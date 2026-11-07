@@ -1,0 +1,816 @@
+/* methodica-math-percent-06-02 — רכיב 1, תרגול סטנדרטי (מסכים 27-29 בתסריט:
+   TransitionScreen + 2×SingleChoiceQuestion). Canvas/buttons/subject tokens
+   ported verbatim from methodica-math-percent-06-01/styles.css so this
+   component matches the unit's established visual/behavioral language —
+   see references/PROJECT_CONTEXT.md. Math mode Subject/* tokens verified
+   against Figma node 618:10116 (see 06-01's own header comment). */
+
+/* Shared rules (tokens, reset, canvas, screen shell, buttons, staged reveal, SCQ options, zoom, hint overlay) live in ../unit-css/base.css and ../unit-css/questions.css, linked before this file. */
+
+/* ============================================================
+   CONTINUE / BACK / HINT BUTTONS — ported from 06-01
+   ============================================================ */
+
+.btn-back[hidden] { display: none; }
+
+/* Secondary "hint" pill — same visual family as .btn-back (white/subject-
+   border ghost button), sits bottom-left next to .btn-continue per
+   720-templates/_global-components.md "Nav bar button geometry" (39px
+   tall, 16px gap between two same-side buttons). Wrapped together in
+   .scq-left-actions so the gap is a flex gap, not a hand-measured offset
+   that would break whenever the continue button's label width changes
+   ("צדקתי?" → "שנמשיך?"). */
+.scq-left-actions {
+  position: absolute;
+  bottom: 16px;
+  left: 32px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* ============================================================
+   SCREEN 0 (s27) — pptx slide 27 — TransitionScreen
+   Reuses the .s13-content/.s13-text-group composition established in
+   methodica-math-percent-06-01 (screens s13/s25) verbatim — same
+   TransitionScreen template, only content differs. This screen's own
+   source text has three distinct runs (20pt / 44pt bold / 20pt, per the
+   pptx's own run-level formatting) rather than 06-01's plain
+   headline+subline two-liner, so it gets its own small text variant
+   (.s27-lead/.s27-emphasis/.s27-sub) instead of reusing
+   .s13-headline/.s13-subline verbatim.
+   ============================================================ */
+.s13-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 760px;
+  max-width: calc(100% - 100px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+
+/* s27's own 3-line lead+emphasis+sub stack is taller than the 2-line
+   headline+subline .s13-content was ported for (06-01 s13/s25), so at the
+   default 50% vertical center it would sit low enough to collide with the
+   bottom-anchored .s13-character below. Raised just enough to clear it. */
+#s27 .s13-content { top: 175px; }
+
+/* Bottom-anchored so its feet sit right on the bottom bar's top hairline
+   (.screen::after, 74px bar) instead of floating mid-canvas with the text —
+   pulled out of .s13-content's own flex flow into its own absolute
+   position for that, same convention as 06-01's .s13-character. Centered
+   via left:50% + negative margin (not transform:translateX) because this
+   element also carries [data-reveal-on-ready], whose reveal animation
+   drives `transform` itself — see motion.css's transform-conflict note. */
+.s13-character {
+  position: absolute;
+  bottom: 74px;
+  left: 50%;
+  /* Enlarged per explicit feedback (was reading too small against all the
+     empty space below this screen's 3-line text block). 600px is close to
+     the max this landscape (16:9) video can go at without its top edge
+     creeping into s27-sub's bottom — measured ~40px clearance at 600px. */
+  margin-left: -300px;
+  width: 600px;
+  height: auto;
+  object-fit: contain;
+}
+
+.s27-lead {
+  font-size: 24px;      /* Body/B-3 — same non-emphasized narrative size
+                            06-01 already uses for TransitionScreen body text */
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--text-body);
+  text-align: center;
+  margin: 0;
+}
+
+.s27-emphasis {
+  font-size: 64px;      /* Heading/H-4 — one step up from the unit's normal
+                            40px TransitionScreen headline, matching the
+                            pptx's own explicit 44pt-bold vs 20pt-regular
+                            emphasis ratio on this one line */
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--subject-800); /* dark-purple emphasis token — same one
+                                 .scq-qtext strong/.q3-shared-qtext strong
+                                 already use for text emphasis in this
+                                 component, not var(--subject-500) which is
+                                 reserved for pill/stroke accents */
+  text-align: center;
+  margin: 4px 0;
+}
+
+.s27-sub {
+  font-size: 24px;      /* Body/B-3 */
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--text-body);
+  text-align: center;
+  margin: 0;
+}
+
+/* ============================================================
+   PROGRESS QUESTION — shared "שאלה N מתוך 3" nav, per
+   720-templates/_global-components.md § Progress Question. One generic
+   renderer (updateProgressQuestion/syncPracticeProgressNav in script.js)
+   drives every instance of this markup across s28/s29/s30.
+
+   Geometry/colors verified against the Foundation component (Figma file
+   eSbp4bKHgBky0rakDb8l9N, node 1460:38334, "Progress question" instance) —
+   24px icons, 64px/1.5px connectors, 4px row gap, 15px labels. Correct and
+   incorrect share the SAME subject-purple filled circle (not green/red) —
+   only the ✓/✕ glyph differs; the Foundation itself renders both states on
+   an identical var(--subject-500) disc, so this is not an invented choice.
+   ============================================================ */
+.progress-question {
+  position: absolute;
+  top: 44px; /* session correction: shifted down with the rest of the
+                question composition (was 24px, nearly touching the canvas
+                edge with no breathing room) — see .scq-wrap/.q3-wrap's
+                matching +20px shift below */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  direction: rtl;
+}
+
+.progress-question__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-question__icon {
+  position: relative;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1.5px solid #ECECEC;
+}
+/* Default (not-visited) center dot */
+.progress-question__icon::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 7.2px;
+  height: 7.2px;
+  border-radius: 50%;
+  background: #D9D9D9;
+  transform: translate(-50%, -50%);
+}
+
+/* Current — pale subject halo + white ring w/ subject stroke + subject dot */
+.progress-question__icon--current {
+  background: var(--subject-100);
+  border: none;
+}
+.progress-question__icon--current::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 19.2px;
+  height: 19.2px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 2px solid var(--subject-500);
+  transform: translate(-50%, -50%);
+}
+.progress-question__icon--current::after { background: var(--subject-500); }
+
+/* Correct / incorrect — identical subject-filled disc, differentiated only
+   by the ✓ / ✕ glyph (never by dot color) per the Foundation component. */
+.progress-question__icon--correct,
+.progress-question__icon--incorrect {
+  background: var(--subject-500);
+  border: none;
+}
+.progress-question__icon--correct::after {
+  content: '';
+  width: 13px;
+  height: 10px;
+  border-radius: 0;
+  background: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMyIgaGVpZ2h0PSIxMCIgdmlld0JveD0iMCAwIDEyLjcyNzMgOS4xODc2MyIgZmlsbD0ibm9uZSI+PHBhdGggZD0iTTQuMTA5NDIgOS4xODc2M0MzLjc0ODE0IDkuMTg3NzggMy40MDE2NyA5LjA0NDE4IDMuMTQ2NDIgOC43ODg1MUwwLjIzNDk1NiA1Ljg3ODEyQy0wLjA3ODMxODggNS41NjQ3NSAtMC4wNzgzMTg4IDUuMDU2NzcgMC4yMzQ5NTYgNC43NDMzOUMwLjU0ODMzMiA0LjQzMDEyIDEuMDU2MzEgNC40MzAxMiAxLjM2OTY5IDQuNzQzMzlMNC4xMDk0MiA3LjQ4MzEyTDExLjM1NzYgMC4yMzQ5NTZDMTEuNjcxIC0wLjA3ODMxODggMTIuMTc4OSAtMC4wNzgzMTg4IDEyLjQ5MjMgMC4yMzQ5NTZDMTIuODA1NiAwLjU0ODMzMiAxMi44MDU2IDEuMDU2MzEgMTIuNDkyMyAxLjM2OTY5TDUuMDcyNDIgOC43ODg1MUM0LjgxNzE3IDkuMDQ0MTggNC40NzA2OSA5LjE4Nzc4IDQuMTA5NDIgOS4xODc2M1oiIGZpbGw9IndoaXRlIi8+PC9zdmc+") no-repeat center / contain;
+}
+.progress-question__icon--incorrect::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 0;
+  background: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgdmlld0JveD0iMCAwIDEwIDEwIiBmaWxsPSJub25lIj48cGF0aCBkPSJNOS43NjczNiAwLjIzMjYzN0M5LjYxODM2IDAuMDgzNjc5NiA5LjQxNjMgMCA5LjIwNTYxIDBDOC45OTQ5MiAwIDguNzkyODYgMC4wODM2Nzk2IDguNjQzODYgMC4yMzI2MzdMNSAzLjg3NjQ5TDEuMzU2MTUgMC4yMzI2MzdDMS4yMDcxNCAwLjA4MzY3OTYgMS4wMDUwOCAwIDAuNzk0MzkxIDBDMC41ODM3MDIgMCAwLjM4MTYzOSAwLjA4MzY3OTYgMC4yMzI2MzcgMC4yMzI2MzdDMC4wODM2Nzk2IDAuMzgxNjM5IDAgMC41ODM3MDIgMCAwLjc5NDM5MUMwIDEuMDA1MDggMC4wODM2Nzk2IDEuMjA3MTQgMC4yMzI2MzcgMS4zNTYxNUwzLjg3NjQ5IDVMMC4yMzI2MzcgOC42NDM4NkMwLjA4MzY3OTYgOC43OTI4NiAwIDguOTk0OTIgMCA5LjIwNTYxQzAgOS40MTYzIDAuMDgzNjc5NiA5LjYxODM2IDAuMjMyNjM3IDkuNzY3MzZDMC4zODE2MzkgOS45MTYzMiAwLjU4MzcwMiAxMCAwLjc5NDM5MSAxMEMxLjAwNTA4IDEwIDEuMjA3MTQgOS45MTYzMiAxLjM1NjE1IDkuNzY3MzZMNSA2LjEyMzUxTDguNjQzODYgOS43NjczNkM4Ljc5Mjg2IDkuOTE2MzIgOC45OTQ5MiAxMCA5LjIwNTYxIDEwQzkuNDE2MyAxMCA5LjYxODM2IDkuOTE2MzIgOS43NjczNiA5Ljc2NzM2QzkuOTE2MzIgOS42MTgzNiAxMCA5LjQxNjMgMTAgOS4yMDU2MUMxMCA4Ljk5NDkyIDkuOTE2MzIgOC43OTI4NiA5Ljc2NzM2IDguNjQzODZMNi4xMjM1MSA1TDkuNzY3MzYgMS4zNTYxNUM5LjkxNjMyIDEuMjA3MTQgMTAgMS4wMDUwOCAxMCAwLjc5NDM5MUMxMCAwLjU4MzcwMiA5LjkxNjMyIDAuMzgxNjM5IDkuNzY3MzYgMC4yMzI2MzdaIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg==") no-repeat center / contain;
+}
+
+.progress-question__label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #ECECEC;
+}
+.progress-question__label--visited { color: #222222; }
+
+.progress-question__connector {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 1.5px;
+  margin-top: 11.5px;
+  background: #ECECEC;
+  border-radius: 2px;
+}
+.progress-question__connector--visited { background: rgba(0, 0, 0, 0.6); }
+
+/* ============================================================
+   SingleChoiceQuestion — shared scq- prefixed markup, per
+   720-templates/SingleChoiceQuestion.md. Generalizes across every SCQ
+   screen in this part (s28/s29) via data-screen-id-scoped JS state —
+   one shared ruleset, not a per-screen copy.
+   ============================================================ */
+.scq-wrap {
+  position: absolute;
+  top: 100px; /* session correction: composition moved down ~20px (was 80px,
+                 leaving only ~4px clearance under .progress-question) —
+                 bottom stays 96px, unchanged footer clearance */
+  left: 40px;
+  right: 40px;
+  bottom: 96px;
+  display: flex;
+  flex-direction: row; /* RTL: 1st DOM child renders rightmost */
+  gap: 40px;
+}
+
+.scq-question-col {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+  padding-top: 36px; /* moves the question text + answers down as one group,
+                         opening up breathing room below the progress nav,
+                         without hand-tuning each child's own margin */
+  padding-left: 4px; /* clearance for the scrollbar on long/literacy questions */
+}
+
+/* Emphasis inside the context sentences (not the question stem) stays plain
+   black bold — the purple token above is reserved for the question stem. */
+.scq-qtext strong.scq-strong-plain { color: inherit; }
+
+.scq-opt.correct .scq-radio {
+  border: none;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgdmlld0JveD0iMCAwIDIyIDIyIj48Y2lyY2xlIGN4PSIxMSIgY3k9IjExIiByPSIxMSIgZmlsbD0iIzYwOWUxMiIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDQuNjM2LDYuNDA2KSIgZD0iTTQuMTA5NTUgOS4xODc2M0MzLjc0ODI4IDkuMTg3NzggMy40MDE4IDkuMDQ0MTggMy4xNDY1NSA4Ljc4ODUxTDAuMjM1MDkgNS44NzgxMkMtMC4wNzgxODU3IDUuNTY0NzUgLTAuMDc4MTg1NyA1LjA1Njc3IDAuMjM1MDkgNC43NDMzOUMwLjU0ODQ2NSA0LjQzMDEyIDEuMDU2NDUgNC40MzAxMiAxLjM2OTgyIDQuNzQzMzlMNC4xMDk1NSA3LjQ4MzEyTDExLjM1NzcgMC4yMzQ5NTZDMTEuNjcxMSAtMC4wNzgzMTg4IDEyLjE3OTEgLTAuMDc4MzE4OCAxMi40OTI1IDAuMjM0OTU2QzEyLjgwNTcgMC41NDgzMzIgMTIuODA1NyAxLjA1NjMxIDEyLjQ5MjUgMS4zNjk2OUw1LjA3MjU1IDguNzg4NTFDNC44MTczMSA5LjA0NDE4IDQuNDcwODMgOS4xODc3OCA0LjEwOTU1IDkuMTg3NjNaIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPgo=");
+  background-size: 22px 22px;
+}
+
+.scq-opt.wrong .scq-radio {
+  border: none;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgdmlld0JveD0iMCAwIDIyIDIyIj48Y2lyY2xlIGN4PSIxMSIgY3k9IjExIiByPSIxMSIgZmlsbD0iI2IyMDAxMCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDYsNikiIGQ9Ik05Ljc2NzM2IDAuMjMyNjM3QzkuNjE4MzYgMC4wODM2Nzk2IDkuNDE2MyAwIDkuMjA1NjEgMEM4Ljk5NDkyIDAgOC43OTI4NiAwLjA4MzY3OTYgOC42NDM4NiAwLjIzMjYzN0w1IDMuODc2NDlMMS4zNTYxNSAwLjIzMjYzN0MxLjIwNzE0IDAuMDgzNjc5NiAxLjAwNTA4IDAgMC43OTQzOTEgMEMwLjU4MzcwMiAwIDAuMzgxNjM5IDAuMDgzNjc5NiAwLjIzMjYzNyAwLjIzMjYzN0MwLjA4MzY3OTYgMC4zODE2MzkgMCAwLjU4MzcwMiAwIDAuNzk0MzkxQzAgMS4wMDUwOCAwLjA4MzY3OTYgMS4yMDcxNCAwLjIzMjYzNyAxLjM1NjE1TDMuODc2NDkgNUwwLjIzMjYzNyA4LjY0Mzg2QzAuMDgzNjc5NiA4Ljc5Mjg2IDAgOC45OTQ5MiAwIDkuMjA1NjFDMCA5LjQxNjMgMC4wODM2Nzk2IDkuNjE4MzYgMC4yMzI2MzcgOS43NjczNkMwLjM4MTYzOSA5LjkxNjMyIDAuNTgzNzAyIDEwIDAuNzk0MzkxIDEwQzEuMDA1MDggMTAgMS4yMDcxNCA5LjkxNjMyIDEuMzU2MTUgOS43NjczNkw1IDYuMTIzNTFMOC42NDM4NiA5Ljc2NzM2QzguNzkyODYgOS45MTYzMiA4Ljk5NDkyIDEwIDkuMjA1NjEgMTBDOS40MTYzIDEwIDkuNjE4MzYgOS45MTYzMiA5Ljc2NzM2IDkuNzY3MzZDOS45MTYzMiA5LjYxODM2IDEwIDkuNDE2MyAxMCA5LjIwNTYxQzEwIDguOTk0OTIgOS45MTYzMiA4Ljc5Mjg2IDkuNzY3MzYgOC42NDM4Nkw2LjEyMzUxIDVMOS43NjczNiAxLjM1NjE1QzkuOTE2MzIgMS4yMDcxNCAxMCAxLjAwNTA4IDEwIDAuNzk0MzkxQzEwIDAuNTgzNzAyIDkuOTE2MzIgMC4zODE2MzkgOS43NjczNiAwLjIzMjYzN1oiIGZpbGw9IndoaXRlIi8+PC9zdmc+Cg==");
+  background-size: 22px 22px;
+}
+
+/* ---- Content image (left column) ----
+   Sized to the actual Q2.png/Yoav.png photo ratio (1536×1024 = 3:2) instead
+   of a fixed 380×380 square, which left ~127px of empty gray letterboxing
+   above/below the contained photo — session correction, this component only.
+   Session correction #2: grown 380->540px (height follows via aspect-ratio,
+   ~253->360px) so the image column visually balances against the
+   context+question+answers block's height instead of reading much shorter
+   than it; narrows .scq-question-col to ~620px in the same move, which is
+   also what brings the answer pills down to a reasonable width (they're
+   width:100% of that same narrower column) instead of stretching across
+   the full former 780-960px flex remainder.
+
+   Split into an outer sizing/position wrapper (.scq-img — no overflow, so
+   .img-zoom-btn can straddle its edge without being clipped) and an inner
+   .scq-img-clip (the actual rounded/bordered/overflow:hidden frame around
+   the <img>). Previously both roles were the same element, which clipped
+   the zoom button's -12px overhang on two sides — see .img-zoom-btn below. */
+.scq-img {
+  flex: 0 0 540px;
+  width: 540px;
+  aspect-ratio: 3 / 2;
+  height: auto;
+  align-self: flex-start;
+  margin-top: 28px; /* session correction: nudges the image down so it
+                        doesn't sit noticeably higher than the question text
+                        (which starts 36px into .scq-question-col's own
+                        padding-top) — doesn't affect image size or layout
+                        width, just its vertical start within .scq-wrap */
+  position: relative; /* no transform/filter — must not create a stacking
+                          context, so .img-zoom-btn can rise above chrome */
+}
+.scq-img-clip {
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #F4F4F6;
+  border: 1px solid #E5E5E5;
+}
+.scq-img-clip img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* ---- Image zoom button (44px circle, per _global-components.md) ----
+   Sits fully inside the image frame, inset from both edges (session
+   correction: previously straddled the top-right corner via a -12px
+   overhang, which read as sitting on/outside the image edge instead of as
+   an overlay on top of it). Positioned relative to .scq-img (the outer,
+   non-clipping wrapper) — kept distinct from .scq-img-clip so the button
+   never affects the image's own size or the column layout. */
+.img-zoom-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 5;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid var(--subject-500);
+  color: var(--subject-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.img-zoom-panel {
+  position: relative;
+  width: 660px;
+  height: 660px;
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.img-zoom-panel img,
+.img-zoom-panel .scq-img {
+  width: 100%;
+  height: 100%;
+  border: none;
+  object-fit: contain; /* preserve the source image's own aspect ratio
+    instead of stretching it to fill the fixed 660x660 square panel — a
+    3:2 photo (Yoav.png, Q2.png) was visibly warped before this. */
+}
+
+/* ---- s29-only override: narrower image, wider question/answers column ----
+   Session correction, this screen only: s29's longer literacy-style context
+   (two context sentences) plus a longer distractor ("יואב השתמש ב-300%
+   מהחבילה המקורית, משום ש-30GB הם פי 3 מ-10GB") needed more column width to
+   avoid awkward line breaks and an internal scrollbar — solved by shrinking
+   the image (same 3:2 aspect ratio, no distortion) rather than the font.
+   flex:1 1 auto on .scq-question-col absorbs the freed width automatically;
+   #s29-img stays flush against .scq-wrap's left edge (RTL row's end side),
+   so shrinking it also reads as "shifted left" per the requested composition. */
+#s29-img {
+  flex-basis: 460px;
+  width: 460px;
+}
+/* Feedback region mirrors #s29-img's own narrower width so the card still
+   centers within the actual image column, not the wider default. */
+#s29-feedbox { width: 460px; }
+
+/* ---- Feedback box ----
+   QA fix: was pinned bottom-left (position:absolute; bottom:96px; left:40px;
+   fixed width:380px, hanging from the corner with max-height+overflow-y:auto)
+   — read as crowded against the image column's edge instead of belonging to
+   it. .scq-feedbox is now the POSITIONING REGION: it spans the exact same
+   left/top/bottom band as .scq-wrap and the same width as .scq-img (the
+   image column it visually belongs beside), and centers its content with
+   flex. .scq-fb (only one .active at a time) is the actual visible card —
+   sized to its own content (width:max-content, capped), not stretched to
+   fill the region — so it reads as a card centered in its column rather
+   than a panel spanning it. pointer-events:none on the region keeps the
+   transparent margin around the card from blocking the image/zoom button
+   underneath. */
+.scq-feedbox {
+  position: absolute;
+  left: 40px;
+  top: 100px;    /* matches .scq-wrap's own top */
+  bottom: 96px;  /* matches .scq-wrap's own bottom */
+  width: 540px;  /* matches .scq-img's own width */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 8;
+  pointer-events: none;
+}
+.scq-feedbox[hidden] { display: none; }
+
+.scq-fb {
+  display: none;
+  pointer-events: auto;
+  width: max-content;
+  max-width: min(400px, 100%);
+  max-height: 100%;
+  overflow-y: auto; /* last-resort fallback — content should fit at this size */
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+  background: #ffffff;
+  direction: rtl;
+  text-align: right;
+  cursor: move; /* draggable via positionFeedbackCard()/the pointerdown
+    handler below — was missing here, a pre-existing affordance gap
+    unrelated to the popup normalization pass (QA fix). */
+}
+.scq-fb.active { display: block; }
+/* Figma 217:4135 "Popup Feedback": SAME neutral gray border in both states
+   (not the shared --correct-border/--incorrect-border 2px green/red used by
+   .scq-opt.correct/.wrong elsewhere on the page) — only the background tint
+   differs between correct/incorrect. */
+.scq-feedbox.is-correct .scq-fb.active { background: var(--fb-bg-correct); border: 0.3px solid var(--fb-border); }
+.scq-feedbox.is-wrong .scq-fb.active { background: var(--fb-bg-incorrect); border: 0.3px solid var(--fb-border); }
+
+.scq-fb-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+}
+.scq-fb-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--fb-text);
+  direction: rtl;
+  text-align: right;
+  /* Orphan-word / line-balance pass (unit-wide feedback typography QA):
+     redistributes this block's own wrapped lines evenly so a long sentence
+     doesn't strand a single trailing word alone on its last line. Alignment
+     stays right/RTL — balance only changes where the soft line-breaks fall.
+     No-op in browsers without support (falls back to normal wrapping). */
+  text-wrap: balance;
+}
+
+.scq-fb-chevron {
+  flex: 0 0 auto;
+  width: 20px; height: 20px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: none;
+}
+.scq-fb-chevron svg { width: 100%; height: 100%; stroke: currentColor; }
+.scq-feedbox.collapsed .scq-fb-chevron svg { transform: rotate(180deg); }
+.scq-feedbox.collapsed .scq-fb-body { display: none; }
+
+.scq-fb-body {
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--fb-text);
+  margin-top: 10px;
+  direction: rtl;
+  text-align: right;
+}
+.scq-fb-body p { margin: 0 0 8px; text-wrap: balance; }   /* orphan/line-balance QA pass — see .scq-fb-title */
+.scq-fb-body p:last-child { margin-bottom: 0; }
+
+/* s29's own correct/wrong2 feedback body runs two longer sentences
+   ("יואב השתמש ב-30GB..." / "כלומר...") that wrapped to 2-3 lines each at
+   the shared 400px cap, making this one card much taller than the others.
+   Widened just for this screen's card (paired with shortening the longer
+   sentence itself in index.html) so both fit closer to one line — per
+   explicit user feedback ("make the popup a bit wider but shorter, play
+   with the length of just those two lines"). Scoped to #s29-feedbox so
+   s28/s30's own feedback cards keep the shared 400px width. */
+#s29-feedbox .scq-fb:not([data-fb="retry"]) { width: 460px; max-width: 460px; }   /* explicit width,
+  scoped away from [data-fb="retry"] — that card is just a short two-line
+  "try again?" title with no body, and forcing it to the same 460px as the
+  long correct/wrong2 bodies made it read as an oversized, mostly-empty
+  box (QA fix); it keeps the shared max-content/400px-cap sizing below.
+  not just a raised max-width — the base .scq-fb's own width:max-content
+  was shrink-wrapping narrower than this cap regardless (some other child's
+  intrinsic size was winning), so the two longer sentences kept wrapping
+  even with more room available. 460px (not more) because #s29-feedbox
+  itself is only 460px wide (s29-only override above, matching #s29-img's
+  own narrower width) — a wider value here would just get flex-shrunk back
+  down to that anyway. Paired with shortening both sentences themselves in
+  index.html so each fits on one line at this width. */
+
+.gvi-percent { font-size: 22px; font-weight: 400; /* script: equation results regular */ color: var(--subject-800); align-self: center; }
+.gvi-percent--strong { font-weight: 700; } /* s29: final answer emphasized, per user QA */
+
+.gvi-feedback-eq {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 14px;
+  direction: ltr; /* math equation chain always reads left-to-right
+    (30/10 = 300/100 = 300%), even on this RTL page — rtl here flipped the
+    whole chain backwards instead of just packing it against the right */
+  margin: 10px 0;
+}
+
+/* De-emphasized fraction digits inside the feedback equation rows —
+   this popup's fractions read as plain numbers, not bolded/highlighted. */
+.gvi-feedback-eq .gvi-fraction { font-weight: 400; }
+
+/* Modifier for a fraction preceded by a Hebrew label on the same line
+   (e.g. "4% הם [4/100]") — reading order must stay RTL, unlike the
+   plain equation chain above which is LTR for its digits/signs. */
+.gvi-feedback-eq--label {
+  direction: rtl;
+  justify-content: flex-start;
+}
+.gvi-eq-label { font-size: 20px; color: var(--text-body); }
+
+.scq-hint-panel {
+  width: 460px;   /* was 560px — a short one-line hint (s29) left a lot of
+                      dead space on both sides of the text at that width;
+                      460px still comfortably fits s28's fraction-equation
+                      row and s30's longer two-sentence hint (they just wrap
+                      to an extra line — the panel's height is auto/content-
+                      driven, not fixed, so that only makes it a bit taller,
+                      never clipped). Per explicit user feedback ("shrink
+                      the hint rectangle, too much dead space"). */
+  max-height: 520px;
+  overflow-y: auto;
+  background: var(--subject-500);
+  border-radius: 48px;
+  padding: 32px 36px;   /* was 40px 44px — trimmed along with the width. */
+  color: #ffffff;
+  text-align: center;
+}
+.scq-hint-body .gvi-fraction,
+.scq-hint-body .gvi-eq-sign { color: #ffffff; }
+.scq-hint-body .gvi-fraction .num { border-bottom-color: #ffffff; }
+.scq-hint-body .gvi-percent { color: #ffffff; }
+.scq-hint-body .gvi-feedback-eq { justify-content: center; }
+
+/* ============================================================
+   s30 (pptx slide 30) — שאלה 3 מתוך 3, local SingleChoiceQuestion variant
+   with three independent single-choice sub-parts (A/B/C). Each part is one
+   graph + one bordered .q3-answer-card holding exactly 3 stacked
+   .scq-opt/.scq-radio rows (session correction — replaces an earlier
+   5-value shared pill pool). See index.html's own header comment on #s30
+   and CONTENT_FLAGS.md #4/#30 (moved to Resolved).
+   ============================================================ */
+.q3-wrap {
+  position: absolute;
+  top: 100px; /* session correction: matches .scq-wrap's +20px downward shift */
+  left: 40px;
+  right: 40px;
+  bottom: 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start; /* session correction: centering left too much
+                                   dead space above the question text/instruction
+                                   (feedback: bring the instruction higher, closer
+                                   to the progress nav, instead of vertically
+                                   centering the whole composition) */
+  gap: 12px; /* session correction: trimmed from 20px to help the extra
+                breathing room added below fit without overflow/scrollbar */
+  overflow-y: auto;
+}
+
+/* Groups the context sentence + purple instruction as one flex child of
+   .q3-wrap (a tight 6px rhythm between them, like the source's own <br>
+   line break) so splitting them into two separately-staged <p> elements
+   (context reveals, then the instruction) doesn't inherit .q3-wrap's much
+   larger inter-group gap between them. */
+.q3-qtext-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 22px; /* session correction: the progress nav and the question
+                        content read as too cramped (progress nav's own box
+                        ends only ~6px above .q3-wrap's top) — this opens up
+                        clear breathing room between them, same intent as
+                        .scq-question-col's own 36px padding-top, sized
+                        smaller here to still fit within the shorter q3
+                        layout's vertical budget (see the image/row-height
+                        trims below that free up the matching space). */
+}
+
+.q3-shared-qtext {
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--text-body);
+  line-height: 1.4;
+  text-align: center;
+  margin: 0;
+  max-width: 900px;
+}
+.q3-shared-qtext strong { font-weight: 700; color: var(--subject-800); }
+
+.q3-parts {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 32px;
+  width: 100%;
+}
+
+.q3-part {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  flex: 0 1 340px;
+  width: 340px;
+}
+
+/* Graph frame — fixed, identical size/top-baseline across all 3 parts so
+   the three graph+card units read as one aligned row (all 3 source circle
+   images are ~1:1, so a square frame fits every one without letterboxing). */
+.q3-part > .q3-img {
+  width: 156px;
+  height: 156px;
+  flex: 0 0 auto;
+  align-self: center;
+}
+
+/* ONE bordered rounded container per graph, holding exactly 3 stacked
+   answer rows — replaces the earlier 5-value shared pill pool (session
+   correction, see #s30's header comment + CONTENT_FLAGS.md #4/#30). Reuses
+   .scq-opt/.scq-radio verbatim for the rows themselves, so selected/correct/
+   wrong states need no new CSS. */
+.q3-answer-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border: 2px solid var(--subject-500);
+  border-radius: 20px;
+  background: #ffffff;
+  overflow: hidden; /* keeps row dividers/fills inside the rounded corners */
+}
+
+.q3-answer-card .scq-opt {
+  width: 100%;
+  min-height: 52px; /* equal row height across all 3 cards, regardless of
+                        whether a row holds a plain percent/decimal or a
+                        taller stacked num/den fraction — trimmed from 64px
+                        (session correction) to help fit the extra top
+                        breathing room added to .q3-qtext-group without an
+                        overflow scrollbar */
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid var(--subject-100);
+  padding: 6px 20px;
+  font-size: 20px;
+}
+.q3-answer-card .scq-opt:last-child { border-bottom: none; }
+
+.q3-answer-card .scq-radio {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+}
+.q3-answer-card .scq-opt.correct .scq-radio,
+.q3-answer-card .scq-opt.wrong .scq-radio {
+  background-size: 20px 20px;
+}
+
+/* Compact fraction rendering inside an answer row (vs. the larger feedback-
+   body .gvi-fraction) — same stacked num/den markup, smaller scale. Also
+   overrides .gvi-fraction's own font-weight:700 (bug fix, this component:
+   that weight is meant for feedback-body emphasis, not answer options —
+   inheriting it here made fraction-valued options render bold while the
+   plain percent/decimal options in the same card stayed regular, an
+   inconsistency with no selected/correct/wrong meaning behind it). Keeps
+   align-items: center from .gvi-fraction (bug fix: an earlier flex-start
+   override here left the numerator and denominator each hugging their own
+   left edge instead of sharing one center axis, so pairs with different
+   digit counts — 10/34, 2/100 — visibly misaligned; flex-start served no
+   purpose this rule's own comment ever documented).
+   display: inline-flex (bug fix, same pattern as the project's own
+   .q1-inline-fraction variant elsewhere in this unit): .gvi-fraction's
+   base display:flex is a block box that stretches to fill .scq-opt-text's
+   full flex:1 1 auto width, so its internally-centered num/den centered
+   inside that full-row width instead of sitting at the row's right edge
+   like the plain percent/decimal options do. inline-flex shrinks it to
+   content width and lets .scq-opt's own text-align:right position it,
+   while align-items:center still centers num over den within that
+   shrunk box. */
+.q3-fraction.gvi-fraction {
+  display: inline-flex;
+  vertical-align: middle;
+  font-size: 18px;
+  font-weight: 400;
+}
+.q3-fraction .num,
+.q3-fraction .den { padding: 0 2px; line-height: 1.25; }
+
+.q3-zoom-caption {
+  font-size: 22px; /* matches .q3-shared-qtext — same body size as the rest of the screen */
+  color: var(--text-body);
+  text-align: center;
+  margin: 0;
+}
+
+/* s30 has no image column — it's a single centered block, not a split
+   layout — so the feedback region is centered horizontally on the whole
+   .q3-wrap band instead of matching a column width. Vertical
+   centering/height come from the shared .scq-feedbox base rule. */
+.q3-feedbox {
+  left: 50%;
+  transform: translateX(-50%);
+  width: 640px;
+}
+
+/* Small inline caption after an equation, e.g. "(צמצום פי 2)" */
+.gvi-eq-note {
+  font-size: 16px;
+  color: var(--text-body);
+  direction: rtl;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   STAGED-REVEAL MOTION — ported verbatim from
+   methodica-math-percent-06-01/styles.css (its "[data-reveal-on-ready]"
+   block), Component-02 copy per the project's own per-component CSS
+   convention (references/PROJECT_CONTEXT.md § component-based
+   restructuring). Pairs with script.js's ported runStagedSequence()
+   engine — used for s27 (TransitionScreen) and the context->question->
+   image->answers sequencing on s28/s29/s30, replacing the coarse fixed-
+   180ms-stagger [data-reveal] tiers (still available via motion.css, but
+   too fast/mechanical for the deliberate settle-then-pause pacing these
+   screens need).
+   [data-reveal-on-ready] starts hidden IN-FLOW (occupies its normal layout
+   slot — no reflow when it appears). runStagedSequence()/stageShowEl() add
+   .is-revealed the moment each step fires; once added it is never removed
+   (one-way latch) except by a screen's own fresh-entry reset path. */
+
+/* ---------------- Staged-reveal motion variant — calm easing tier ----------------
+   Ported from methodica-math-percent-06-01/styles.css's "Staged-reveal motion
+   variant" block (its own header there is scoped "Component-01 only" for the
+   CSS FILE COPY — since components keep separate per-folder CSS — but the
+   motion FEEL itself is meant to read the same everywhere runStagedSequence()
+   drives a screen: the base engine's shared --m-reveal-duration/--m-ease pair
+   (600ms/ease) front-loads most of the opacity change into the first third of
+   the duration, which reads as an abrupt snap rather than a settling float —
+   confirmed on s27/s28/s29/s30 (session fix, this pass). Higher specificity
+   than the base [data-reveal-on-ready].is-revealed rule above (3 selector
+   segments vs 2) so these always win when both classes are present. Same
+   m-float-in keyframe, same is-revealed trigger, same JS-driven
+   sequencing/delays — only each element's OWN entrance duration/easing is
+   recalibrated per role, never the delays between elements (those stay fully
+   JS-driven via script.js's step `wait` values). */
+:root {
+  --m-ease-calm: cubic-bezier(0.4, 0, 0.2, 1);
+  --m-stage-duration-text: 420ms;
+  --m-stage-duration-card: 375ms;
+  --m-stage-duration-visual: 525ms;
+}
+
+/* ============================================================
+   CONTINUE CTA PULSE — ported verbatim from methodica-math-percent-06-01
+   ("Emphasize-Grow", scale(1)->scale(1.05)->scale(1), 1100ms ease-in-out
+   infinite). #s27-continue starts disabled and only becomes enabled at
+   the exact moment its staged sequence completes, so ":not(:disabled)" IS
+   "pulse now" for it (same reasoning as 06-01's s13-continue). The SCQ
+   check/continue buttons (#s28-check/#s29-check/#s30-check) are reused for
+   TWO roles on the same element ("צדקתי?" while grading, then "שנמשיך?"
+   once resolved) — they become enabled the moment a selection exists,
+   well before feedback shows, so ":not(:disabled)" alone would pulse the
+   "צדקתי?" state too early. They get the explicit .is-pulsing trigger
+   instead (added in scqCheck()/q3Check() only once the question resolves),
+   same pattern as 06-01's #hook1-action-btn.is-pulsing. */
+#s27-continue:not(:disabled),
+#s28-check.is-pulsing,
+#s29-check.is-pulsing,
+#s30-check.is-pulsing {
+  animation: btnAdvanceGrow 1100ms ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  #s27-continue:not(:disabled),
+  #s28-check.is-pulsing,
+  #s29-check.is-pulsing,
+  #s30-check.is-pulsing { animation: none; }
+}
+
+/* Retry title lines are already split by <br> — never re-wrap one inside
+   a shrink-wrapped card ("זה לא / מדויק,"). */
+.scq-fb[data-fb="retry"] .scq-fb-title { white-space: nowrap; }
+
+/* One-line hint (s29): keep the sentence on a single row and let the panel
+   grow to fit it instead of wrapping "10GB" onto its own line. */
+.scq-hint-body .hint-one-line { white-space: nowrap; }
+.scq-hint-panel:has(.hint-one-line) { width: max-content; min-width: 460px; }

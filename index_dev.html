@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>DEV — לומדה | methodica-math-percent-06</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #111; overflow: hidden; }
+
+    /* DEV-only screen sidebar (Storyline-style) + the iframe, side by side —
+       never shown in production (index.html is loaded directly there, this
+       markup lives only in index_dev.html). row-reverse puts the sidebar on
+       the right, matching the lomda's own RTL reading order; the iframe
+       fills the rest, so the sidebar never overlays the unit's content —
+       it shrinks the iframe instead, and the unit's own scaleApp() (it
+       listens for its own window's resize event) re-fits to the new size. */
+    #dev-layout { display: flex; flex-direction: row-reverse; width: 100vw; height: 100vh; }
+    #lomdah-frame { flex: 1 1 auto; min-width: 0; height: 100vh; border: none; display: block; }
+    #dev-bar {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.88); color: #fff; border: 2px solid #ffe600;
+      border-radius: 32px; padding: 10px 22px;
+      display: flex; align-items: center; gap: 14px;
+      z-index: 9999; font-family: monospace; font-size: 15px; user-select: none;
+      white-space: nowrap;
+    }
+    #dev-label {
+      color: #ffe600; font-weight: 700; font-size: 13px; letter-spacing: 1px;
+      padding-left: 10px; border-left: 1px solid #444; margin-left: 2px;
+    }
+    #dev-bar button {
+      background: transparent; border: 1px solid #ffe600; color: #ffe600;
+      border-radius: 8px; padding: 5px 14px; cursor: pointer; font-size: 17px;
+    }
+    #dev-bar button:hover { background: #ffe600; color: #000; }
+    #dev-bar button:disabled { opacity: 0.3; cursor: default; background: transparent; color: #ffe600; }
+    #btn-reset { border-color: #ff6b6b; color: #ff6b6b; font-size: 13px; }
+    #btn-reset:hover { background: #ff6b6b; color: #000; }
+    #dev-screen-input {
+      width: 46px; text-align: center; background: #1a1a1a;
+      color: #ffe600; border: 1px solid #ffe600; border-radius: 6px;
+      font-size: 16px; font-family: monospace; padding: 4px;
+    }
+    #dev-total { color: #aaa; font-size: 14px; }
+    #dev-screen-name { color: #ffe600; font-size: 13px; min-width: 60px; text-align: center; }
+    #dev-hint { color: #555; font-size: 11px; border-right: 1px solid #333; padding-right: 12px; }
+    #dev-datalist-wrap { display: flex; align-items: center; gap: 4px; }
+
+    /* ---------------- DEV screen sidebar (Storyline-style) ---------------- */
+    #dev-sidebar {
+      flex: 0 0 220px;
+      height: 100vh;
+      background: #161616;
+      border-left: 2px solid #ffe600;
+      overflow-y: auto;
+      font-family: monospace;
+      direction: rtl;
+    }
+    #dev-sidebar-header {
+      position: sticky; top: 0;
+      background: #161616;
+      color: #ffe600; font-size: 12px; font-weight: 700; letter-spacing: 1px;
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid #333;
+    }
+    #dev-sidebar-list { list-style: none; margin: 0; padding: 8px; }
+    #dev-sidebar-list li { margin-bottom: 4px; }
+    #dev-sidebar-list button {
+      width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      background: transparent; border: 1px solid transparent; border-radius: 8px;
+      color: #ccc; font-family: monospace; font-size: 13px; text-align: right;
+      padding: 9px 10px; cursor: pointer;
+    }
+    #dev-sidebar-list button:hover { background: #262626; border-color: #444; }
+    #dev-sidebar-list button.active {
+      background: rgba(255,230,0,0.12); border-color: #ffe600; color: #ffe600; font-weight: 700;
+    }
+    .dev-sidebar-idx { color: #666; font-size: 11px; }
+    #dev-sidebar-list button.active .dev-sidebar-idx { color: #ffe600; }
+  </style>
+</head>
+<body>
+  <div id="dev-layout">
+    <aside id="dev-sidebar">
+      <div id="dev-sidebar-header">שקפים</div>
+      <ul id="dev-sidebar-list"></ul>
+    </aside>
+    <!-- Points at the unit shell (index.html), not directly at 06-01 —
+         unit-shell.js detects it's embedded in a parent (this file) and
+         bridges DEV_READY/DEV_STATE/DEV_GOTO in GLOBAL screen numbers
+         (0..39, see unit-manifest.js) across all 6 components, instead of
+         only ever exposing 06-01's own 18 local screens. -->
+    <iframe id="lomdah-frame" src="index.html"></iframe>
+  </div>
+
+  <div id="dev-bar">
+    <!-- RTL: next (◀) on LEFT, prev (▶) on RIGHT -->
+    <span id="dev-hint">Ctrl+← / Ctrl+→</span>
+    <button id="btn-next" onclick="devNext()" title="מסך הבא (Ctrl+←)">◀</button>
+    <div id="dev-datalist-wrap">
+      <input id="dev-screen-input" type="number" min="0" max="0" value="0" list="dev-screen-options"
+             title="הקלד מספר מסך לקפיצה ישירה — כל מסך שמומש כרגע חשוף כאן" onchange="devJump(this.value)">
+      <datalist id="dev-screen-options"></datalist>
+    </div>
+    <span id="dev-total">/ 0</span>
+    <span id="dev-screen-name">–</span>
+    <button id="btn-prev" onclick="devPrev()" title="מסך קודם (Ctrl+→)">▶</button>
+    <button id="btn-reset" onclick="devReset()" title="אפס את מצב המסך הנוכחי (לא משנה מסך)">↺ Reset</button>
+    <span id="dev-label">DEV</span>
+  </div>
+
+  <script>
+    'use strict';
+
+    // Screen list is NOT hardcoded — it's derived live from script.js's
+    // DEV_READY/DEV_STATE messages, which read the real DOM (.screen ids).
+    // Nothing here needs manual editing as later phases add screens.
+    var screens = []; // [{index, id}, ...] — only screens that actually exist today
+    var frame      = document.getElementById('lomdah-frame');
+    var inputEl    = document.getElementById('dev-screen-input');
+    var totalLabel = document.getElementById('dev-total');
+    var nameLabel  = document.getElementById('dev-screen-name');
+    var btnPrev    = document.getElementById('btn-prev');
+    var btnNext    = document.getElementById('btn-next');
+    var optionsEl  = document.getElementById('dev-screen-options');
+    var sidebarListEl = document.getElementById('dev-sidebar-list');
+    var devCurrent = 0;
+    var maxRealIndex = 0;
+
+    // Screens intentionally kept out of the active DEV flow — same reasoning
+    // as script.js's NAV_FLOW. Empty now that the guided-practice segment
+    // (s13-s24, formerly deferred at the old s17 prototype) has been
+    // properly wired into the main learner flow — every screen is reachable
+    // via the sidebar, Next/Previous, and direct-jump navigation here.
+    var DEV_EXCLUDED_SCREEN_IDS = [];
+
+    // id → display name for the DEV sidebar. Not read from the DOM because
+    // script.js's DEV_STATE only exposes each screen's id (see devScreenList()
+    // there) — this is a small, local mapping, not a new source of truth;
+    // screen ids themselves are unchanged. Falls back to the raw id for any
+    // screen added later and not yet listed here.
+    var SCREEN_NAMES = {
+      hook1: 'Hook 1',
+      whypercent: 'Why Percent',
+      hook2: 'Hook 2',
+      learningphase: 'Learning Phase',
+      s13: 'Transition',
+      s14: 'Intro Problem',
+      s15: 'What To Do?',
+      s16: 'Explain Why',
+      s17: 'Dani Input',
+      s18: 'Dani Reveal',
+      s19: 'Gal Input',
+      s20: 'Gal Reveal',
+      s21: 'Alon Input',
+      s22: 'Alon Reveal',
+      s23: 'Comparison',
+      s24: 'Summary',
+      s25: 'Warm-up Transition',
+      s26: 'Warm-up Chart'
+    };
+
+    window.addEventListener('message', function (e) {
+      if (!e.data) return;
+      if (e.data.type === 'DEV_READY' || e.data.type === 'DEV_STATE') {
+        screens = (e.data.screens || []).filter(function (s) {
+          return DEV_EXCLUDED_SCREEN_IDS.indexOf(s.id) === -1;
+        });
+        devCurrent = typeof e.data.current === 'number' ? e.data.current : devCurrent;
+        maxRealIndex = screens.length ? Math.max.apply(null, screens.map(function (s) { return s.index; })) : 0;
+        totalLabel.textContent = '/ ' + maxRealIndex;
+        inputEl.max = maxRealIndex;
+        inputEl.value = devCurrent;
+        rebuildOptions();
+        rebuildSidebar();
+        updateNameLabel();
+        updateButtons();
+      }
+    });
+
+    function rebuildOptions() {
+      optionsEl.innerHTML = '';
+      screens.forEach(function (s) {
+        var opt = document.createElement('option');
+        opt.value = s.index;
+        opt.label = s.id;
+        optionsEl.appendChild(opt);
+      });
+    }
+
+    // Sidebar list — reuses devGoTo() (which itself only talks to the real
+    // engine via the existing DEV_GOTO postMessage bridge) rather than any
+    // parallel navigation path.
+    function rebuildSidebar() {
+      sidebarListEl.innerHTML = '';
+      screens.forEach(function (s) {
+        var li = document.createElement('li');
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = (s.index === devCurrent) ? 'active' : '';
+        btn.onclick = function () { devGoTo(s.index); };
+
+        var name = document.createElement('span');
+        name.textContent = SCREEN_NAMES[s.id] || s.id;
+        var idx = document.createElement('span');
+        idx.className = 'dev-sidebar-idx';
+        idx.textContent = s.index;
+
+        btn.appendChild(name);
+        btn.appendChild(idx);
+        li.appendChild(btn);
+        sidebarListEl.appendChild(li);
+      });
+    }
+
+    function updateNameLabel() {
+      var match = screens.find(function (s) { return s.index === devCurrent; });
+      nameLabel.textContent = match ? match.id : ('s' + devCurrent);
+    }
+
+    function devGoTo(n) {
+      n = Math.max(0, Math.min(maxRealIndex, n));
+      frame.contentWindow.postMessage({ type: 'DEV_GOTO', screen: n }, '*');
+      // devCurrent/label update on the DEV_STATE echo from goTo(), but set
+      // optimistically too so the input reflects the click immediately.
+      devCurrent = n;
+      inputEl.value = n;
+      updateNameLabel();
+      updateButtons();
+      rebuildSidebar();
+    }
+
+    // Position of the current real screen index within the filtered
+    // (excluded-screens-removed) `screens` list — used so Next/Previous
+    // step through the active flow, not raw index+/-1 (which would land on
+    // an excluded screen like s17 sitting between two active ones).
+    function devCurrentPos() {
+      for (var i = 0; i < screens.length; i++) {
+        if (screens[i].index === devCurrent) return i;
+      }
+      return -1;
+    }
+
+    function devNext() {
+      var pos = devCurrentPos();
+      if (pos === -1 || pos >= screens.length - 1) return;
+      devGoTo(screens[pos + 1].index);
+    }
+    function devPrev() {
+      var pos = devCurrentPos();
+      if (pos <= 0) return;
+      devGoTo(screens[pos - 1].index);
+    }
+    function devReset() { frame.contentWindow.postMessage({ type: 'DEV_RESET' }, '*'); }
+
+    function devJump(val) {
+      var n = parseInt(val, 10);
+      if (isNaN(n)) return;
+      // Ignore jumps to a screen outside the active DEV flow (e.g. s17) —
+      // typing its real index manually must not reach it either.
+      var known = screens.some(function (s) { return s.index === n; });
+      if (!known) return;
+      devGoTo(n);
+    }
+
+    function updateButtons() {
+      var pos = devCurrentPos();
+      btnPrev.disabled = (pos <= 0);
+      btnNext.disabled = (pos === -1) || (pos >= screens.length - 1);
+    }
+
+    // RTL keyboard: Ctrl+← = forward (next), Ctrl+→ = backward (prev)
+    window.addEventListener('keydown', function (e) {
+      if (!e.ctrlKey) return;
+      if (e.key === 'ArrowLeft')  { e.preventDefault(); devNext(); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); devPrev(); }
+    });
+
+    inputEl.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') devJump(inputEl.value);
+    });
+
+    updateButtons();
+  </script>
+</body>
+</html>

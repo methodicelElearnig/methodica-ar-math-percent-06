@@ -1,0 +1,998 @@
+/* methodica-math-percent-06-06 — שאלת שיא, מועד ב' / Peak Question B (pptx
+   slides 54-59: Launch + 5 discrete screens — the opening context and 4
+   lettered sections א/ב/ג/ד). Canvas/buttons/subject tokens/SCQ/DnD/
+   progress-nav ported verbatim from methodica-math-percent-06-05/
+   styles.css so this component matches the unit's established visual/
+   behavioral language. .lp-section/.lp-page (originally built as scroll-
+   container "pages", ported/generalized from 06-01's Learning Phase +
+   06-03's s3435/s3839 generalization of it) now just shell each screen's
+   own content. Also: the floating data card/table (no prior "sticky"
+   precedent exists anywhere in this project — built to match the
+   established floating-card visual language, i.e. .dnd-reference; kept as
+   position:sticky, which degrades harmlessly to its normal in-flow
+   position with no scrolling ancestor), and the MultipleChoiceQuestion
+   checkbox indicator (reuses 06-01's .hook1-checkbox verbatim). */
+
+/* Shared rules (tokens, reset, canvas, screen shell, buttons, staged reveal, SCQ options, zoom, hint overlay) live in ../unit-css/base.css and ../unit-css/questions.css, linked before this file. */
+
+/* ============================================================
+   CONTINUE / BACK / HINT BUTTONS — ported verbatim
+   ============================================================ */
+
+.btn-back[hidden] { display: none; }
+
+/* Static/in-flow, NOT position:absolute — this class is used exclusively by
+   the 4 question screens (s56-s59), each an .lp-page sized to its content
+   (not a fixed height), so anchoring to "bottom" of that box left the
+   actions row stranded far below short content, looking detached/
+   "floating" instead of sitting right under it. In-flow placement right
+   after the answers/feedback keeps it anchored to the actual content in
+   every screen, per explicit QA fix. No own margin-top: this row is a
+   flex child of .scq-question-col--flow, which already applies gap:20px
+   between every child — an extra margin-top here was stacking on top of
+   that gap and doubling the space before this row to 40px (found during
+   the spacing audit for these question screens). */
+.scq-left-actions {
+  position: static;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+/* s56 — per QA fix, hint/check sit in the bottom bar (bottom-left), matching
+   the template placement used in 06-02..06-05, instead of in-flow. */
+.scq-left-actions--bar {
+  position: absolute;
+  bottom: 16px;
+  left: 32px;
+  z-index: 10;
+}
+.scq-left-actions[hidden] { display: none; }
+
+/* ============================================================
+   SCREEN 0 (s54) — Launch. Reuses .s13-content/.s13-text-group/
+   .s13-character verbatim (06-01/06-02/06-04/06-05).
+   ============================================================ */
+.s13-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 760px;
+  max-width: calc(100% - 100px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+
+.s13-character {
+  position: absolute;
+  bottom: 74px;
+  left: 50%;
+  /* margin-left (not transform:translateX(-50%)) — this element also
+     carries data-reveal-on-ready, whose .is-revealed animation drives
+     `transform` itself (see 06-01/motion.css's documented transform-
+     conflict note) and would silently wipe out a transform-based center
+     once revealed. Same fix as 06-01's s13/06-02's s27. Based on `width`
+     only, so unaffected by this screen's portrait-video auto `height`. */
+  margin-left: -130px;
+  width: 260px;
+  height: auto;
+  object-fit: contain;
+}
+
+.s54-content {
+  width: 780px;
+  max-width: calc(100% - 100px);
+  gap: 28px;
+}
+
+.s54-line {
+  font-size: 24px;      /* Body/B-3 — same non-emphasized narrative size
+                            established for TransitionScreen body text */
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--text-body);
+  text-align: center;
+  margin: 0;
+}
+
+.s54-emphasis {
+  font-size: 40px;      /* Heading/H-4 — this unit's normal TransitionScreen
+                            headline size (06-04's s42, 06-05's s48) */
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--subject-800);
+  text-align: center;
+  margin: 0;
+}
+
+.s54-character-crop {
+  /* Overrides .s13-character's absolute bottom-pin — see 06-05's
+     .s48-character-crop for the full rationale: character_peakB.mp4's raw
+     frame has a real blank white margin above/below the character (~11.9%
+     top / ~12.3% bottom of its 3840px height, measured via a pixel-bbox
+     scan), and a <video>'s box paints opaque there even though the frame
+     content is blank — a plain negative margin on the video (tried first)
+     just moved that opaque box up until it visually painted over the last
+     line of text. Cropping via a fixed-size `overflow:hidden` wrapper
+     sized to just the visible portion of the frame, with the video shifted
+     up inside it by the blank top-margin amount, removes the dead space
+     from this flex child's box entirely so it can never paint over or
+     overlap the text above it. */
+  position: relative;
+  overflow: hidden;
+  width: 185px;
+  height: 249px; /* 329px full render at this width * (1 - 11.9% - 12.3%)
+                    visible frac — width trimmed from the shared 220px (to
+                    the same 185px as 06-05's s48) so the visible (cropped)
+                    character clears the Continue button lower on screen */
+}
+
+.s54-character {
+  position: absolute;
+  top: -39px; /* -(11.9% of 329px full render) so the crop window opens
+                 exactly where the character's own head starts */
+  left: 0;
+  margin-left: 0;
+  width: 185px;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Plain narrative screen (s55, opening text) — same two-column shell as
+   06-01's Learning Phase sections. Height sizes to content + padding, same
+   as every other screen here. Base padding below is always overridden by
+   .lp-section--opening (the only variant in use) — kept as a sane fallback
+   shell default. */
+.lp-section {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  direction: rtl;
+  align-items: center;
+  justify-content: center;
+  gap: 56px;
+  padding: 48px 80px;
+}
+/* Opening screen (s55) — text+data stacked as ONE right-side column (same
+   width, so their edges align and they read as one block, wide enough for
+   the paragraph's 2 authored sentences to each render as a single line),
+   image separately on the left, vertically centered against that column.
+   Top padding matches .lp-page's own 112px, for the same clearance from
+   the fixed progress nav. */
+.lp-section--opening {
+  padding: 144px 56px 32px;
+}
+.lp-opening-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  width: 100%;
+}
+/* 720px — enough for the paragraph's widest authored line (~656px measured)
+   plus a safety margin, not the 800px this used to be. Narrowed per
+   explicit QA fix so the image column could grow without the row
+   overflowing the 1280px canvas (800+40+380 already exceeded it). */
+.lp-opening-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 720px;
+  flex-shrink: 0;
+}
+.lp-text-col { width: 100%; direction: rtl; }
+.lp-img-col { flex-shrink: 0; width: 400px; display: flex; justify-content: center; }
+.lp-img-frame { width: 400px; }
+.lp-img-frame img {
+  width: 100%;
+  height: auto;
+  border-radius: 16px;
+  object-fit: contain;
+  display: block;
+}
+.lp-body {
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--text-body);
+}
+
+.pk-data-title { font-size: 24px; font-weight: 700; color: var(--subject-800); margin: 0 0 12px; }
+.pk-data-line { font-size: 24px; font-weight: 400; color: var(--text-body); line-height: 1.6; margin: 0 0 8px; }
+.pk-data-line:last-child { margin-bottom: 0; }
+
+/* Question screen (s56-s59) — internal layout comes from .scq-flow/.dnd-*
+   below, not from this shell itself; height sizes to content + padding. */
+.lp-page {
+  box-sizing: border-box;
+  direction: rtl;
+  padding: 112px 56px 40px;
+  position: relative;
+}
+
+/* ============================================================
+   SingleChoiceQuestion / MultipleChoiceQuestion — shared scq- prefixed
+   markup, ported verbatim from 06-05 (pill/radio/correct/wrong states,
+   image column, gvi-fraction, hint modal, image zoom). Only the WRAPPER
+   layout differs here (.scq-flow, normal flow, no fixed .scq-wrap
+   positioning) — every visual token (border/radius/color/spacing) on
+   .scq-opt/.scq-radio themselves is untouched.
+   ============================================================ */
+.scq-flow {
+  display: flex;
+  flex-direction: row; /* RTL: 1st DOM child renders rightmost */
+  gap: 40px;
+  align-items: flex-start;
+}
+.scq-question-col--flow {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.pk-instruction { margin: 0; }
+
+/* s59 only — .scq-qtext sits directly under .lp-page here (see HTML
+   comment), outside .scq-question-col--flow's own gap:20px between
+   children, so it needs that same 20px carried over explicitly. Scoped via
+   ".lp-page > .scq-qtext" (not "#s59 > .scq-qtext") since .scq-qtext is a
+   grandchild of #s59, not a direct child — only s59's own .lp-page has a
+   .scq-qtext direct child (s56/s57's own qtext nests inside .scq-flow). */
+.lp-page > .scq-qtext { margin-bottom: 20px; }
+
+/* Section א' (s56, MultipleChoiceQuestion) — its 4 statements are short, so
+   left at the default full-width stretch they read as oversized pills
+   spanning almost the entire column. Shrink-wrap to the widest option's own
+   content instead (align-self overrides the column's default stretch;
+   every .scq-opt still shares that same computed width via its own
+   width:100%). Scoped to s56 only — s59's options are full sentences that
+   NEED the full column width to wrap sanely, so this is not made a shared
+   .scq-answers rule. */
+#s56 .scq-answers { align-self: flex-start; }
+
+/* Checkbox indicator (MultipleChoiceQuestion, s56) — reused verbatim
+   from 06-01's .hook1-checkbox (Figma-verified, node 525:9102), on the
+   same .scq-opt pill every other question in this unit already uses. */
+.scq-opt .hook1-checkbox {
+  order: -1;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
+  border: 2px solid var(--subject-500);
+  background: #ffffff;
+  position: relative;
+}
+.scq-opt.selected .hook1-checkbox {
+  background: var(--subject-500);
+  border-color: var(--subject-500);
+}
+.scq-opt.selected .hook1-checkbox::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 10px;
+  height: 5px;
+  border-left: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.scq-opt.correct .scq-radio {
+  border: none;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgdmlld0JveD0iMCAwIDIyIDIyIj48Y2lyY2xlIGN4PSIxMSIgY3k9IjExIiByPSIxMSIgZmlsbD0iIzYwOWUxMiIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDQuNjM2LDYuNDA2KSIgZD0iTTQuMTA5NTUgOS4xODc2M0MzLjc0ODI4IDkuMTg3NzggMy40MDE4IDkuMDQ0MTggMy4xNDY1NSA4Ljc4ODUxTDAuMjM1MDkgNS44NzgxMkMtMC4wNzgxODU3IDUuNTY0NzUgLTAuMDc4MTg1NyA1LjA1Njc3IDAuMjM1MDkgNC43NDMzOUMwLjU0ODQ2NSA0LjQzMDEyIDEuMDU2NDUgNC40MzAxMiAxLjM2OTgyIDQuNzQzMzlMNC4xMDk1NSA3LjQ4MzEyTDExLjM1NzcgMC4yMzQ5NTZDMTEuNjcxMSAtMC4wNzgzMTg4IDEyLjE3OTEgLTAuMDc4MzE4OCAxMi40OTI1IDAuMjM0OTU2QzEyLjgwNTcgMC41NDgzMzIgMTIuODA1NyAxLjA1NjMxIDEyLjQ5MjUgMS4zNjk2OUw1LjA3MjU1IDguNzg4NTFDNC44MTczMSA5LjA0NDE4IDQuNDcwODMgOS4xODc3OCA0LjEwOTU1IDkuMTg3NjNaIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPgo=");
+  background-size: 22px 22px;
+}
+.scq-opt.correct .hook1-checkbox {
+  border: none;
+  background-color: #609e12;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgdmlld0JveD0iMCAwIDIyIDIyIj48cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSg0LjYzNiw2LjQwNikiIGQ9Ik00LjEwOTU1IDkuMTg3NjNDMy43NDgyOCA5LjE4Nzc4IDMuNDAxOCA5LjA0NDE4IDMuMTQ2NTUgOC43ODg1MUwwLjIzNTA5IDUuODc4MTJDLTAuMDc4MTg1NyA1LjU2NDc1IC0wLjA3ODE4NTcgNS4wNTY3NyAwLjIzNTA5IDQuNzQzMzlDMC41NDg0NjUgNC40MzAxMiAxLjA1NjQ1IDQuNDMwMTIgMS4zNjk4MiA0Ljc0MzM5TDQuMTA5NTUgNy40ODMxMkwxMS4zNTc3IDAuMjM0OTU2QzExLjY3MTEgLTAuMDc4MzE4OCAxMi4xNzkxIC0wLjA3ODMxODggMTIuNDkyNSAwLjIzNDk1NkMxMi44MDU3IDAuNTQ4MzMyIDEyLjgwNTcgMS4wNTYzMSAxMi40OTI1IDEuMzY5NjlMNS4wNzI1NSA4Ljc4ODUxQzQuODE3MzEgOS4wNDQxOCA0LjQ3MDgzIDkuMTg3NzggNC4xMDk1NSA5LjE4NzYzWiIgZmlsbD0id2hpdGUiLz48L3N2Zz4K");
+  background-size: 14px 14px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.scq-opt.wrong .scq-radio {
+  border: none;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgdmlld0JveD0iMCAwIDIyIDIyIj48Y2lyY2xlIGN4PSIxMSIgY3k9IjExIiByPSIxMSIgZmlsbD0iI2IyMDAxMCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDYsNikiIGQ9Ik05Ljc2NzM2IDAuMjMyNjM3QzkuNjE4MzYgMC4wODM2Nzk2IDkuNDE2MyAwIDkuMjA1NjEgMEM4Ljk5NDkyIDAgOC43OTI4NiAwLjA4MzY3OTYgOC42NDM4NiAwLjIzMjYzN0w1IDMuODc2NDlMMS4zNTYxNSAwLjIzMjYzN0MxLjIwNzE0IDAuMDgzNjc5NiAxLjAwNTA4IDAgMC43OTQzOTEgMEMwLjU4MzcwMiAwIDAuMzgxNjM5IDAuMDgzNjc5NiAwLjIzMjYzNyAwLjIzMjYzN0MwLjA4MzY3OTYgMC4zODE2MzkgMCAwLjU4MzcwMiAwIDAuNzk0MzkxQzAgMS4wMDUwOCAwLjA4MzY3OTYgMS4yMDcxNCAwLjIzMjYzNyAxLjM1NjE1TDMuODc2NDkgNUwwLjIzMjYzNyA4LjY0Mzg2QzAuMDgzNjc5NiA4Ljc5Mjg2IDAgOC45OTQ5MiAwIDkuMjA1NjFDMCA5LjQxNjMgMC4wODM2Nzk2IDkuNjE4MzYgMC4yMzI2MzcgOS43NjczNkMwLjM4MTYzOSA5LjkxNjMyIDAuNTgzNzAyIDEwIDAuNzk0MzkxIDEwQzEuMDA1MDggMTAgMS4yMDcxNCA5LjkxNjMyIDEuMzU2MTUgOS43NjczNkw1IDYuMTIzNTFMOC42NDM4NiA5Ljc2NzM2QzguNzkyODYgOS45MTYzMiA4Ljk5NDkyIDEwIDkuMjA1NjEgMTBDOS40MTYzIDEwIDkuNjE4MzYgOS45MTYzMiA5Ljc2NzM2IDkuNzY3MzZDOS45MTYzMiA5LjYxODM2IDEwIDkuNDE2MyAxMCA5LjIwNTYxQzEwIDguOTk0OTIgOS45MTYzMiA4Ljc5Mjg2IDkuNzY3MzYgOC42NDM4Nkw2LjEyMzUxIDVMOS43NjczNiAxLjM1NjE1QzkuOTE2MzIgMS4yMDcxNCAxMCAxLjAwNTA4IDEwIDAuNzk0MzkxQzEwIDAuNTgzNzAyIDkuOTE2MzIgMC4zODE2MzkgOS43NjczNiAwLjIzMjYzN1oiIGZpbGw9IndoaXRlIi8+PC9zdmc+Cg==");
+  background-size: 22px 22px;
+}
+.scq-opt.wrong .hook1-checkbox {
+  border: none;
+  background-color: #b20010;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgdmlld0JveD0iMCAwIDIyIDIyIj48cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSg2LDYpIiBkPSJNOS43NjczNiAwLjIzMjYzN0M5LjYxODM2IDAuMDgzNjc5NiA5LjQxNjMgMCA5LjIwNTYxIDBDOC45OTQ5MiAwIDguNzkyODYgMC4wODM2Nzk2IDguNjQzODYgMC4yMzI2MzdMNSAzLjg3NjQ5TDEuMzU2MTUgMC4yMzI2MzdDMS4yMDcxNCAwLjA4MzY3OTYgMS4wMDUwOCAwIDAuNzk0MzkxIDBDMC41ODM3MDIgMCAwLjM4MTYzOSAwLjA4MzY3OTYgMC4yMzI2MzcgMC4yMzI2MzdDMC4wODM2Nzk2IDAuMzgxNjM5IDAgMC41ODM3MDIgMCAwLjc5NDM5MUMwIDEuMDA1MDggMC4wODM2Nzk2IDEuMjA3MTQgMC4yMzI2MzcgMS4zNTYxNUwzLjg3NjQ5IDVMMC4yMzI2MzcgOC42NDM4NkMwLjA4MzY3OTYgOC43OTI4NiAwIDguOTk0OTIgMCA5LjIwNTYxQzAgOS40MTYzIDAuMDgzNjc5NiA5LjYxODM2IDAuMjMyNjM3IDkuNzY3MzZDMC4zODE2MzkgOS45MTYzMiAwLjU4MzcwMiAxMCAwLjc5NDM5MSAxMEMxLjAwNTA4IDEwIDEuMjA3MTQgOS45MTYzMiAxLjM1NjE1IDkuNzY3MzZMNSA2LjEyMzUxTDguNjQzODYgOS43NjczNkM4Ljc5Mjg2IDkuOTE2MzIgOC45OTQ5MiAxMCA5LjIwNTYxIDEwQzkuNDE2MyAxMCA5LjYxODM2IDkuOTE2MzIgOS43NjczNiA5Ljc2NzM2QzkuOTE2MzIgOS42MTgzNiAxMCA5LjQxNjMgMTAgOS4yMDU2MUMxMCA4Ljk5NDkyIDkuOTE2MzIgOC43OTI4NiA5Ljc2NzM2IDguNjQzODZMNi4xMjM1MSA1TDkuNzY3MzYgMS4zNTYxNUM5LjkxNjMyIDEuMjA3MTQgMTAgMS4wMDUwOCAxMCAwLjc5NDM5MUMxMCAwLjU4MzcwMiA5LjkxNjMyIDAuMzgxNjM5IDkuNzY3MzYgMC4yMzI2MzdaIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPgo=");
+  background-size: 14px 14px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* ---- Content image (flow variant) — same 3:2 photo ratio as 06-05's
+   .scq-img, just not position:absolute (this lives in normal flow inside
+   .lp-page, not a fixed-height .scq-wrap). ---- */
+.scq-img {
+  position: relative;
+}
+.pk-scq-img {
+  flex: 0 0 380px;
+  width: 380px;
+  aspect-ratio: 3 / 2;
+  height: auto;
+  align-self: flex-start;
+}
+
+/* Section ב' (s57) — family photo (widened) stacked ABOVE a narrower data
+   card, centered under it, as one visual column — instead of 3 separate
+   row items that left the data card floating on its own at the far side
+   of the screen. The stack itself (not the card alone) carries the sticky
+   behavior, so image+data move/stop together. */
+.pk-visual-stack {
+  /* QA fix: widened 480→610px to fit the data card at the regular 24px
+     body size (widest statement ≈ 563px + card padding). */
+  flex: 0 0 610px;
+  width: 610px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  align-self: flex-start;
+  position: sticky;
+  top: 24px;
+}
+/* Image keeps its own original fixed size (not stretched to the stack's
+   width — QA fix: widening the data card below must not inflate the photo)
+   and is explicitly centered — its base .pk-scq-img align-self:flex-start
+   is a ROW-context cross-axis rule that would otherwise hug this COLUMN
+   stack's inline-start (right, under RTL) edge instead of centering. The
+   data card is as wide as the stack itself (480px — measured against each
+   of the 3 published-data statements' actual unwrapped text width at this
+   card's 18px body size, +buffer), so image and card share the same
+   centered horizontal footprint and read as one group.
+   QA fix: the selector below is ".pk-data-card.pk-data-card--narrow" (not
+   bare ".pk-data-card--narrow") so its specificity beats the later, wider
+   ".pk-data-card" base-width rule regardless of source order — previously
+   the base rule's later position in this file silently won the cascade and
+   the card rendered at 300px instead of this intended width, which was the
+   actual cause of the row-wrapping QA report (not a sizing miscalculation). */
+.pk-visual-stack > .pk-scq-img { flex: 0 0 auto; width: 380px; align-self: center; }
+.pk-data-card.pk-data-card--narrow { flex: 0 0 auto; width: fit-content; align-self: center; }
+/* User fix: image and data card share one center line — the stack
+   shrink-wraps to the wider of the two (the card) and both center in it. */
+#s57 .pk-visual-stack { flex: 0 0 auto; width: auto; }
+/* Hard guarantee (not just a sized buffer) that each statement renders as
+   one line — nowrap forces it, so any future copy edit that no longer fits
+   overflows visibly (catchable) instead of silently re-wrapping. QA fix:
+   font-size bumped from 17px to the max size that still keeps all 3
+   statements on one line at this card's fixed 480px width (measured via
+   scrollWidth vs clientWidth against the widest statement — the fraction
+   glyph's own font-size is untouched, only the surrounding sentence). */
+/* QA fix: typography raised to the unit's regular body size (24px, same as
+   the s55 opening card) — the card now shrink-wraps its one-line statements
+   instead of a fixed 480px width. */
+.pk-data-card.pk-data-card--narrow .pk-data-line { white-space: nowrap; font-size: 24px; line-height: 1.6; }
+.pk-data-card.pk-data-card--narrow .pk-data-title { font-size: 24px; margin-bottom: 12px; }
+.pk-data-card.pk-data-card--narrow .q1-inline-fraction.gvi-fraction { font-size: 20px; }
+
+/* Section ב' (s57, SingleChoiceQuestion) — its 3 options ("שכבת ז'/ח'/ט'")
+   are short labels that would stretch across the whole question column
+   (which grew wider once the data card moved into .pk-visual-stack above)
+   if left at the default full-width stretch. A pure content shrink-wrap
+   (like #s56 above) made them TOO narrow relative to the heading above —
+   so instead cap at a fixed moderate width rather than the bare option
+   text width. */
+#s57 .scq-answers { max-width: 460px; }
+.scq-img-clip {
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #F4F4F6;
+  border: 1px solid #E5E5E5;
+}
+.scq-img-clip img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* ---- Image zoom button (44px circle) ---- */
+.img-zoom-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 5;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid var(--subject-500);
+  color: var(--subject-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.img-zoom-panel {
+  position: relative;
+  max-width: calc(100% - 160px);
+  max-height: calc(100% - 80px);
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.img-zoom-panel img,
+.img-zoom-panel .scq-img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 1100px;
+  max-height: 620px;
+  object-fit: contain;
+  border: none;
+}
+
+/* ============================================================
+   FEEDBACK POPUP — one draggable, canvas-clamped checkpoint per graded
+   screen (s56-s59), same pattern methodica-math-percent-06-01's Learning
+   Phase uses for its own embedded checkpoints (#lp-popup/#lpv-popup):
+   position:absolute relative to its own screen, bounded by
+   clampPopupToCanvas (script.js) the same way every other draggable
+   feedback popup in this project is — never leaves the 1280x710 canvas,
+   never covers the 74px bottom bar. Each popup lives inside its own
+   screen (index.html), so goTo()'s per-navigation `hidden=true` sweep
+   already handles show/hide — no scroll-scoping needed.
+   ============================================================ */
+.pk-popup {
+  position: absolute;
+  width: auto;
+  max-width: 360px;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
+  background: #ffffff;
+  direction: rtl;
+  cursor: move;
+  z-index: 20;
+}
+/* Border/background per Figma popup-feedback template: SAME neutral gray
+   border in both states (no colored 2px correct/wrong border) — the tint
+   alone (background) carries the correct/wrong signal. */
+.pk-popup.is-correct { background: var(--fb-bg-correct); border: 0.3px solid var(--fb-border); }
+.pk-popup.is-wrong { background: var(--fb-bg-incorrect); border: 0.3px solid var(--fb-border); }
+.pk-popup[hidden] { display: none; }
+
+/* s57's own feedback is denser (3-row equation comparison) than the other
+   3 popups — QA fix: at the shared 360px max-width its explanatory sentence
+   stranded its last word ("יותר.") alone on a 3rd line; 400px lets it
+   re-wrap onto 2 lines instead, verified against the actual rendered text
+   rather than hand-inserting a line break. */
+#s57-popup { max-width: 440px; }
+#s57-popup .scq-fb-body p { text-wrap: nowrap; }  /* authored 2-line break */
+
+/* s58's feedback body is 3 authored <br>-paired lines — QA fix: at the
+   shared 360px width the 2nd authored line of each pair still overflowed
+   its own line width and wrapped again, breaking the intended 2-line-per-
+   paragraph grouping into 3 uneven lines. 480px is the measured minimum
+   (content box ≈440px) for every authored line's own natural width
+   (widest: "ולכן מספר התלמידים יהיה פי 2 מהאחוז שאותו הוא מייצג." ≈412px)
+   to render as one line, restoring the intended paragraph shape. */
+#s58-popup { max-width: 480px; }
+
+/* s59's final feedback is one long unbroken sentence — QA fix: at the
+   shared 360px width it wrapped into several short, unevenly-broken lines
+   (a narrow tall column) instead of a balanced paragraph. 460px (content
+   box ≈420px) was measured to bring it to 3 more evenly-balanced lines. */
+#s59-popup { max-width: 460px; }
+
+.scq-fb { display: none; padding: 24px; text-align: right; }
+.scq-fb.active { display: block; }
+
+/* justify-content:flex-start (not flex-end) — QA fix: .pk-popup sets
+   direction:rtl, and under rtl a row's flex-end edge is the LEFT edge (the
+   axis reverses with the writing direction), so flex-end here was pushing
+   the title/icon group to the popup's left — opposite of the intended
+   right alignment. flex-start is the row's RTL start edge, i.e. the right,
+   matching .scq-fb's own text-align:right and every other feedback popup
+   in this screen. */
+.scq-fb-head {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+}
+.scq-fb-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  /* Orphan-word / line-balance pass (unit-wide feedback typography QA):
+     redistributes this block's own wrapped lines evenly so a long sentence
+     doesn't strand a single trailing word alone on its last line. Alignment
+     stays right/RTL — balance only changes where the soft line-breaks fall.
+     No-op in browsers without support (falls back to normal wrapping). */
+  text-wrap: balance;
+  /* Neutral dark per the Figma template (title text stays neutral on the
+     tinted card; the pink/green background alone carries the correct/
+     wrong signal) — was previously colored via --correct-text/
+     --incorrect-text, which the source-of-truth template doesn't do.
+     --fb-text (#222222) is the popup-scoped exact-match token; deliberately
+     NOT tinted by correct/wrong state — that part was already correct, only
+     the exact neutral hex changed here. */
+  color: var(--fb-text);
+}
+
+.scq-fb-body {
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--fb-text);
+  margin-top: 10px;
+}
+.scq-fb-body p { margin: 0 0 8px; text-wrap: balance; }   /* orphan/line-balance QA pass — see .scq-fb-title */
+.scq-fb-body p:last-child { margin-bottom: 0; }
+
+.gvi-eq-result { font-size: 22px; font-weight: 400; /* script: equation results regular */ color: var(--text-body); }
+
+/* s57 feedback only (.gvi-eq-sign/.gvi-fraction render nowhere else) —
+   QA fix: every token in the equation rows shared the same font-weight:700,
+   reading as one undifferentiated bold block. Scoped under .scq-fb-body
+   (not the base rules above) so this doesn't touch the data-card's own
+   bold/purple inline fractions, which share the same .gvi-fraction class.
+   All parts, incl. .gvi-eq-result (e.g. "80%"), are regular per the script —
+   the rest drops to regular weight for hierarchy.
+   QA fix: also drop font-size from the base 22px to the surrounding
+   .scq-fb-body's own 20px — the equation rows previously read as an
+   oversized graphic bolted onto the paragraph above instead of part of the
+   same feedback text. Script pass: .gvi-eq-result is now regular too (script math is not bold); it
+   is capped at the same 20px, not larger. */
+.scq-fb-body .gvi-eq-sign,
+.scq-fb-body .gvi-fraction,
+.scq-fb-body .gvi-eq-result { font-size: 20px; }
+.scq-fb-body .gvi-eq-sign,
+.scq-fb-body .gvi-fraction { font-weight: 400; }
+/* Script: the answer (final % of each equation row) is bold. */
+.scq-fb-body .gvi-eq-result { font-weight: 700; }
+
+/* direction:rtl (not ltr) — QA fix: the row's DOM order is label → fraction
+   → "=" → fraction → "=" → result (e.g. "שכבת ז׳:" ... "80%"), and this
+   needs to read right-to-left like the rest of the popup: label at the
+   RIGHT end, result at the LEFT end. A prior fix forced direction:ltr,
+   which rendered the DOM order left-to-right instead — label on the left,
+   result on the right, backwards. Under RTL a flex row's start edge (first
+   DOM child) is the right edge, so plain direction:rtl already lays the
+   tokens out correctly with no reordering. justify-content:flex-start (not
+   flex-end) — under rtl, flex-end is the row's LEFT edge (the axis reverses
+   with the writing direction, same as .scq-fb-head above), so flex-start is
+   what packs the row against the popup's right-aligned content. */
+.gvi-feedback-eq {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  direction: rtl;
+  margin: 10px 0;
+}
+
+/* Inline fraction variant — mid-sentence fractions, same num/den tokens,
+   inline-flex instead of a standalone row. Ported verbatim from 06-05. */
+.q1-inline-fraction {
+  display: inline-flex;
+  vertical-align: middle;
+  margin: 0 4px;
+}
+.q1-inline-fraction.gvi-fraction { font-size: 20px; font-weight: 400; /* script: inline data fractions regular */ color: var(--subject-800); }
+.q1-inline-fraction .num,
+.q1-inline-fraction .den { padding: 0 4px; line-height: 1.15; }
+.q1-inline-fraction .num { border-bottom-color: var(--subject-800); }
+
+/* Inline percent value inside the published-data lines — same bold/purple
+   emphasis as the sibling inline fractions (4/5, 7/10) so all 3 reported
+   values read as equally highlighted, per explicit QA fix. */
+.pk-percent-highlight { font-weight: 400; /* script: regular */ color: var(--subject-800); }
+
+.scq-hint-panel {
+  width: 560px;
+  max-height: 520px;
+  overflow-y: auto;
+  background: var(--subject-500);
+  border-radius: 48px;
+  padding: 40px 44px;
+  color: #ffffff;
+  text-align: center;
+}
+.scq-hint-body p { margin: 0 0 10px; }
+.scq-hint-body p:last-child { margin-bottom: 0; }
+
+/* ============================================================
+   FLOATING DATA CARD — scoped per-screen (s56/s57). No "position: sticky"
+   precedent exists anywhere in this project (checked across all
+   methodica-math-percent-06-0* stylesheets) — built here to match the
+   established floating-card visual language (.dnd-reference's white card /
+   purple heading / bordered rows) rather than inventing a new one.
+   `position: sticky` degrades harmlessly to its normal in-flow position
+   with no scrolling ancestor, which is the case here — kept rather than
+   reverted to plain `relative` so a future reintroduction of scrolling
+   content elsewhere in this screen (e.g. a genuinely tall interaction)
+   would make it stick again with no extra work.
+   ============================================================ */
+.pk-data-card {
+  flex: 0 0 300px;
+  width: 300px;
+  align-self: flex-start;
+  padding: 18px 20px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid var(--subject-200);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+.pk-data-card--sticky {
+  position: sticky;
+  top: 24px;
+}
+.pk-data-card .pk-data-title { font-size: 18px; margin-bottom: 10px; }
+.pk-data-card .pk-data-line { font-size: 17px; line-height: 1.5; margin-bottom: 8px; }
+.pk-data-card .q1-inline-fraction.gvi-fraction { font-size: 16px; }
+/* QA fix: fractions + percents inside the published-data card are bold
+   (s55/s56/s57). */
+.pk-data-card .q1-inline-fraction.gvi-fraction,
+.pk-data-card .pk-percent-highlight { font-weight: 700; }
+
+/* s55 opening variant — same card chrome, plain in-flow (not sticky), full
+   width of .lp-opening-col so it lines up with the paragraph above it.
+   Typography matches .lp-body's 24px (the "text above") instead of the
+   smaller per-question aside sizing. */
+.pk-data-card--opening {
+  flex: 0 0 auto;
+  width: fit-content;
+  max-width: 100%;
+  align-self: flex-start;
+}
+.pk-data-card--opening .pk-data-title { font-size: 24px; margin-bottom: 12px; }
+.pk-data-card--opening .pk-data-line { font-size: 24px; line-height: 1.6; margin-bottom: 8px; }
+.pk-data-card--opening .q1-inline-fraction.gvi-fraction { font-size: 20px; }
+
+/* Section א' (s56) variant — enlarged reference card so the published data
+   reads as a significant reference, not a small aside next to the question.
+   QA fix: widened 420→580px so each statement fits on one line (widest,
+   the 4/5 line, measures ~495px at 21px + 60px padding); the question
+   column keeps ~548px, still wider than its 495px option rows. */
+.pk-data-card--lg {
+  flex: 0 0 580px;
+  width: 580px;
+  /* QA fix: drop the card so its top aligns with the first option row
+     (instruction line height + its bottom margin) instead of the heading. */
+  margin-top: 54px;
+  padding: 28px 30px;
+}
+.pk-data-card--lg .pk-data-title { font-size: 26px; margin-bottom: 16px; }
+.pk-data-card--lg .pk-data-line { font-size: 21px; line-height: 1.6; margin-bottom: 12px; }
+.pk-data-card--lg .q1-inline-fraction.gvi-fraction { font-size: 19px; }
+
+/* ============================================================
+   DRAG-AND-DROP (headcount fill-in, s58) — ported verbatim from 06-05's
+   s51 engine. Only the row shape gains a 3rd "suffix" label cell
+   ("...תלמידים בתנועות נוער") since this domain's sentence continues
+   after the drop target, unlike s51's company-name slots.
+   ============================================================ */
+.dnd-instruction {
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--text-body);
+  line-height: 1.4;
+  text-align: right;
+  /* Trimmed from 20px — this screen no longer scrolls, so its total content
+     height must fit inside the 710px canvas above the fixed bottom bar;
+     see the DRAG-AND-DROP FIT comment below .dnd-chip for the full
+     rationale behind every spacing trim in this section. */
+  margin: 0 0 10px;
+}
+
+.dnd-row-layout {
+  display: flex;
+  flex-direction: row; /* RTL: 1st DOM child (ranking table) renders rightmost */
+  gap: 32px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 10px; /* trimmed from 20px — see DRAG-AND-DROP FIT comment */
+}
+
+/* QA fix: the interactive table's own box used to start flush with the row
+   top, while the reference card's box started lower (pushed down by its
+   own "תזכורת:" title + margin above it) — the two table BOXES were
+   misaligned even though the row itself used align-items:flex-start. Fix
+   is structural, not a hardcoded offset: this column gets its own
+   "תזכורת:" title clone, visually hidden but still taking up layout space
+   (visibility:hidden, not display:none), so both columns spend the same
+   title-height before their actual table box begins and the two boxes'
+   tops land on the same Y regardless of either title's real font metrics. */
+.dnd-table-col {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+.dnd-table-col > .dnd-reference-title { visibility: hidden; }
+/* QA request: raise the fill-in table slightly — its top now lines up with
+   the "תזכורת:" title instead of the reference table box below it. */
+.dnd-table-col > .dnd-reference-title { display: none; }
+
+/* Enlarged significantly per QA fix — this reference needs to read as a
+   meaningful reference for the whole section, not a small aside next to
+   the drag-and-drop table. Stays wide (more columns-worth of width, not
+   taller/narrower) per explicit instruction. */
+.dnd-reference { flex: 0 0 480px; width: 480px; }
+/* margin trimmed from 12px — see DRAG-AND-DROP FIT comment below
+   .dnd-chip. Shared by .dnd-table-col's own hidden title placeholder
+   above, so both columns' table boxes still land on the same Y. */
+.dnd-reference-title { font-size: 26px; font-weight: 700; color: var(--subject-800); margin: 0 0 6px; }
+.dnd-ref-table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--subject-200);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.dnd-ref-row { display: flex; flex-direction: row; }
+.dnd-ref-cell {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 42px; /* trimmed from 64px — see DRAG-AND-DROP FIT comment below .dnd-chip; min-height (not height) so the stacked 4/5 fraction row can grow at the unified 22px */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 16px;
+  border-bottom: 1px solid var(--subject-200);
+  border-left: 1px solid var(--subject-200);
+  font-size: 22px;
+  color: var(--text-body);
+  background: #ffffff;
+  text-align: center;
+}
+.dnd-ref-row:last-child .dnd-ref-cell { border-bottom: none; }
+.dnd-ref-row .dnd-ref-cell:last-child { border-left: none; }
+.dnd-ref-cell--head {
+  background: var(--subject-800);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 22px;
+  border-bottom-color: var(--subject-800);
+  border-left-color: var(--subject-800);
+}
+.dnd-ref-fraction { font-size: 22px; font-weight: 400; }
+/* QA request: all reminder data rows share the 4/5 fraction row's height,
+   instead of only that one row growing. */
+.dnd-ref-row:not(.dnd-ref-row--head) .dnd-ref-cell { height: 68px; }
+.dnd-ref-fraction .num, .dnd-ref-fraction .den { padding: 0 6px; }
+
+.dnd-table {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--subject-200);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.dnd-row { display: flex; flex-direction: row; } /* RTL: 1st child renders rightmost */
+.dnd-row:not(:last-child) { border-bottom: 1px solid var(--subject-200); }
+
+.dnd-cell { display: flex; align-items: stretch; }
+.dnd-cell--rank {
+  flex: 0 0 150px;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  font-size: 22px;
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--subject-800);
+  border-left: 1px solid var(--subject-800);
+  text-align: center;
+}
+.dnd-cell--suffix {
+  background: #ffffff;
+  color: var(--text-body);
+  font-weight: 400;
+  font-size: 22px;
+  border-left: none;
+  border-right: 1px solid var(--subject-200);
+}
+.dnd-cell--drop {
+  flex: 0 0 190px;
+  padding: 6px 20px; /* trimmed from 14px — see DRAG-AND-DROP FIT comment below .dnd-chip */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Sized to match .dnd-chip's own footprint so the empty drop target reads
+   as the outline of the exact chip that will be dragged into it. */
+.dnd-slot {
+  width: 110px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--subject-350);
+  border-radius: 10px;
+  background: #FBFAFF;
+  font-family: Calibri, 'Segoe UI', Tahoma, sans-serif;
+  cursor: pointer;
+  transition: none;
+}
+.dnd-slot:hover:not(:disabled) { border-color: var(--subject-500); background: var(--subject-100); }
+.dnd-slot:focus-visible { outline: 3px solid var(--subject-500); outline-offset: 2px; }
+.dnd-slot.is-dragover { border-color: var(--subject-700); background: var(--subject-100); }
+
+.dnd-slot-placeholder { font-size: 22px; color: #8B8B8B; }
+.dnd-slot-label { font-size: 22px; font-weight: 700; color: var(--subject-800); }
+.dnd-slot.is-filled { border-style: solid; border-color: var(--subject-500); background: #ffffff; }
+.dnd-slot.is-filled .dnd-slot-placeholder { display: none; }
+.dnd-slot:not(.is-filled) .dnd-slot-label { display: none; }
+
+.dnd-slot.is-correct { border-style: solid; border-color: var(--correct-border); background: var(--correct-bg); }
+.dnd-slot.is-correct .dnd-slot-label { color: var(--correct-text); }
+.dnd-slot.is-error { border-style: solid; border-color: var(--incorrect-border); background: var(--incorrect-bg); }
+.dnd-slot.is-error .dnd-slot-label { color: var(--incorrect-text); }
+
+.dnd-pool-wrap { display: flex; flex-direction: column; gap: 6px; align-self: flex-start; margin-bottom: 6px; } /* gap/margin trimmed from 10px/16px — see DRAG-AND-DROP FIT comment below .dnd-chip */
+/* QA fix: an empty pool (every chip placed) leaves no draggable items to
+   show — hide the whole label+container instead of stranding an empty
+   dashed rectangle. script.js's dndRenderPool() toggles the `hidden`
+   attribute; this override is required because the class rule above's
+   display:flex otherwise wins the cascade over the UA [hidden] default. */
+.dnd-pool-wrap[hidden] { display: none; }
+.dnd-pool-title { font-size: 22px; font-weight: 600; color: var(--text-body); margin: 0; }
+.dnd-pool {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  min-height: 64px;
+  padding: 6px 14px; /* trimmed from 10px — see DRAG-AND-DROP FIT comment below .dnd-chip */
+  border: 1px dashed #D9D9D9;
+  border-radius: 14px;
+  background: #FAFAFA;
+  width: fit-content;
+}
+
+/* DRAG-AND-DROP FIT: this screen no longer scrolls (converted from a
+   scroll "page" to a discrete goTo() screen — see index.html/script.js),
+   so its total content must fit inside the 710px canvas above the fixed
+   74px bottom bar without being clipped. Its own content was originally
+   sized to spill ~40px past one viewport during scroll, so every spacing
+   value marked "trimmed" above (instruction/row-layout margins, the
+   reference table's row height + title margin, the drop-cell's vertical
+   padding, the pool's gap/margin/padding) was tightened just enough to
+   close that gap — none of it touches font sizes, colors, the drag/drop
+   targets themselves (.dnd-slot/.dnd-chip stay their original 52px, still
+   matched to each other per the comment below), or any interaction logic. */
+.dnd-chip {
+  min-width: 90px;
+  height: 52px;
+  padding: 0 20px;
+  border: 1px solid var(--subject-800);
+  border-radius: 10px;
+  background: var(--subject-800);
+  color: #ffffff;
+  font-family: Calibri, 'Segoe UI', Tahoma, sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.dnd-chip:hover:not(:disabled) { box-shadow: 0 2px 6px rgba(0, 0, 0, 0.16); }
+.dnd-chip:active { cursor: grabbing; }
+.dnd-chip:focus-visible { outline: 3px solid var(--subject-500); outline-offset: 2px; }
+.dnd-chip.is-picked { background: var(--subject-500); color: #ffffff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); }
+.dnd-chip[hidden] { display: none; }
+
+/* ============================================================
+   STAGED-REVEAL MOTION — ported verbatim from 06-05's
+   "[data-reveal-on-ready]" block. Pairs with script.js's ported
+   runStagedSequence() engine.
+   ============================================================ */
+
+:root {
+  --m-ease-calm: cubic-bezier(0.4, 0, 0.2, 1);
+  --m-stage-duration-text: 420ms;
+  --m-stage-duration-card: 375ms;
+  --m-stage-duration-visual: 525ms;
+}
+
+/* Peak-question reveal speed — scoped to s55-s59 ONLY, so s54's own
+   unrelated staged reveal keeps the unit's normal 600/420/375/525ms
+   timings. Found during the reveal-speed audit: with each screen staging
+   5-7 elements in sequence, the base timings made the learner wait 6+
+   seconds of pure animation/stagger before a screen's Continue-equivalent
+   became reachable. These are the same three tokens/keyframe (m-float-in)
+   shortened, not a new animation — script.js's per-step `dur` in
+   mcqStagedSteps/scqStagedSteps/dndStagedSteps/s55StagedSteps was updated
+   to match these exact values (see script.js), so the JS stagger clock and
+   the actual CSS animation length stay in sync. */
+#s55, #s56, #s57, #s58, #s59 {
+  --m-reveal-duration: 300ms;
+  --m-stage-duration-card: 220ms;
+  --m-stage-duration-visual: 320ms;
+}
+
+/* ============================================================
+   CONTINUE CTA PULSE — ported verbatim ("Emphasize-Grow",
+   scale(1)->scale(1.05)->scale(1), 1100ms ease-in-out infinite).
+   #s54-continue/#s55-continue pulse once their own staged reveal
+   completes (plain screens, gated purely on the reveal finishing); the 4
+   graded screens' own check button doubles as Continue and pulses via
+   the .is-pulsing class once resolved (mcqCheck/scqCheck/dndCheck in
+   script.js) — same convention as 06-05's own #s49-check.is-pulsing etc.
+   s59 (the last screen — no further screen exists) never gets
+   .is-pulsing, since its resolved button stays a disabled dead end.
+   ============================================================ */
+#s54-continue:not(:disabled),
+#s55-continue:not(:disabled),
+#s56-check.is-pulsing,
+#s57-check.is-pulsing,
+#s58-check.is-pulsing {
+  animation: btnAdvanceGrow 1100ms ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  #s54-continue:not(:disabled),
+  #s55-continue:not(:disabled),
+  #s56-check.is-pulsing,
+  #s57-check.is-pulsing,
+  #s58-check.is-pulsing { animation: none; }
+}
+
+/* Final-wrong "התשובה הנכונה" / "התשובה שלי" reveal toggle — ported from
+   methodica-math-percent-03 (.scq-popup-reveal-btn, S8 pilot): a single
+   pill button whose label swaps between the two states. Sits last in the
+   wrong2 feedback card, under the explanation. */
+.scq-popup-reveal-btn {
+  display: block;
+  margin: 14px 0 0 auto; /* right edge = RTL reading start, as in 4.3 */
+  background: #fff;
+  color: var(--subject-500);
+  border: 1.5px solid var(--subject-500);
+  border-radius: 1000px;
+  font-family: Calibri, 'Segoe UI', Tahoma, sans-serif;
+  font-size: 20px;   /* matches .scq-fb-body text (was 16px — read too small) */
+  font-weight: 400;
+  padding: 6px 18px;
+  cursor: pointer;
+  direction: rtl;
+}
+.scq-popup-reveal-btn:hover { background: var(--subject-100); }
+
+/* Retry title lines are already split by <br> — never re-wrap one inside
+   a shrink-wrapped card ("זה לא / מדויק,"). */
+.scq-fb[data-fb="retry"] .scq-fb-title { white-space: nowrap; }
+
+/* Hint card (all 4 sections) — the panel shrink-wraps to its text and the
+   text is right-aligned (RTL start), so every line starts right beside the
+   lamp. A fixed-width panel with centered text left the lamp floating far
+   from the text (user feedback on s56 and s58). Line breaks are the
+   script's own (<br>), never re-wrapped (nowrap). */
+.scq-hint-panel { width: auto; min-width: 420px; max-width: 1000px; }
+.scq-hint-body { text-align: right; white-space: nowrap; }
+
+/* s58 — line breaks as on the slide: the 3 grade sizes on their own lines;
+   the question (bold purple, like every other section heading) sits at the
+   top of the drop-table column, parallel to the reference's "תזכורת:". */
+.pk-dnd-question { display: block; margin: 0 0 10px; }
+.pk-dnd-question strong { font-weight: 700; color: var(--subject-800); }
+#s58 #s58-instruction { margin-bottom: 12px; }
+#s58 .dnd-row-layout { margin-bottom: 24px; }
+/* s58 is the tallest section (slide line breaks: 4 context lines + the
+   question block + rows + pool) — less top padding than the shared 112px
+   so the pool clears the bottom bar. */
+#s58 > .lp-page { padding-top: 32px; padding-bottom: 16px; }

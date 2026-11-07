@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>methodica-math-percent-06</title>
+  <!-- The shared xAPI library is fetched by unit-js/50-loader.js at the END of the body, after the
+       parser has queued every image below; live, its request waited for the last image, which put the
+       resume restore 20-45 s behind a slow line (2026-11-03). Preloading it from the head queues it FIRST.
+       The href must equal what 50-loader.js builds (no ?v=, no crossorigin) or the browser fetches it
+       twice; the library letter here changes together with LIB720 there (the harness asserts it). -->
+  <link rel="preload" as="script" fetchpriority="high" href="https://lomdot.education.gov.il/metodica/720active/common/xapiwrapper.min.js">
+  <link rel="preload" as="script" fetchpriority="high" href="https://lomdot.education.gov.il/metodica/720active/common/xapi-720-l.js">
+  <link rel="preconnect" href="https://kata.cet.ac.il">
+  <link rel="stylesheet" href="../unit-css/base.css?v=1">
+  <link rel="stylesheet" href="../unit-css/25-report.css?v=1">
+  <link rel="stylesheet" href="styles.css?v=72">
+  <!-- system-animation skill's canonical engine — copied verbatim from
+       skills/system-animation/engine/. Provides the fade-in/float-in
+       vocabulary, tokens, and once-per-session reveal used by the Learning
+       Phase's entry-reveal system (see styles.css/.lp-section.m-animate and
+       script.js lpMaybeRevealSections()). -->
+  <link rel="stylesheet" href="../unit-css/motion.css?v=1">
+</head>
+<body>
+  <!-- Boot cover (ADDING-REPORTING-AND-RESUME.md §8.11): hides screen 0 until the resume
+       decision is known, so a returning learner never sees the first screen flash before their
+       own. Removed by dropBootCover() (../unit-js/40-resume.js) on every loader exit path; the
+       inline net below needs no other file: it lifts the cover after 800ms, or — while
+       50-loader.js has set window.__resumeInFlight — waits for the restore up to a hard 11s
+       ceiling (the metadata poll alone may take 10s). A loader that failed to load gives back
+       exactly the 800ms behaviour. From methodica-math-ratio-01. -->
+  <div id="boot-cover" style="position:fixed;inset:0;z-index:9999;background:#ffffff"></div>
+  <script>
+  (function () {
+    /* A Kata launch (registration in the query) may have a document to restore: raise the
+     flag HERE, before any script is fetched. bootXAPI raises it too, but it runs from the
+     last script tag, and on a cold cache those scripts arrive after the 800 ms below - so
+     the cover used to drop before the flag existed, exposing screen 0 for the whole wait
+     (2026-11-03). Without a registration (local, dev) the 800 ms behaviour is unchanged. */
+  if (/[?&]registration=/.test(location.search)) window.__resumeInFlight = true;
+  var t0 = Date.now();
+    function tick() {
+      var c = document.getElementById('boot-cover');
+      if (!c || !c.parentNode) return;
+      if (window.__resumeInFlight && Date.now() - t0 < 11000) { setTimeout(tick, 100); return; }
+      c.parentNode.removeChild(c);
+    }
+    setTimeout(tick, 800);
+  })();
+  </script>
+  <div id="app">
+
+    <!-- Report / Issue button ("מצאתם בעיה?") — global, outside all .screen divs; top-left,
+         z-index 30 (720-templates _global-components.md). Glyph is inline SVG on currentColor,
+         styles in ../unit-css/25-report.css, behaviour in ../unit-js/25-report.js. -->
+    <button class="flag-btn" id="flag-btn" type="button" onclick="openReportModal()" aria-label="هل وجدتم مشكلة؟">
+      <span class="flag-btn-icon">
+        <span class="flag-btn-glyph" aria-hidden="true">
+          <svg class="flag-btn-glyph-pole" viewBox="0 0 0.794329 17.0005" preserveAspectRatio="none" fill="none"><path d="M0.397164 17C0.177722 17 0 16.8239 0 16.6065V0.393501C0 0.176082 0.177722 0 0.397164 0C0.616607 0 0.794329 0.176082 0.794329 0.393501V16.607C0.794329 16.8245 0.616607 17.0005 0.397164 17.0005V17Z" fill="currentColor"/></svg>
+          <svg class="flag-btn-glyph-banner" viewBox="0 0 12 9.31542" preserveAspectRatio="none" fill="none"><path d="M2.76227 9.31542C1.91972 9.31542 1.06958 9.15545 0.213483 8.71363C0.0823588 8.64599 0 8.51124 0 8.36469V0.950975C0 0.814619 0.0715221 0.687925 0.188558 0.615989C0.305594 0.54459 0.45189 0.537611 0.574886 0.598811C0.577053 0.599884 0.578679 0.600958 0.580846 0.602032C2.31309 1.49586 4.05563 1.046 5.90003 0.569821C7.80946 0.0770055 9.78336 -0.431915 11.7865 0.601495C11.9176 0.669136 12 0.803882 12 0.950438V8.36415C12 8.4946 11.9344 8.617 11.8255 8.69001C11.7166 8.76302 11.5774 8.77805 11.4555 8.72974C11.443 8.7249 11.4311 8.71954 11.4197 8.71363C9.68745 7.8198 7.94491 8.26967 6.10051 8.7453C5.00709 9.02714 3.89199 9.31489 2.76281 9.31489L2.76227 9.31542ZM0.793787 8.11935C2.45559 8.87307 4.13094 8.44038 5.90003 7.98407C7.62469 7.53903 9.40191 7.08057 11.2062 7.75806V1.19631C9.54441 0.442591 7.86906 0.875281 6.09997 1.33159C4.37531 1.77663 2.59755 2.23509 0.793787 1.5576V8.11935Z" fill="currentColor"/></svg>
+        </span>
+      </span>
+      <span class="flag-btn-label">هل وجدتم مشكلة؟</span>
+    </button>
+
+    <!-- ================================================================
+         SCREEN 0 — pptx slide 3 (item methodica-math-percent-06-01-001)
+         Opening HOOK sequence — component 1 ("הוק"). Local variant of
+         MultipleChoiceQuestion per 720-templates/MultipleChoiceQuestion.md:
+         multi-select reflection question, NO grading/attempts/hint (script
+         defines no correct answer) — "اخترتُ" commit step reveals a neutral
+         "message"-type feedback popup (_global-components.md → Feedback
+         popup system), then the same button relabels to "متابعة".
+         Character + speech bubble are PERMANENT screen content, not the
+         feedback (the off-canvas purple rectangle in the pptx *is* the
+         feedback, revealed only after "اخترتُ" — see PROJECT_CONTEXT.md).
+         Asset: assets/img/HOOK_001.png (real pptx media, verified against
+         ppt/media/image2.png — not a placeholder).
+         ================================================================ -->
+    <section class="screen active" data-screen="0" id="hook1">
+      <!-- Reveal timing for this screen is fully JS-driven — see script.js
+           hook1StagedSteps()/runStagedSequence('hook1', ...) — title (1s) ->
+           instruction (2s) -> each option (1s apart) -> character -> bubble
+           (after the character finishes entering). data-reveal-on-ready
+           replaces the old data-reveal="N" CSS-stagger group numbers: same
+           hidden-until-JS-reveals-it mechanism (styles.css), just driven by
+           explicit per-element timing instead of the fixed 180ms stagger. -->
+      <h1 class="hook1-title m-stage-text" id="hook1-title" data-reveal-on-ready>هل يبدو مألوفاً؟</h1>
+      <p class="hook1-instruction m-stage-text" id="hook1-instruction" data-reveal-on-ready>ضعوا علامة على جميع الجمل التي تبدو لكم مألوفة، أي تلك التي سمعتموها أو قلتموها مؤخرًا:</p>
+
+      <!-- Speech bubble sits before the character in DOM (flex-column stacks
+           it visually above the image — see .hook1-character comment), but
+           reveal order is "character then bubble" per the approved motion
+           plan — reveal order follows instructional hierarchy, not DOM/
+           visual position. -->
+      <div class="hook1-character">
+        <div class="hook1-bubble m-stage-popup" id="hook1-bubble" data-reveal-on-ready>هذه النسب المئوية في كل مكان...<br>ولا تحصل حتى على<br><strong>واحد بالمئة</strong> من الراحة 😂</div>
+        <img class="m-stage-visual" id="hook1-char-img" data-reveal-on-ready src="assets/img/HOOK_001.png" alt="شخصية ترتدي قميصًا عليه رمز النسبة المئوية">
+      </div>
+
+      <div class="hook1-options" role="group" aria-label="جمل">
+        <button class="hook1-opt m-stage-card" id="hook1-opt-a" data-reveal-on-ready type="button" role="checkbox" aria-checked="false" data-id="a" onclick="hook1Toggle('a')">
+          <span class="hook1-opt-text">"خصم 70؟ صفقة رائعة!!!"</span>
+          <span class="hook1-checkbox" aria-hidden="true"></span>
+        </button>
+        <button class="hook1-opt m-stage-card" id="hook1-opt-b" data-reveal-on-ready type="button" role="checkbox" aria-checked="false" data-id="b" onclick="hook1Toggle('b')">
+          <span class="hook1-opt-text">"بقي لدي 3% من البطارية فقط!"</span>
+          <span class="hook1-checkbox" aria-hidden="true"></span>
+        </button>
+        <button class="hook1-opt m-stage-card" id="hook1-opt-c" data-reveal-on-ready type="button" role="checkbox" aria-checked="false" data-id="c" onclick="hook1Toggle('c')">
+          <span class="hook1-opt-text">"98% - لحظات وينتهي التحديث!"</span>
+          <span class="hook1-checkbox" aria-hidden="true"></span>
+        </button>
+        <button class="hook1-opt m-stage-card" id="hook1-opt-d" data-reveal-on-ready type="button" role="checkbox" aria-checked="false" data-id="d" onclick="hook1Toggle('d')">
+          <span class="hook1-opt-text">"92% دقة في التمرير؟ يا له من لاعب بطل!!!"</span>
+          <span class="hook1-checkbox" aria-hidden="true"></span>
+        </button>
+
+        <!-- Feedback panel — "message" type (no correct/incorrect grading), no
+             close button/X, per current no-manual-close contract. Nested here
+             (a flex child of .hook1-options, after the last distractor) so it
+             lays out directly under the distractors themselves — see the CSS
+             comment on .hook1-popup. -->
+        <div class="hook1-popup hidden no-drag" id="hook1-popup" hidden>
+          <p class="hook1-popup-body"><strong>كل هذه الجمل تبدو مألوفة لنا، لأن النسب المئوية جزء من حياتنا اليومية.</strong> فهي تساعدنا على أن نفهم بسرعة مقدار ما تبقّى، وما اكتمل، وما وفّرناه، ومدى نجاحنا.</p>
+        </div>
+      </div>
+
+      <button class="btn-back" id="hook1-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <!-- Deferred reveal (data-reveal-on-ready, not data-reveal) — excluded
+           from the screen's initial entrance; script.js's revealOnReady()
+           reveals it the first time hook1Selected.size > 0 (hook1Toggle()). -->
+      <button class="btn-continue" id="hook1-action-btn" data-reveal-on-ready onclick="hook1MainAction()" disabled>اخترتُ</button>
+    </section>
+
+    <!-- ================================================================
+         SCREEN 1 — pptx slide 4 (item methodica-math-percent-06-01-001)
+         "لماذا بالذات النسب المئوية؟" — production note explicitly labels this
+         screen "FlipcardsRevael – State 01 – Before interation". Confirmed
+         via Figma (file eSbp4bKHgBky0rakDb8l9N, node 405:8027, exact same
+         "Before interation" wording) — this IS the canonical FlipCardsReveal
+         "before interaction" screen state, not a generic content template.
+         That Figma state's own composition is: centered heading (Heading/
+         H-5, 40px Bold) + body paragraph (28px, right-aligned) above a
+         4-image-card row + a watch-video/flip-cards mode toggle. The
+         production script for this step supplies ONLY heading+body text —
+         no card images, no per-card text, no video — so per the user's
+         explicit direction ("implement only that state for now if that is
+         what the script shows"), only the text-layout portion of that
+         Figma state is implemented here; the card row and video toggle are
+         intentionally omitted (no fabricated placeholders/content).
+         Continue follows normal (always-enabled) content-screen nav.
+         ================================================================ -->
+    <section class="screen" data-screen="1" id="whypercent">
+      <!-- Reveal timing is fully JS-driven — see script.js
+           whypercentStagedSteps()/runStagedSequence('whypercent', ...):
+           title (1s) -> body1 (2s) -> body2 (1s) -> body3 (2s) -> body4
+           (2s) -> continue button enables + pulses. The "אבל.. לא תמיד" /
+           "לפעמים תפגשו שבר" pair used to share one <p> (joined by <br>) —
+           split into two separate paragraphs here (same exact wording/
+           emphasis, no content change) purely so they can be staged 1s
+           apart per the approved motion plan; a single paragraph can't
+           reveal in two timed steps. -->
+      <div class="whypercent-content">
+        <h1 class="whypercent-title m-stage-text" id="whypercent-title" data-reveal-on-ready>لماذا بالذات النسب المئوية؟</h1>
+        <p class="whypercent-body m-stage-text" id="whypercent-body-1" data-reveal-on-ready>لأنها تتيح لنا فهم البيانات بسرعة، ومقارنتها بشكل عادل، واتخاذ القرارات دون التوقف وإعادة الحساب في كل مرة.</p>
+        <p class="whypercent-body m-stage-text" id="whypercent-body-2" data-reveal-on-ready>لكن.. لن تُعرض البيانات دائمًا كنسب مئوية.</p>
+        <p class="whypercent-body m-stage-text" id="whypercent-body-3" data-reveal-on-ready>قد تصادفون أحيانًا <strong>كسرًا،</strong> مثل 13 من أصل 30، وأحيانًا <strong>عددًا عشريًا،</strong> مثل 0.65.</p>
+        <p class="whypercent-body m-stage-text" id="whypercent-body-4" data-reveal-on-ready>لكي نفهم معنى المعطى ونقارنه بمعطيات أخرى، يجب أن نعرف كيف ننتقل بين التمثيلات.</p>
+      </div>
+
+      <button class="btn-back" id="whypercent-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <button class="btn-continue" id="whypercent-continue-btn" onclick="goTo(2)" disabled>متابعة</button>
+    </section>
+
+    <!-- ================================================================
+         SCREEN 2 — pptx slide 5 (item methodica-math-percent-06-01-001)
+         HOOK_002. Production note literally says "שם התמונה: HOOK_001",
+         but the slide's own embedded picture (ppt/media/image3.png) is
+         pixel-confirmed to be the phone/battery character, matching
+         assets/img/HOOK_002.png — not the plain HOOK_001 character used on
+         slide 3. Per explicit user confirmation, this is an outdated label
+         in the production note; HOOK_002 is used here, not HOOK_001.
+         Composition corrected 2026-08-06 per user-supplied reference image:
+         bold heading centered above the character group (not beside it),
+         character on the RIGHT, speech bubble to its LEFT with a CSS tail
+         (white interior / purple outline, same construction as hook1's
+         bubble but pointing right into the character instead of down).
+         ================================================================ -->
+    <section class="screen" data-screen="2" id="hook2">
+      <!-- Reveal timing is fully JS-driven — see script.js
+           hook2StagedSteps()/runStagedSequence('hook2', ...): text (2s) ->
+           character -> bubble (after the character finishes entering) ->
+           continue button enables + pulses immediately. -->
+      <div class="hook2-content">
+        <p class="hook2-text m-stage-text" id="hook2-text" data-reveal-on-ready>في هذه الوحدة سنتعلم الانتقال بين الكسر والعدد العشري والنسبة المئوية،<br>لفهم البيانات ومقارنتها واتخاذ قرارات صحيحة وعادلة.</p>
+
+        <div class="hook2-group">
+          <img class="hook2-character m-stage-visual" id="hook2-character" data-reveal-on-ready src="assets/img/HOOK_002-opt.png" alt="شخصية تمسك هاتفًا تبقّى من شحن بطاريته 3%" loading="lazy">
+          <div class="hook2-bubble m-stage-popup" id="hook2-bubble" data-reveal-on-ready>إذا كنتم تعرفون أنه عندما يتبقى 3% فقط من البطارية، يجب البحث عن شاحن بسرعة، فقد حان الوقت لتتعلموا كيف تحوّلون أيضًا 13 من أصل 30 إلى نسبة مئوية.</div>
+        </div>
+      </div>
+
+      <button class="btn-back" id="hook2-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <button class="btn-continue" id="hook2-continue-btn" onclick="goTo(3)" disabled>متابعة</button>
+    </section>
+
+    <!-- ================================================================
+         SCREEN 3 — Learning Phase scroll sequence (pptx slides 6-11, item
+         methodica-math-percent-06-01-002). ONE vertically-scrolling screen,
+         not six separate learner screens — see PROJECT_CONTEXT.md / the
+         approved session plan. Global nav chrome (bottom bar, back/continue)
+         stays outside the scroll container; internal progression happens by
+         scrolling #lp-scroll.
+
+         Scroll-gate mechanic: sections 4-6 (slides 9-11) live inside
+         #lp-locked with the `hidden` attribute — not rendered, so the
+         scroll container's native scrollHeight simply ends at the first
+         checkpoint (slide 8) and there is nothing below it to scroll into.
+         JS removes `hidden` once that checkpoint is answered, which
+         naturally extends the scrollable range — no per-pixel scroll-lock
+         hacks, no forced auto-scroll (per approved plan, correction #4).
+
+         Composition: image LEFT / text RIGHT on every narrative section,
+         per each slide's own pptx shape geometry (image x≈9-35%, w≈35%;
+         text x≈46-93%) — same side-arrangement precedent as screen 0
+         (hook1). Assets are the existing verified files (real pptx media,
+         not placeholders) used from their current location — not moved or
+         renamed, per approved plan correction #2:
+           assets/images/LearningPhase_001.png
+           assets/images/Learning_Phase_002.png  (source filename as-is)
+           assets/images/LearningPhase_003.png
+           assets/images/LearningPhase_004.png
+
+         Continue button unlocks once section 6 (slide 11, the embedded
+         ValueInputQuestion checkpoint) is submitted — regardless of outcome,
+         since that checkpoint allows no retry. There is still nothing built
+         to navigate to past this screen (TOTAL_SCREENS unchanged) — enabling
+         the button only reflects this screen's own completion state, per
+         the approved session plan. Back is the normal per-screen back
+         button.
+
+         Section 7 (slide 12) — added 2026-08-09 — is a second scroll-gate
+         tier: it lives inside its own #lp-locked-2[hidden], unlocked by
+         lpvCheck() (section 6's submit handler) alongside the continue
+         button, the same "hidden attribute removed on completion, no forced
+         auto-scroll" mechanic #lp-locked already uses for checkpoint 1. It
+         is a plain narrative section (image LEFT / text RIGHT, same
+         .lp-section/.lp-text-col/.lp-img-col shell as sections 1/2/4/5) —
+         not a question — revisiting the same LearningPhase_004.png asset
+         section 5 already uses, per the storyboard, with two animated
+         percentage callouts (50%/20%) layered over it.
+         ================================================================ -->
+    <section class="screen" data-screen="3" id="learningphase">
+      <div class="lp-scroll" id="lp-scroll">
+
+        <!-- ---------------- SECTION 1 — slide 6 — LearningPhase_001 ----------------
+             Reveal timing is fully JS-driven — see script.js
+             lpSec1StagedSteps()/runStagedSequence('lp-sec-1', ...): title
+             (1s) -> body1 (1s) -> body2 (1s) -> image -> (once the image
+             finishes entering) the battery alert. -->
+        <div class="lp-section lp-sec-1" id="lp-sec-1">
+          <div class="lp-text-col">
+            <h2 class="lp-title" id="lp1-title" data-reveal-on-ready>لماذا نحتاج إلى النسب المئوية؟</h2>
+            <p class="lp-body lp-gap" id="lp1-body-1" data-reveal-on-ready>لعب آدم وسامر معًا لعبة عبر الإنترنت.</p>
+            <p class="lp-body" id="lp1-body-2" data-reveal-on-ready><strong>أثناء اللعب، ظهر على جهاز سامر تنبيه بانخفاض شحن البطارية.</strong></p>
+          </div>
+          <div class="lp-img-col">
+            <div class="lp-img-frame">
+              <!-- "بطارية ضعيفة" alert — live HTML (LearningPhase_001.png is a
+                   plain photo, no baked-in text/notification, pixel-confirmed).
+                   Keeps its own distinct lpAlertIn keyframe (styles.css) rather
+                   than the generic data-reveal-on-ready float-in — a
+                   notification-style badge, not a content paragraph — but its
+                   trigger is now JS-driven (.is-revealed, added once the image
+                   finishes entering) instead of firing on a fixed 350ms CSS
+                   delay every time the section mounts. Once-per-session now
+                   (matches the rest of this staged sequence), not a replay-
+                   every-open notification. -->
+              <div class="lp-alert" id="lp-alert" aria-hidden="true">
+                <svg class="lp-alert-icon" viewBox="0 0 24 12" fill="none" aria-hidden="true">
+                  <rect x="1" y="1" width="20" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/>
+                  <rect x="22" y="4" width="2" height="4" rx="1" fill="currentColor"/>
+                  <rect x="3" y="3" width="4" height="6" rx="1" fill="#D9360B"/>
+                </svg>
+                <span class="lp-alert-text">بطارية ضعيفة</span>
+              </div>
+              <img id="lp1-img" data-reveal-on-ready src="assets/images/LearningPhase_001-opt.png" alt="آدم وسامر يجلسان على الأريكة، يلعب كل واحد منهما بجهازه المحمول." loading="lazy">
+            </div>
+          </div>
+        </div>
+
+        <!-- ---------------- SECTION 2 — slide 7 — Learning_Phase_002 ----------------
+             Reveal timing is fully JS-driven — see script.js
+             lpSec2StagedSteps()/runStagedSequence('lp-sec-2', ...). -->
+        <div class="lp-section lp-sec-2" id="lp-sec-2">
+          <div class="lp-text-col">
+            <p class="lp-body" id="lp2-p1" data-reveal-on-ready>أمعن سامر النظر في مؤشر البطارية وقال:</p>
+            <p class="lp-body lp-gap" id="lp2-p2" data-reveal-on-ready><strong>"أفّ، لم يبقَ لديّ سوى شريطين."</strong></p>
+            <p class="lp-body" id="lp2-p3" data-reveal-on-ready>ألقى آدم نظرة على شاشته وابتسم:</p>
+            <p class="lp-body" id="lp2-p4" data-reveal-on-ready><strong>"لا بأس، تبقّى لديّ أيضًا شريطان بالضبط."</strong></p>
+          </div>
+          <div class="lp-img-col">
+            <img id="lp2-img" data-reveal-on-ready src="assets/images/Learning_Phase_002-opt.png" alt="يتبادل آدم وسامر النظرات وهما يمسكان جهازيهما." loading="lazy">
+          </div>
+        </div>
+
+        <!-- ---------------- SECTION 3 — slide 8 — INTERACTIVE CHECKPOINT ----------------
+             Local SingleChoiceQuestion variant (720-templates/SingleChoiceQuestion.md):
+             single submission, no retry/2nd-attempt (approved plan correction #1 — the
+             script gives no retry language for this slide, unlike slide 11's explicit
+             "אין ניסיונות מענה" flag). One press of "هل إجابتي صحيحة؟" locks the board, reveals the
+             correct pill alongside whichever pill the learner picked, and shows one
+             shared explanation (title only differs) — then unlocks sections 4-5. -->
+        <div class="lp-section lp-sec-3 lp-checkpoint" id="lp-sec-3">
+          <div class="lp-q-panel">
+            <!-- Reveal timing is fully JS-driven — see script.js
+                 lpSec3StagedSteps()/runStagedSequence('lp-sec-3', ...):
+                 question stem, then each option, 1s apart (approved motion
+                 plan). Interaction logic (lpSelect()/lpCheck(), the check
+                 button's own data-reveal-on-ready gating via revealOnReady())
+                 is untouched — only the entrance timing changed. -->
+            <div class="lp-q-frame">
+              <p class="lp-q-text" id="lp3-q" data-reveal-on-ready>هل يمكن معرفة مَن تبقّى لديه شحن أكثر في البطارية؟</p>
+              <div class="lp-q-answers" role="radiogroup" aria-label="إجابات">
+                <button class="lp-q-opt" id="lp3-opt-a" data-reveal-on-ready type="button" role="radio" aria-checked="false" data-id="a" onclick="lpSelect('a')">
+                  <span class="lp-q-opt-text">نعم، لسامر</span>
+                  <span class="lp-q-radio" aria-hidden="true"></span>
+                </button>
+                <button class="lp-q-opt" id="lp3-opt-b" data-reveal-on-ready type="button" role="radio" aria-checked="false" data-id="b" onclick="lpSelect('b')">
+                  <span class="lp-q-opt-text">نعم، لآدم</span>
+                  <span class="lp-q-radio" aria-hidden="true"></span>
+                </button>
+                <button class="lp-q-opt" id="lp3-opt-c" data-reveal-on-ready type="button" role="radio" aria-checked="false" data-id="c" onclick="lpSelect('c')">
+                  <span class="lp-q-opt-text">تبقّت لدى كليهما الكمية نفسها من شحن البطارية</span>
+                  <span class="lp-q-radio" aria-hidden="true"></span>
+                </button>
+                <button class="lp-q-opt" id="lp3-opt-d" data-reveal-on-ready type="button" role="radio" aria-checked="false" data-id="d" onclick="lpSelect('d')">
+                  <span class="lp-q-opt-text">لا يمكن معرفة ذلك</span>
+                  <span class="lp-q-radio" aria-hidden="true"></span>
+                </button>
+              </div>
+            </div>
+            <button class="lp-check-btn" data-reveal-on-ready id="lp-check-btn" onclick="lpCheck()" disabled>هل إجابتي صحيحة؟</button>
+          </div>
+        </div>
+
+        <!-- ---------------- LOCKED — sections 4-5, unlocked after the checkpoint ---------------- -->
+        <div id="lp-locked" hidden>
+
+          <!-- ---------------- SECTION 4 — slide 9 — LearningPhase_003 ----------------
+               Reveal timing is fully JS-driven — see script.js
+               lpSec4StagedSteps()/runStagedSequence('lp-sec-4', ...). -->
+          <div class="lp-section lp-sec-4" id="lp-sec-4">
+            <div class="lp-text-col">
+              <p class="lp-body" id="lp4-p1" data-reveal-on-ready>واصل الاثنان اللعب.</p>
+              <p class="lp-body" id="lp4-p2" data-reveal-on-ready><strong>بعد بضع دقائق انطفأ هاتف سامر،</strong></p>
+              <p class="lp-body lp-gap" id="lp4-p3" data-reveal-on-ready><strong>بينما واصل آدم اللعب كالمعتاد.</strong></p>
+              <p class="lp-body" id="lp4-p4" data-reveal-on-ready>كيف يمكن أن يحدث هذا؟</p>
+            </div>
+            <div class="lp-img-col">
+              <img class="lp-img-wide" id="lp4-img" data-reveal-on-ready src="assets/images/LearningPhase_003-opt.png" alt="صورة من الأعلى لآدم وسامر يمسكان هاتفين محمولين، وهاتف سامر يعرض رمز بطارية ضعيفة باللون الأحمر" loading="lazy">
+            </div>
+          </div>
+
+          <!-- ---------------- SECTION 5 — slide 10 — LearningPhase_004 ----------------
+               Reveal timing is fully JS-driven — see script.js
+               lpSec5StagedSteps()/runStagedSequence('lp-sec-5', ...). -->
+          <div class="lp-section lp-sec-5" id="lp-sec-5">
+            <div class="lp-text-col">
+              <p class="lp-body lp-gap" id="lp5-p1" data-reveal-on-ready>فقط بعد ذلك لاحظوا تفصيلاً صغيراً، لكنه مهم.</p>
+              <p class="lp-body lp-gap" id="lp5-p2" data-reveal-on-ready>لكن على جهاز آدم، الشريطان المتبقيان <strong>هما 2 من أصل 4.</strong></p>
+              <p class="lp-body" id="lp5-p3" data-reveal-on-ready>لم يتبقَّ في جهاز سامر سوى شريطين، <strong>وهما 2 من أصل 10.</strong></p>
+            </div>
+            <div class="lp-img-col">
+              <img class="lp-img-wide" id="lp5-img" data-reveal-on-ready src="assets/images/LearningPhase_004-opt.png" alt="تصوير من الأعلى لآدم وسامر وهما يمسكان هاتفين محمولين، يعرض كل جهاز مؤشر بطارية مقسّماً" loading="lazy">
+            </div>
+          </div>
+
+          <!-- ---------------- SECTION 6 — slide 11 — INLINE SCROLL QUESTION ----------------
+               Local ValueInputQuestion variant (720-templates/ValueInputQuestion.md):
+               two Variant-A-style inline percentage inputs sharing one submission, no
+               retry — production note reads "אין ניסיונות מענה" (resolves
+               CONTENT_FLAGS.md #2 as "no retry attempts", not "unlimited"). One press
+               of "هل إجابتي صحيحة؟" locks both inputs, marks each correct/wrong individually,
+               shows one feedback popup (correct only if BOTH values are right), then
+               unlocks the screen's own "متابعة" continue button regardless of outcome. -->
+          <div class="lp-section lp-checkpoint" id="lp-sec-6">
+            <div class="lpv-frame" data-reveal="1">
+            <div class="lp-q-panel lpv-panel">
+              <!-- 2026-08-16 correction: this framed card (border + background +
+                   heading + both examples) must read as ONE unit entering
+                   together, not three internally-staggered pieces — the
+                   single data-reveal="1" now lives on the outer .lpv-frame
+                   above instead of split across the heading/example/example
+                   below (previously "1".."3"). Check button stays deferred
+                   (data-reveal-on-ready) — shown by revealOnReady() once
+                   lpvUpdateCheckBtn() finds both inputs filled; untouched. -->
+              <h2 class="lpv-heading"><strong>كم يساوي ذلك بالنسبة المئوية؟</strong> أكملوا الفراغ.</h2>
+
+              <div class="lpv-example">
+                <p class="lp-body">في جهاز خالد، يتكوّن مؤشر البطارية من 4 أشرطة في المجموع.</p>
+                <p class="lp-body">إذا تبقّى لديه شريطان من أصل 4، فهذا يعني أنه تبقّى لديه
+                  <span class="lpv-blank">
+                    <span class="lpv-pct" aria-hidden="true">%</span>
+                    <input
+                      class="lpv-input"
+                      id="lpv-input-1"
+                      type="text"
+                      inputmode="numeric"
+                      maxlength="3"
+                      dir="ltr"
+                      aria-label="النسبة المئوية لشحن البطارية المتبقي لدى خالد"
+                      oninput="lpvUpdateCheckBtn()"
+                    >
+                  </span>
+                  من شحن البطارية.
+                </p>
+              </div>
+
+              <div class="lpv-example lpv-example-2">
+                <p class="lp-body">بجهاز سامر، مقياس البطارية أكثر تفصيلاً ويتكون من 10 أشرطة في المجمل.</p>
+                <p class="lp-body">إذا تبقّى لديه شريطان، فهذا يعني أنه تبقّى لديه فقط
+                  <span class="lpv-blank">
+                    <span class="lpv-pct" aria-hidden="true">%</span>
+                    <input
+                      class="lpv-input"
+                      id="lpv-input-2"
+                      type="text"
+                      inputmode="numeric"
+                      maxlength="3"
+                      dir="ltr"
+                      aria-label="النسبة المئوية لشحن البطارية المتبقي لدى سامر"
+                      oninput="lpvUpdateCheckBtn()"
+                    >
+                  </span>
+                  من شحن البطارية.
+                </p>
+              </div>
+
+              <button class="lp-check-btn" data-reveal-on-ready id="lpv-check-btn" onclick="lpvCheck()" disabled>هل إجابتي صحيحة؟</button>
+            </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ---------------- LOCKED — section 7, unlocked once section 6's own
+             checkpoint (the ValueInputQuestion above) is submitted — see
+             lpvCheck() in script.js. Independent of #lp-locked above (that
+             one gates on section 3 instead); same hidden-attribute mechanic,
+             second tier. ---------------- -->
+        <div id="lp-locked-2" hidden>
+
+          <!-- ---------------- SECTION 7 — slide 12 — LearningPhase_004 (reused from
+               section 5) + percentage reveal. Plain narrative section, same
+               image-LEFT/text-RIGHT shell as sections 1/2/4/5 — not a question.
+               Copy verified verbatim against docs/math-percent-06-script.pptx.pptx
+               slide 12 (shape "תיבת טקסט 4"). Per that slide's own text runs,
+               "50%" is written inline for Yonatan's line but "20%" for Alon's
+               line is NOT — the sentence ends "כלומר:." and the value is
+               conveyed only by the animated callout below, per the slide's own
+               production note ("פופ אפ עם מספרי האחוזים..."); preserved as-is
+               rather than inventing the missing inline number. -->
+          <div class="lp-section" id="lp-sec-7">
+            <!-- Reveal timing is fully JS-driven — see script.js
+                 lpSec7StagedSteps()/runStagedSequence('lp-sec-7', ...): the
+                 seven paragraphs at their specified waits, then the image,
+                 then callout-50, then (+0.5s) callout-20. Supersedes the old
+                 scroll-position-triggered callout pop-in. -->
+            <div class="lp-text-col">
+              <p class="lp-body" id="lp7-p1" data-reveal-on-ready><strong>ماذا حدث هنا؟</strong></p>
+              <p class="lp-body lp-gap" id="lp7-p2" data-reveal-on-ready>لكليهما بقي شريطان، لكنهما لا يمثلان الكمية نفسها المتبقية في البطارية.</p>
+              <p class="lp-body lp-gap" id="lp7-p3" data-reveal-on-ready>في جهاز آدم، الشريطان المتبقيان <strong>كانا 2 من أصل 4 أشرطة،<br>أي:</strong> النصف = 50% من شحن البطارية.</p>
+              <p class="lp-body lp-gap" id="lp7-p4" data-reveal-on-ready>في جهاز سامر، الشريطان المتبقيان <strong>كانا 2 من أصل 10،<br>أي:</strong> <span class="lp-eq" role="math" aria-label="2 من 10 يساوي 20 من 100 يساوي 20%"><span class="lp-frac" aria-hidden="true"><span class="num">2</span><span class="den">10</span></span><span aria-hidden="true">=</span><span class="lp-frac" aria-hidden="true"><span class="num">20</span><span class="den">100</span></span><span aria-hidden="true">= 20%</span></span>.</p>
+              <p class="lp-body lp-gap" id="lp7-p5" data-reveal-on-ready>فقط بعد التحويل من الكسر إلى النسبة المئوية، أمكننا فهم مقدار شحن البطارية<br>المتبقي فعليًا لدى كلٍّ منهما.</p>
+              <p class="lp-body" id="lp7-p6" data-reveal-on-ready><strong>يمكن تمثيل المعطى نفسه ككسر، أو كعدد عشري، أو بالنسبة المئوية.</strong></p>
+              <p class="lp-body" id="lp7-p7" data-reveal-on-ready><strong>القدرة على التنقل بين هذه التمثيلات تساعدنا على استخدام البيانات<br>بما يتناسب مع ما نبحث عنه.</strong></p>
+            </div>
+            <div class="lp-img-col">
+              <div class="lp-img-frame">
+                <!-- data-reveal-on-ready sits on the img itself, not
+                     .lp-img-frame — that wrapper also contains the two
+                     .lp-callout bubbles below, which keep their own distinct
+                     lpAlertIn animation (triggered via .is-shown, added by
+                     the same lp-sec-7 sequence) rather than the generic
+                     float-in — same mixed-container leaf-mark reasoning as
+                     section 1's .lp-alert. -->
+                <span class="lp-callout lp-callout-a" id="lp-callout-50">
+                  <svg class="lp-alert-icon" viewBox="0 0 24 12" fill="none" aria-hidden="true">
+                    <rect x="1" y="1" width="20" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/>
+                    <rect x="22" y="4" width="2" height="4" rx="1" fill="currentColor"/>
+                    <rect x="3" y="3" width="4" height="6" rx="1" fill="#D9360B"/>
+                  </svg>
+                  50%
+                </span>
+                <span class="lp-callout lp-callout-b" id="lp-callout-20">
+                  <svg class="lp-alert-icon" viewBox="0 0 24 12" fill="none" aria-hidden="true">
+                    <rect x="1" y="1" width="20" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/>
+                    <rect x="22" y="4" width="2" height="4" rx="1" fill="currentColor"/>
+                    <rect x="3" y="3" width="4" height="6" rx="1" fill="#D9360B"/>
+                  </svg>
+                  20%
+                </span>
+                <img class="lp-img-wide" id="lp7-img" data-reveal-on-ready src="assets/images/LearningPhase_004-opt.png" alt="تصوير من الأعلى لآدم وسامر يمسكان هاتفين محمولين، يعرض كل جهاز مؤشر بطارية مقسّماً" loading="lazy">
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Feedback popup — outside .lp-scroll so it never scrolls away; standard
+           draggable, no-manual-close popup component (_global-components.md),
+           themed with current Math tokens — not the HOOK screen's custom
+           fixed-slot panel (approved plan point 3). -->
+      <div class="lp-popup hidden" id="lp-popup" hidden>
+        <p class="lp-popup-title" id="lp-popup-title"></p>
+        <div class="lp-popup-body" id="lp-popup-body"></div>
+      </div>
+
+      <!-- Feedback popup for section 6 (slide 11) — same shared popup contract as
+           lp-popup above, scoped to its own section (graded correct/incorrect
+           colors, per .s17-popup, rather than lp-popup's neutral message style). -->
+      <div class="lpv-popup hidden" id="lpv-popup" hidden>
+        <p class="lpv-popup-title" id="lpv-popup-title"></p>
+        <div class="lpv-popup-body" id="lpv-popup-body"></div>
+      </div>
+
+      <button class="btn-back" id="learningphase-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <button class="btn-continue" id="learningphase-continue-btn" onclick="goTo(4)" disabled>متابعة</button>
+    </section>
+
+    <!-- ================================================================
+         GUIDED-PRACTICE SEGMENT — pptx slides 13-24 (screens 4-15), item
+         methodica-math-percent-06-01-003. One worked example (three
+         friends' free-throw comparison) solved step by step — see
+         references/PROJECT_CONTEXT.md / CONTENT_FLAGS.md for source
+         hierarchy and open flags. Persistent chrome across screens
+         5-8/10/12/14 (slides 14-23): the .guided-card three-friend
+         context panel + goal statement stay visually present; the
+         currently-relevant friend is emphasized via .is-focus. Ported
+         .guided-layout/.guided-card/.guided-panel chrome from 04-03,
+         retextured to current Math tokens — same precedent already used
+         for the deferred slide-17 prototype this segment supersedes.
+
+         KNOWN SOURCE INCONSISTENCY (flagged, not silently corrected): the
+         pptx's own friend-card group shows Danny's stat as "21 מתוך 30"
+         on slides 14/17/18, but as "14 מתוך 30" on slides 19-23 (an
+         apparent copy/paste slip once the group was duplicated forward).
+         21/30 = 70% is the value used throughout the persisted "70%"
+         badge on every one of those same slides, so "14" would visually
+         contradict the badge sitting right next to it. Preserved as
+         "21 מתוך 30" everywhere below for internal consistency; see the
+         session report for the full flag.
+         ================================================================ -->
+
+    <!-- ---------------- SCREEN 4 (s13) — pptx slide 13 — TransitionScreen ----------------
+         Character is the animated character_one.mp4 (raising one finger,
+         "1") — replaces the earlier character_one.png static fallback. -->
+    <section class="screen" data-screen="4" id="s13">
+      <!-- Reveal timing is fully JS-driven — see script.js
+           s13StagedSteps()/runStagedSequence('s13', ...): headline (1s) ->
+           subline (1s) -> character -> continue button enables + pulses. -->
+      <div class="s13-content">
+        <div class="s13-text-group">
+          <p class="s13-headline" id="s13-headline" data-reveal-on-ready>سنبدأ التدريب بعد قليل.</p>
+          <p class="s13-subline" id="s13-subline" data-reveal-on-ready>لحظة قبل أن نبدأ، لنحلّ تمريناً واحداً معاً.</p>
+        </div>
+      </div>
+      <video class="s13-character" id="s13-character-img" data-reveal-on-ready data-src="assets/videos/character_one-opt.mp4" autoplay loop muted playsinline aria-label="شخصية ترتدي قميصًا عليه رمز النسبة المئوية، ترفع إصبعًا واحدًا وتُعدّل نظارتها"></video>
+
+      <button class="btn-back" id="s13-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <button class="btn-continue" id="s13-continue" onclick="goTo(5)" disabled>متابعة</button>
+    </section>
+
+    <!-- ---------------- SCREEN 5 (s14) — pptx slide 14 — introduce the problem ----------------
+         Establishes the persistent guided-practice layout: no left panel
+         yet (nothing to solve on this screen — "אל תפתרו אותו, רק
+         הסתכלו"), just the right-hand context card. -->
+    <section class="screen" data-screen="5" id="s14">
+      <h1 class="guided-title" data-reveal="1">لنحلّ معاً التمرين الأول</h1>
+      <p class="guided-instruction" data-reveal="2">تأمّلوا التمرين التالي. لا تحلّوه، فقط انظروا إلى المعطيات وفكّروا: هل لديكم اتجاه للحل؟</p>
+
+      <!-- Guided Practice family layout rule: RIGHT = characters/given data/
+           visual context (rendered first here — first-child = right edge
+           under direction:rtl); LEFT = question/learner interaction/answer
+           options (rendered second, when present). See styles.css
+           .guided-layout comment. -->
+      <div class="guided-layout guided-layout--solo">
+        <div class="guided-card" data-reveal="3">
+          <p class="guided-context-title">ثلاثة أصدقاء تدرّبوا على التسديد في السلة:</p>
+          <div class="guided-friend-row">
+            <div class="guided-friend-card">
+              <img src="assets/img/s17-dani-opt.png" alt="وليد" loading="lazy">
+              <span class="name">وليد</span>
+              <span class="stat">سجّل في <strong>21 من أصل 30</strong> تسديدة</span>
+            </div>
+            <div class="guided-friend-card">
+              <img src="assets/img/s17-gal-opt.png" alt="ليلى" loading="lazy">
+              <span class="name">ليلى</span>
+              <span class="stat">سجّلت في <strong>8 من أصل 10</strong> تسديدات</span>
+            </div>
+            <div class="guided-friend-card">
+              <img src="assets/img/s17-alon-opt.png" alt="سامر" loading="lazy">
+              <span class="name">سامر</span>
+              <span class="stat">سجّل في <strong>30 من أصل 40</strong> تسديدة</span>
+            </div>
+          </div>
+          <p class="guided-goal">هدفنا: <strong>معرفة مَن منهم الأفضل في التسديد إلى السلة</strong>.</p>
+        </div>
+      </div>
+
+      <button class="btn-back" id="s14-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <button class="btn-continue" id="s14-continue" onclick="s14ToS15Morph()">متابعة</button>
+    </section>
+
+    <!-- ---------------- SCREEN 6 (s15) — pptx slide 15 — "מה כדאי לעשות" ----------------
+         Local SCQ variant per production note: "אין משוב לשאלה, רק
+         התשובה הנכונה מסומנת" — no feedback panel/popup at all; selecting
+         any option immediately marks the correct one (never marks a wrong
+         pick red), then enables Continue. -->
+    <section class="screen" data-screen="6" id="s15">
+      <h1 class="guided-title">لنحلّ معًا التمرين الأول</h1>
+      <p class="guided-instruction">تأمّلوا التمرين التالي. لا تحلّوه، فقط انظروا إلى المعطيات وفكّروا: هل لديكم اتجاه للحل؟</p>
+
+      <div class="guided-layout">
+        <div class="guided-card">
+          <p class="guided-context-title">ثلاثة أصدقاء تدربوا على التسديد في السلة:</p>
+          <div class="guided-friend-row">
+            <div class="guided-friend-card">
+              <img src="assets/img/s17-dani-opt.png" alt="وليد" loading="lazy">
+              <span class="name">وليد</span>
+              <span class="stat">سجّل في <strong>21 من أصل 30</strong> تسديدة</span>
+            </div>
+            <div class="guided-friend-card">
+              <img src="assets/img/s17-gal-opt.png" alt="ليلى" loading="lazy">
+              <span class="name">ليلى</span>
+              <span class="stat">سجّلت في <strong>8 من أصل 10</strong> تسديدات</span>
+            </div>
+            <div class="guided-friend-card">
+              <img src="assets/img/s17-alon-opt.png" alt="سامر" loading="lazy">
+              <span class="name">سامر</span>
+              <span class="stat">سجّل في <strong>30 من أصل 40</strong> تسديدة</span>
+            </div>
+          </div>
+          <p class="guided-goal">هدفنا: <strong>معرفة مَن منهم الأفضل في التسديد إلى السلة</strong>.</p>
+        </div>
+
+        <div class="guided-panel">
+          <p class="guided-question">ما الذي يجب فعله لمقارنة النتائج؟</p>
+          <div class="guided-opt-col" role="radiogroup" aria-label="إجابات">
+            <button class="guided-opt" type="button" role="radio" aria-checked="false" data-id="a" onclick="s15Select('a')">
+              <span class="guided-opt-text">تحويل جميع البيانات إلى نسب مئوية</span>
+              <span class="guided-opt-radio" aria-hidden="true"></span>
+            </button>
+            <button class="guided-opt" type="button" role="radio" aria-checked="false" data-id="b" onclick="s15Select('b')">
+              <span class="guided-opt-text">جمع جميع الأعداد</span>
+              <span class="guided-opt-radio" aria-hidden="true"></span>
+            </button>
+            <button class="guided-opt" type="button" role="radio" aria-checked="false" data-id="c" onclick="s15Select('c')">
+              <span class="guided-opt-text">ضرب جميع المعطيات في 10</span>
+              <span class="guided-opt-radio" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-back" id="s15-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <button class="btn-continue" id="s15-continue" data-reveal-on-ready onclick="goTo(7)" disabled>متابعة</button>
+    </section>
+
+    <!-- ---------------- SCREEN 7 (s16) — pptx slide 16 — explain why ----------------
+         Production note: "עולה סימון מודגש על נתוני השאלה – בהנפשה" —
+         an animated emphasis highlight appears over each friend's fraction
+         data. Implemented as staged data-reveal groups (float-in), not a
+         permanently-painted highlight. -->
+    <section class="screen" data-screen="7" id="s16">
+      <h1 class="guided-title">لنحل معاً التمرين الأول</h1>
+      <p class="guided-instruction">تأمّلوا التمرين التالي. لا تحلّوه، فقط انظروا إلى المعطيات وفكّروا: هل لديكم اتجاه للحل؟</p>
+
+      <div class="guided-layout">
+        <div class="guided-card">
+          <p class="guided-context-title">ثلاثة أصدقاء تدربوا على التصويب نحو السلة:</p>
+          <div class="guided-friend-row">
+            <div class="guided-friend-card">
+              <img src="assets/img/s17-dani-opt.png" alt="وليد" loading="lazy">
+              <span class="name">وليد</span>
+              <span class="stat">سجّل في <strong>21 من أصل 30</strong> تسديدة<span class="guided-highlight" data-reveal="3" aria-hidden="true"></span></span>
+            </div>
+            <div class="guided-friend-card">
+              <img src="assets/img/s17-gal-opt.png" alt="ليلى" loading="lazy">
+              <span class="name">ليلى</span>
+              <span class="stat">سجّلت في <strong>8 من أصل 10</strong> تسديدات<span class="guided-highlight" data-reveal="4" aria-hidden="true"></span></span>
+            </div>
+            <div class="guided-friend-card">
+              <img src="assets/img/s17-alon-opt.png" alt="سامر" loading="lazy">
+              <span class="name">سامر</span>
+              <span class="stat">سجّل في <strong>30 من أصل 40</strong> تسديدة<span class="guided-highlight" data-reveal="5" aria-hidden="true"></span></span>
+            </div>
+          </div>
+          <p class="guided-goal">هدفنا: <strong>معرفة مَن منهم الأفضل في التسديد إلى السلة</strong>.</p>
+        </div>
+
+        <div class="guided-panel guided-panel--character">
+          <img class="guided-char" src="assets/images/pointing-opt.png" alt="شخصية ترتدي قميصًا عليه رمز النسبة المئوية" loading="lazy">
+          <div class="guided-bubble">عندما تُعرض البيانات على شكل كسور ذات مقامات مختلفة، يصعب مقارنتها بسرعة. لذلك يُستحسن تحويلها جميعًا إلى نسب مئوية.</div>
+        </div>
+      </div>
+
+      <button class="btn-back" id="s16-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <button class="btn-continue" id="s16-continue" onclick="goTo(8)">متابعة</button>
+    </section>
+
+    <!-- ---------------- SCREEN 8 (s17) — pptx slide 17 — Danny: guided value input ----------------
+         Danny emphasized (.is-focus) per production note ("وليد 'בולט' יותר
+         משאר הדמויות"). Single-submission (no retry/attempts) — see
+         script.js GVI/gviSubmit(). On submit, the whole question area
+         (instruction + equation, wrapped in #s17-panel-body) is replaced in
+         place by the worked-solution feedback — no popup/modal, and nothing
+         from the old question stays visible alongside it. -->
+    <section class="screen" data-screen="8" id="s17">
+      <h1 class="guided-title">لنحلّ معًا التمرين الأول</h1>
+      <p class="guided-instruction">تأمّلوا التمرين التالي. لا تحلّوه، فقط انظروا إلى المعطيات وفكّروا: هل لديكم اتجاه للحل؟</p>
+
+      <div class="guided-layout">
+        <div class="guided-card">
+          <p class="guided-context-title">ثلاثة أصدقاء تدربوا على التصويب في كرة السلة:</p>
+          <div class="guided-friend-row">
+            <div class="guided-friend-card is-focus">
+              <img src="assets/img/s17-dani-opt.png" alt="وليد" loading="lazy">
+              <span class="name">وليد</span>
+              <span class="stat">سجّل في <strong>21 من أصل 30</strong> تسديدة</span>
+            </div>
+            <div class="guided-friend-card">
+              <img src="assets/img/s17-gal-opt.png" alt="ليلى" loading="lazy">
+              <span class="name">ليلى</span>
+              <span class="stat">سجّلت في <strong>8 من أصل 10</strong> تسديدات</span>
+            </div>
+            <div class="guided-friend-card">
+              <img src="assets/img/s17-alon-opt.png" alt="سامر" loading="lazy">
+              <span class="name">سامر</span>
+              <span class="stat">سجّل في <strong>30 من أصل 40</strong> تسديدة</span>
+            </div>
+          </div>
+          <p class="guided-goal">هدفنا: <strong>معرفة مَن منهم الأفضل في التسديد إلى السلة</strong>.</p>
+        </div>
+
+        <div class="guided-panel">
+          <div class="gvi-panel-body" id="s17-panel-body">
+            <div class="guided-panel-text" id="s17-panel-text">
+              <p class="guided-intro">
+                <strong>للمقارنة بسهولة، نريد تحويل جميع الكسور إلى نسب مئوية.</strong><br><strong>النسبة المئوية تعني "من أصل 100"، لذلك سنحاول تحويل الكسور إلى كسور مقامها 100.</strong>
+              </p>
+              <p class="guided-intro">أدخلوا البسط في المعادلة</p>
+            </div>
+
+            <div class="gvi-equation">
+              <div class="gvi-fraction">
+                <span class="num">21</span>
+                <span class="den">30</span>
+              </div>
+              <span class="gvi-eq-sign">=</span>
+              <div class="gvi-fraction">
+                <span class="num is-input">
+                  <input class="gvi-answer-box" id="s17-answer-1" type="text" inputmode="numeric" maxlength="3" dir="ltr" aria-label="أكملوا البسط" oninput="gviInput('s17')">
+                </span>
+                <span class="den">10</span>
+              </div>
+              <span class="gvi-eq-sign">=</span>
+              <div class="gvi-fraction">
+                <span class="num is-input">
+                  <input class="gvi-answer-box" id="s17-answer-2" type="text" inputmode="numeric" maxlength="3" dir="ltr" aria-label="أكملوا البسط" oninput="gviInput('s17')">
+                </span>
+                <span class="den">100</span>
+              </div>
+              <span class="gvi-fraction-pct" aria-hidden="true">%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-back" id="s17-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <button class="btn-continue" id="s17-action-btn" onclick="gviSubmit('s17')" disabled>أجبتُ بشكل صحيح</button>
+    </section>
+
+    <!-- ---------------- SCREEN 9 (s18) — pptx slide 18 — reveal Danny's result ----------------
+         Rebuilt to reuse the segment's own guided-layout/guided-card (right,
+         persistent three-friend comparison) + guided-panel--character (left,
+         character+bubble) — matches the pptx's own "קבוצה 33" friend-group
+         plus overlaid result ellipse, per the friend-row's own
+         .guided-pct-badge convention already used on s19/s21/s23 for
+         previously-resolved players. Only the new badge + new bubble text
+         animate in (data-reveal) — the row itself renders instantly, so it
+         reads as persistent rather than re-entering. -->
+    <section class="screen" data-screen="9" id="s18">
+      <h1 class="guided-title">لنحلّ معاً تمريناً أولاً</h1>
+      <p class="guided-instruction">تأمّلوا التمرين التالي. لا تحلّوه، فقط انظروا إلى المعطيات وفكّروا: هل لديكم اتجاه للحل؟</p>
+
+      <div class="guided-layout">
+        <div class="guided-card">
+          <p class="guided-context-title">ثلاثة أصدقاء تدربوا على التصويب نحو السلة:</p>
+          <div class="guided-friend-row">
+            <div class="guided-friend-card is-focus">
+              <img src="assets/img/s17-dani-opt.png" alt="وليد" loading="lazy">
+              <span class="name">وليد</span>
+              <span class="stat">سجّل في <strong>21 من أصل 30</strong> تسديدة</span>
+              <span class="guided-pct-badge" data-reveal="3" data-reveal-fade>70%</span>
+            </div>
+            <div class="guided-friend-card">
+              <img src="assets/img/s17-gal-opt.png" alt="ليلى" loading="lazy">
+              <span class="name">ليلى</span>
+              <span class="stat">سجّلت في <strong>8 من أصل 10</strong> تسديدات</span>
+            </div>
+            <div class="guided-friend-card">
+              <img src="assets/img/s17-alon-opt.png" alt="سامر" loading="lazy">
+              <span class="name">سامر</span>
+              <span class="stat">سجّل في <strong>30 من أصل 40</strong> تسديدة</span>
+            </div>
+          </div>
+          <p class="guided-goal">هدفنا: <strong>معرفة مَن منهم الأفضل في التسديد إلى السلة</strong>.</p>
+        </div>
+
+        <div class="guided-panel guided-panel--character">
+          <img class="guided-char" src="assets/images/pointing-opt.png" alt="شخصية ترتدي قميصاً عليه رمز النسبة المئوية" loading="lazy">
+          <div class="guided-bubble" data-reveal="4">الآن يمكن القول إن وليد سجّل في <span class="guided-bubble-pct">70%</span> من التسديدات</div>
+        </div>
+      </div>
+
+      <button class="btn-back" id="s18-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <button class="btn-continue" id="s18-continue" onclick="goTo(10)">متابعة</button>
+    </section>
+
+    <!-- ---------------- SCREEN 10 (s19) — pptx slide 19 — Gal: guided value input ----------------
+         Gal emphasized (.is-focus). NOTE: the pptx's own production note on
+         this slide re-reads "وليد 'בולט' יותר משאר הדמויות" — a copy/paste
+         leftover from slide 17's note, since this screen's actual active
+         calculation is Gal's 8/10. Emphasis follows the real calculation
+         (Gal), not the stale note text — flagged in the session report. -->
+    <section class="screen" data-screen="10" id="s19">
+      <h1 class="guided-title">لنحل معاً التمرين الأول</h1>
+      <p class="guided-instruction">تأمّلوا التمرين التالي. لا تحلّوه، فقط انظروا إلى المعطيات وفكّروا: هل لديكم اتجاه للحل؟</p>
+
+      <div class="guided-layout">
+        <div class="guided-card">
+          <p class="guided-context-title">ثلاثة أصدقاء تدرّبوا على التسديد في السلة:</p>
+          <div class="guided-friend-row">
+            <div class="guided-friend-card">
+              <img src="assets/img/s17-dani-opt.png" alt="وليد" loading="lazy">
+              <span class="name">وليد</span>
+              <span class="stat">سجّل في <strong>21 من أصل 30</strong> تسديدة</span>
+              <span class="guided-pct-badge">70%</span>
+            </div>
+            <div class="guided-friend-card is-focus">
+              <img src="assets/img/s17-gal-opt.png" alt="ليلى" loading="lazy">
+              <span class="name">ليلى</span>
+              <span class="stat">سجّلت في <strong>8 من أصل 10</strong> تسديدات</span>
+            </div>
+            <div class="guided-friend-card">
+              <img src="assets/img/s17-alon-opt.png" alt="سامر" loading="lazy">
+              <span class="name">سامر</span>
+              <span class="stat">سجّل في <strong>30 من أصل 40</strong> تسديدة</span>
+            </div>
+          </div>
+          <p class="guided-goal">هدفنا: <strong>معرفة مَن منهم الأفضل في التسديد إلى السلة</strong>.</p>
+        </div>
+
+        <div class="guided-panel">
+          <div class="gvi-panel-body" id="s19-panel-body">
+            <div class="guided-panel-text" id="s19-panel-text">
+              <div class="guided-intro-row">
+                <span class="guided-intro"><strong>يمكن تمثيل الكسر</strong></span>
+                <div class="gvi-fraction"><span class="num">8</span><span class="den">10</span></div>
+                <span class="guided-intro"><strong>أيضًا على صورة كسر عشري: 0.8.</strong></span>
+              </div>
+              <p class="guided-intro">أدخلوا البسط في المعادلة</p>
+            </div>
+
+            <div class="gvi-equation">
+              <div class="gvi-fraction">
+                <span class="num">8</span>
+                <span class="den">10</span>
+              </div>
+              <span class="gvi-eq-sign">=</span>
+              <div class="gvi-fraction">
+                <span class="num is-input">
+                  <input class="gvi-answer-box" id="s19-answer" type="text" inputmode="numeric" maxlength="3" dir="ltr" aria-label="أكملوا البسط" oninput="gviInput('s19')">
+                </span>
+                <span class="den">100</span>
+              </div>
+              <span class="gvi-fraction-pct" aria-hidden="true">%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-back" id="s19-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <button class="btn-continue" id="s19-action-btn" onclick="gviSubmit('s19')" disabled>أجبتُ بشكل صحيح</button>
+    </section>
+
+    <!-- ---------------- SCREEN 11 (s20) — pptx slide 20 — reveal Gal's result ----------------
+         Same rebuild as s18 — see its comment. Danny's badge is already
+         resolved (no data-reveal, persistent); Gal's is the new reveal. -->
+    <section class="screen" data-screen="11" id="s20">
+      <h1 class="guided-title">لنحل معًا التمرين الأول</h1>
+      <p class="guided-instruction">تأمّلوا التمرين التالي. لا تحلّوه، فقط انظروا إلى المعطيات وفكّروا: هل لديكم اتجاه للحل؟</p>
+
+      <div class="guided-layout">
+        <div class="guided-card">
+          <p class="guided-context-title">ثلاثة أصدقاء تدرّبوا على التسديد في السلة:</p>
+          <div class="guided-friend-row">
+            <div class="guided-friend-card">
+              <img src="assets/img/s17-dani-opt.png" alt="وليد" loading="lazy">
+              <span class="name">وليد</span>
+              <span class="stat">سجّل في <strong>21 من أصل 30</strong> تسديدة</span>
+              <span class="guided-pct-badge">70%</span>
+            </div>
+            <div class="guided-friend-card is-focus">
+              <img src="assets/img/s17-gal-opt.png" alt="ليلى" loading="lazy">
+              <span class="name">ليلى</span>
+              <span class="stat">سجّلت في <strong>8 من أصل 10</strong> تسديدات</span>
+              <span class="guided-pct-badge" data-reveal="3" data-reveal-fade>80%</span>
+            </div>
+            <div class="guided-friend-card">
+              <img src="assets/img/s17-alon-opt.png" alt="سامر" loading="lazy">
+              <span class="name">سامر</span>
+              <span class="stat">سجّل في <strong>30 من أصل 40</strong> تسديدة</span>
+            </div>
+          </div>
+          <p class="guided-goal">هدفنا: <strong>معرفة مَن منهم الأفضل في التسديد إلى السلة</strong>.</p>
+        </div>
+
+        <div class="guided-panel guided-panel--character">
+          <img class="guided-char" src="assets/images/pointing-opt.png" alt="شخصية ترتدي قميصًا عليه رمز النسبة المئوية" loading="lazy">
+          <div class="guided-bubble" data-reveal="4">الآن يمكن القول إن ليلى سجّلت <span class="guided-bubble-pct">80%</span> من التسديدات</div>
+        </div>
+      </div>
+
+      <button class="btn-back" id="s20-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <button class="btn-continue" id="s20-continue" onclick="goTo(12)">متابعة</button>
+    </section>
+
+    <!-- ---------------- SCREEN 12 (s21) — pptx slide 21 — Alon: guided value input ----------------
+         Alon emphasized. No production-notes block on this slide
+         (CONTENT_FLAGS.md open flag #1) — attempt/hint policy for this
+         screen isn't independently specified, so it follows the same
+         single-submission gvi pattern established by screens 17/19. Hint
+         text is shown inline (not gated behind a hint button), matching
+         how the pptx itself prints it as a permanently visible line. -->
+    <section class="screen" data-screen="12" id="s21">
+      <h1 class="guided-title">لنحل معاً التمرين الأول</h1>
+      <p class="guided-instruction">تأمّلوا التمرين التالي. لا تحلّوه، فقط انظروا إلى المعطيات وفكّروا: هل لديكم اتجاه للحل؟</p>
+
+      <div class="guided-layout">
+        <div class="guided-card">
+          <p class="guided-context-title">ثلاثة أصدقاء تدربوا على التسديد في السلة:</p>
+          <div class="guided-friend-row">
+            <div class="guided-friend-card">
+              <img src="assets/img/s17-dani-opt.png" alt="وليد" loading="lazy">
+              <span class="name">وليد</span>
+              <span class="stat">سجّل في <strong>21 من أصل 30</strong> تسديدة</span>
+              <span class="guided-pct-badge">70%</span>
+            </div>
+            <div class="guided-friend-card">
+              <img src="assets/img/s17-gal-opt.png" alt="ليلى" loading="lazy">
+              <span class="name">ليلى</span>
+              <span class="stat">سجّلت في <strong>8 من أصل 10</strong> تسديدات</span>
+              <span class="guided-pct-badge">80%</span>
+            </div>
+            <div class="guided-friend-card is-focus">
+              <img src="assets/img/s17-alon-opt.png" alt="سامر" loading="lazy">
+              <span class="name">سامر</span>
+              <span class="stat">سجّل في <strong>30 من أصل 40</strong> تسديدة</span>
+            </div>
+          </div>
+          <p class="guided-goal">هدفنا: <strong>معرفة مَن منهم الأفضل في التسديد إلى السلة</strong>.</p>
+        </div>
+
+        <div class="guided-panel">
+          <div class="gvi-panel-body" id="s21-panel-body">
+            <div class="guided-panel-text" id="s21-panel-text">
+              <p class="guided-intro"><strong>هنا أيضًا، نريد عرض النتيجة كنسبة مئوية.</strong></p>
+              <p class="guided-intro">أدخلوا البسط في المعادلة</p>
+            </div>
+
+            <div class="gvi-equation">
+              <div class="gvi-fraction">
+                <span class="num">3</span>
+                <span class="den">4</span>
+              </div>
+              <span class="gvi-eq-sign">=</span>
+              <div class="gvi-fraction">
+                <span class="num is-input">
+                  <input class="gvi-answer-box" id="s21-answer" type="text" inputmode="numeric" maxlength="3" dir="ltr" aria-label="أكملوا البسط" oninput="gviInput('s21')">
+                </span>
+                <span class="den">100</span>
+              </div>
+              <span class="gvi-fraction-pct" aria-hidden="true">%</span>
+            </div>
+
+            <p class="guided-hint">تلميح: للوصول إلى مقام مئة، نضرب المقام في 25.</p>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-back" id="s21-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <button class="btn-continue" id="s21-action-btn" onclick="gviSubmit('s21')" disabled>أجبتُ بشكل صحيح</button>
+    </section>
+
+    <!-- ---------------- SCREEN 13 (s22) — pptx slide 22 — reveal Alon's result ----------------
+         Same rebuild as s18/s20 — see s18's comment. Danny's and Gal's
+         badges are already resolved (persistent); Alon's is the new reveal. -->
+    <section class="screen" data-screen="13" id="s22">
+      <h1 class="guided-title">لنحلّ معاً التمرين الأول</h1>
+      <p class="guided-instruction">تأمّلوا التمرين التالي. لا تحلّوه، فقط انظروا إلى المعطيات وفكّروا: هل لديكم اتجاه للحل؟</p>
+
+      <div class="guided-layout">
+        <div class="guided-card">
+          <p class="guided-context-title">ثلاثة أصدقاء تدرّبوا على التسديد في السلة:</p>
+          <div class="guided-friend-row">
+            <div class="guided-friend-card">
+              <img src="assets/img/s17-dani-opt.png" alt="وليد" loading="lazy">
+              <span class="name">وليد</span>
+              <span class="stat">سجّل في <strong>21 من أصل 30</strong> تسديدة</span>
+              <span class="guided-pct-badge">70%</span>
+            </div>
+            <div class="guided-friend-card">
+              <img src="assets/img/s17-gal-opt.png" alt="ليلى" loading="lazy">
+              <span class="name">ليلى</span>
+              <span class="stat">سجّلت في <strong>8 من أصل 10</strong> تسديدات</span>
+              <span class="guided-pct-badge">80%</span>
+            </div>
+            <div class="guided-friend-card is-focus">
+              <img src="assets/img/s17-alon-opt.png" alt="سامر" loading="lazy">
+              <span class="name">سامر</span>
+              <span class="stat">سجّل في <strong>30 من أصل 40</strong> تسديدة</span>
+              <span class="guided-pct-badge" data-reveal="3" data-reveal-fade>75%</span>
+            </div>
+          </div>
+          <p class="guided-goal">هدفنا: <strong>معرفة مَن منهم الأفضل في التسديد إلى السلة</strong>.</p>
+        </div>
+
+        <div class="guided-panel guided-panel--character">
+          <img class="guided-char" src="assets/images/pointing-opt.png" alt="شخصية ترتدي قميصاً عليه رمز النسبة المئوية" loading="lazy">
+          <div class="guided-bubble" data-reveal="4">الآن يمكن القول إن سامر سجّل في <span class="guided-bubble-pct">75%</span> من المرات</div>
+        </div>
+      </div>
+
+      <button class="btn-back" id="s22-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <button class="btn-continue" id="s22-continue" onclick="goTo(14)">متابعة</button>
+    </section>
+
+    <!-- ---------------- SCREEN 14 (s23) — pptx slide 23 — final comparison ----------------
+         Local SCQ variant, same no-feedback behavior as screen 6 (s15).
+         KNOWN SOURCE INCONSISTENCY (flagged): the pptx also leaves a stale
+         leftover question textbox on this slide ("ما الذي يجب فعله لمقارنة النتائج؟" — slide 15's own question, apparently not
+         deleted after slide 23 was cloned from it). Not used here — the
+         actual new question on this slide is "مَن الأفضل في التسديد إلى السلة؟". -->
+    <section class="screen" data-screen="14" id="s23">
+      <h1 class="guided-title">لنحلّ معًا التمرين الأول</h1>
+      <p class="guided-instruction">تأمّلوا التمرين التالي. لا تحلّوه، فقط انظروا إلى المعطيات وفكّروا: هل لديكم اتجاه للحل؟</p>
+
+      <div class="guided-layout">
+        <div class="guided-card">
+          <p class="guided-context-title">ثلاثة أصدقاء تدرّبوا على التسديد في السلة:</p>
+          <div class="guided-friend-row">
+            <div class="guided-friend-card">
+              <img src="assets/img/s17-dani-opt.png" alt="وليد" loading="lazy">
+              <span class="name">وليد</span>
+              <span class="stat">سجّل في <strong>21 من أصل 30</strong> تسديدة</span>
+              <span class="guided-pct-badge">70%</span>
+            </div>
+            <div class="guided-friend-card">
+              <img src="assets/img/s17-gal-opt.png" alt="ليلى" loading="lazy">
+              <span class="name">ليلى</span>
+              <span class="stat">سجّلت في <strong>8 من أصل 10</strong> تسديدات</span>
+              <span class="guided-pct-badge">80%</span>
+            </div>
+            <div class="guided-friend-card">
+              <img src="assets/img/s17-alon-opt.png" alt="سامر" loading="lazy">
+              <span class="name">سامر</span>
+              <span class="stat">سجّل في <strong>30 من أصل 40</strong> تسديدة</span>
+              <span class="guided-pct-badge">75%</span>
+            </div>
+          </div>
+          <p class="guided-goal">هدفنا: <strong>معرفة مَن منهم الأفضل في التسديد إلى السلة</strong>.</p>
+        </div>
+
+        <div class="guided-panel">
+          <p class="guided-question">مَن الأفضل في التسديد إلى السلة؟</p>
+          <p class="guided-sub">قارنوا بين النسب المئوية وأجيبوا:</p>
+          <div class="guided-opt-col" role="radiogroup" aria-label="إجابات">
+            <button class="guided-opt" type="button" role="radio" aria-checked="false" data-id="gal" onclick="s23Select('gal')">
+              <span class="guided-opt-text">ليلى</span>
+              <span class="guided-opt-radio" aria-hidden="true"></span>
+            </button>
+            <button class="guided-opt" type="button" role="radio" aria-checked="false" data-id="alon" onclick="s23Select('alon')">
+              <span class="guided-opt-text">سامر</span>
+              <span class="guided-opt-radio" aria-hidden="true"></span>
+            </button>
+            <button class="guided-opt" type="button" role="radio" aria-checked="false" data-id="dani" onclick="s23Select('dani')">
+              <span class="guided-opt-text">وليد</span>
+              <span class="guided-opt-radio" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-back" id="s23-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <button class="btn-continue" id="s23-continue" data-reveal-on-ready onclick="goTo(15)" disabled>متابعة</button>
+    </section>
+
+    <!-- ---------------- SCREEN 15 (s24) — pptx slide 24 — guided-practice summary ----------------
+         Character + speech bubble closing composition, per the pptx (a
+         standalone centered text block was a mismatch — corrected here).
+         Reuses .guided-char/.guided-bubble verbatim (same component as
+         screens 7/9/11/13 — s16/s18/s20/s22); only .s24-reveal/.s24-bubble
+         are new, scoped to this screen alone, so the shared guided-practice
+         classes used by the protected 13-23 screens stay untouched. -->
+    <section class="screen" data-screen="15" id="s24">
+      <div class="s24-reveal">
+        <img class="guided-char" data-reveal="1" src="assets/images/pointing-opt.png" alt="شخصية ترتدي قميصاً عليه رمز النسبة المئوية" loading="lazy">
+        <div class="guided-bubble s24-bubble" data-reveal="2">
+          <p class="fb-regular">لاحظنا أنه عندما تُعرض النتائج بأعداد مختلفة<br>(دون مقام مشترك)، يصعب مقارنتها.</p>
+          <p><strong>بمجرد أن حوّلنا المعطيات إلى نسب مئوية، أصبحت المقارنة سهلة وواضحة.</strong></p>
+          <p class="fb-regular">النسب المئوية تحوّل الكسور إلى مقادير سهلة المقارنة.</p>
+        </div>
+      </div>
+
+      <button class="btn-back" id="s24-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <button class="btn-continue" id="s24-continue" onclick="goTo(16)">متابعة</button>
+    </section>
+
+    <!-- ================================================================
+         SCREEN 16 (s25) — pptx slide 25, item methodica-math-percent-06-01-004
+         Warm-up transition — TransitionScreen, same pattern as s13 (single
+         headline, no subline — slide 25's own textbox is one line only,
+         unlike s13's two lines; not adding a second line that isn't in the
+         script). Character asset: assets/videos/character_hot.mp4, an
+         animated loop of the mascot warming up by a wood-burning stove —
+         replaces the earlier static character_hot.png fallback (itself
+         exported verbatim from pptx embedded media image22.png) and
+         fulfills the production note asking for an animated flames GIF
+         ("לייצר את התמונה כגיף של להבות").
+         ================================================================ -->
+    <section class="screen" data-screen="16" id="s25">
+      <div class="s13-content">
+        <div class="s13-text-group">
+          <p class="s13-headline" data-reveal="1">والآن، تمرين للإحماء!</p>
+        </div>
+      </div>
+      <video class="s13-character" data-reveal="2" data-src="assets/videos/character_hot-opt.mp4" autoplay loop muted playsinline aria-label="شخصية ترتدي قميصًا عليه رمز النسبة المئوية، تتدفأ أمام موقد حطب مشتعل"></video>
+
+      <button class="btn-back" id="s25-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <button class="btn-continue" id="s25-continue" onclick="goTo(17)">متابعة</button>
+    </section>
+
+    <!-- ================================================================
+         SCREEN 17 (s26) — pptx slide 26, item methodica-math-percent-06-01-004
+         Warm-up question — circular-budget diagram, 5 fillable percentages.
+         PRODUCTION_PLAN.md classified this "Custom (last resort)": no
+         Figma/720-templates frame matches a radial fill-in-the-chart layout
+         (confirmed again this session via search_design_system — no
+         donut/pie-chart question component exists in the 720 - UI Templates
+         library). Built as a ValueInputQuestion-family variant (single
+         submission, no retry — the script gives no "ניסיונות" language,
+         matching this project's own s17/s19/s21/lpv precedent) with 5
+         inputs instead of 1-2, reusing the existing digit-only sanitization
+         (script.js handleDigitsInput/handleDigitsPaste), existing
+         .btn-continue/.btn-back chrome, and the theme's global
+         --correct-*/--incorrect-* feedback tokens.
+
+         Chart image (assets/images/warmup_budget_chart-opt.png) is the pptx's
+         own embedded picture (image23.png), used as-is/unmodified. The 5
+         answer-box positions were NOT read from the pptx shapes' own
+         coordinates (cross-checked and found unreliable — they land off
+         the actual drawn boxes); instead they were measured directly from
+         the image's pixel content (white-square detection) and are placed
+         here as percentages of the chart image's own box, so they stay
+         aligned regardless of render size. Correct values (2/5, 1/4, 1/5,
+         1/10, 1/20 → 40/25/20/10/5%) are exactly as marked in the slide.
+
+         Session correction — this screen was rebuilt from the original
+         "single submission, no retry, no hint" build to the unit's
+         standard maxAttempts:2 + hint-enabled contract
+         (_question-template-defaults.md), per direct producer review:
+         - 2 attempts: after attempt 1, only the cells still marked wrong
+           reopen for a 2nd try (already-correct cells stay locked); a
+           retry popup shows between attempts. The final (2nd) wrong
+           attempt keeps the learner's own typed value visible in the
+           input (marked error, locked) rather than overwriting it, so no
+           View My Answer Toggle is needed — the worked-solution popup body
+           already states every category's correct answer.
+         - Hint: "هل من تلميح؟" button + copy supplied directly by the producer
+           in-session (previously CONTENT_FLAGS.md #23 — omitted for lack
+           of hint text; now resolved).
+         - Feedback popup visual style corrected to the shared tinted-
+           background contract (`--correct-bg`/`--incorrect-bg` +
+           2px border, same as `.lpv-popup`) — the previous white-card-
+           with-colored-accent-bar treatment was a one-off deviation from
+           the shipped popup system, not an intentional match to it.
+
+         Still flagged rather than invented (see CONTENT_FLAGS.md):
+         - Popup is a fixed-position, non-draggable panel — a scoped
+           simplification of the full canonical draggable feedback-popup
+           system (_global-components.md), proportional to this single
+           screen; flagged rather than silently built as a one-off "same as
+           everywhere else" claim.
+         - The small top-left icon on the slide (pptx image1.png, a generic
+           88×68 grey flag placeholder) is not reproduced — it doesn't
+           correspond to any identifiable content.
+         - The off-canvas leaked textbox on this slide ("השוו בין אחוז
+           הלייקים..." — CONTENT_FLAGS.md #3) sits at negative slide
+           coordinates (never actually visible) and is excluded, not shown.
+         ================================================================ -->
+    <section class="screen" data-screen="17" id="s26">
+      <div class="warmup-layout">
+        <div class="warmup-text-col">
+          <p data-reveal="1">طلاب مجموعة القيادة الخضراء في المدرسة حصلوا على ميزانية سنوية خاصة لتطوير مشاريع بيئية.</p>
+          <p data-reveal="2">لقد عرضوا توزيع الميزانية المخطط له باستخدام مخطط دائري.</p>
+          <p data-reveal="3"><strong>أكملوا المخطط: حوّلوا كل جزء من الميزانية إلى نسب مئوية وأدخلوا النتيجة.</strong></p>
+        </div>
+        <div class="warmup-chart-col" data-reveal="4">
+          <div class="warmup-chart-wrap">
+            <img class="warmup-chart-img" src="assets/images/warmup_budget_chart-opt.png" alt="دائرة نسبية تعرض توزيع الميزانية على خمسة مشاريع بيئية: مرافق إعادة تدوير الزجاجات 2 من أصل 5، والحديقة المجتمعية ربع، ونظام تجميع مياه الأمطار خُمس، والكومبوست المدرسي عُشر، والتوعية والملصقات جزء من عشرين" loading="lazy">
+            <input class="warmup-input" data-key="bottles" type="text" inputmode="numeric" maxlength="3" style="right:35.37%; top:43.13%" aria-label="نسبة مئوية لمرافق إعادة تدوير الزجاجات (2 من أصل 5)">
+            <input class="warmup-input" data-key="garden" type="text" inputmode="numeric" maxlength="3" style="right:47.96%; top:78.48%" aria-label="نسبة مئوية لحديقة مجتمعية (ربع)">
+            <input class="warmup-input" data-key="rain" type="text" inputmode="numeric" maxlength="3" style="right:59.91%; top:64.20%" aria-label="النسبة المئوية لنظام جمع مياه الأمطار (خُمس)">
+            <input class="warmup-input" data-key="compost" type="text" inputmode="numeric" maxlength="3" style="right:61.46%; top:40.63%" aria-label="النسبة المئوية لحاوية التسميد المدرسية (عُشر)">
+            <input class="warmup-input" data-key="posters" type="text" inputmode="numeric" maxlength="3" style="right:54.80%; top:23.30%" aria-label="نسبة مئوية لحملة التوعية والملصقات (جزء من عشرين)">
+          </div>
+        </div>
+      </div>
+
+      <div class="warmup-popup" id="warmup-popup" hidden>
+        <p class="warmup-popup-title" id="warmup-popup-title"></p>
+        <div class="warmup-popup-body" id="warmup-popup-body"></div>
+      </div>
+
+      <button class="btn-back" id="s26-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <div class="scq-left-actions">
+        <button class="btn-hint" id="s26-hint" onclick="warmupOpenHint()">هل من تلميح؟</button>
+        <button class="btn-continue" id="s26-continue" onclick="warmupSubmit()" disabled>هل إجابتي صحيحة؟</button>
+      </div>
+    </section>
+
+    <!-- Hint overlay — outside .screen divs (scaling parity with #app's
+         transform), single-use here since s26 is this component's only
+         hint-bearing question. Hint copy supplied directly by the producer
+         in-session (CONTENT_FLAGS.md #23 previously left this unimplemented
+         for lack of hint text — now resolved). -->
+    <div id="warmup-hint-overlay" class="hidden" hidden>
+      <div class="warmup-hint-panel" role="dialog" aria-modal="true" aria-label="تلميح">
+        <div class="warmup-hint-content">
+          <svg class="hint-lamp" width="36" height="31" viewBox="0 0 26 22.2883" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M17.7925 2.76345C16.3676 1.37911 14.5057 0.68776 12.5488 0.815545C9.07995 1.04163 6.27286 3.9168 6.01796 7.50134C5.85646 9.77363 6.7035 11.9443 8.34374 13.4548C9.23036 14.2723 9.74016 15.465 9.74016 16.7265H11.2284H14.7733H16.2615C16.2615 15.4847 16.7919 14.2707 17.7181 13.3959C19.17 12.0263 20.0012 10.0751 20.0012 8.04361C20.0012 6.01215 19.1953 4.12486 17.7909 2.76018L17.7925 2.76345ZM13.0001 5.54524C11.6701 5.54524 10.5856 6.66582 10.5856 8.04525C10.5856 8.46956 10.2515 8.81524 9.84149 8.81524C9.43143 8.81524 9.09736 8.46956 9.09736 8.04525C9.09736 5.8172 10.8484 4.00527 13.0001 4.00527C13.4133 4.00527 13.7473 4.35094 13.7473 4.77525C13.7473 5.19957 13.4133 5.54524 13.0001 5.54524Z" fill="white"/>
+            <path d="M9.73858 19.6245C9.73858 20.3289 9.99823 20.9908 10.478 21.4904L10.4938 21.5068C10.9783 22.0098 11.6242 22.2883 12.3114 22.2883H13.6888C14.3775 22.2883 15.025 22.0114 15.5111 21.5052C15.9956 21.0039 16.2631 20.3355 16.2631 19.6277V17.9895H9.73858V19.6245ZM11.2268 19.5294H14.7717V19.6277C14.7717 19.9243 14.6609 20.2077 14.4566 20.419C14.254 20.6254 13.9753 20.7483 13.6888 20.7483H12.3114C12.028 20.7483 11.7588 20.6336 11.5561 20.4305L11.5451 20.4174C11.3424 20.211 11.2268 19.9226 11.2268 19.6261V19.5311V19.5294Z" fill="white"/>
+            <path d="M25.2558 7.27531H22.607C22.1954 7.27531 21.8629 7.62099 21.8629 8.0453C21.8629 8.46961 22.197 8.81529 22.607 8.81529H25.2558C25.6674 8.81529 25.9999 8.46961 25.9999 8.0453C25.9999 7.62099 25.6658 7.27531 25.2558 7.27531Z" fill="white"/>
+            <path d="M4.1386 8.0453C4.1386 7.61935 3.80453 7.27531 3.39447 7.27531H0.744124C0.332481 7.27531 0 7.62099 0 8.0453C0 8.46961 0.334064 8.81529 0.744124 8.81529H3.39289C3.80453 8.81529 4.13701 8.46961 4.13701 8.0453H4.1386Z" fill="white"/>
+            <path d="M20.8702 3.11398C21.0175 3.11398 21.1663 3.06811 21.2961 2.97472L23.4667 1.40198C23.804 1.15788 23.8847 0.677863 23.6488 0.328911C23.4129 -0.0200418 22.949 -0.105232 22.6118 0.140509L20.4412 1.71325C20.1039 1.95736 20.0232 2.43737 20.2591 2.78632C20.4032 3.00094 20.6343 3.11562 20.8702 3.11562V3.11398Z" fill="white"/>
+            <path d="M4.70372 13.1172L2.53309 14.69C2.19586 14.9341 2.11512 15.4141 2.35102 15.763C2.49509 15.9777 2.72625 16.0923 2.96215 16.0923C3.10939 16.0923 3.25822 16.0465 3.38804 15.9531L5.55867 14.3803C5.8959 14.1362 5.97665 13.6562 5.74074 13.3073C5.50484 12.9583 5.04095 12.8731 4.70372 13.1189V13.1172Z" fill="white"/>
+            <path d="M23.4668 14.6884L21.2961 13.1157C20.9589 12.8716 20.495 12.9567 20.2591 13.3041C20.0232 13.653 20.1055 14.133 20.4412 14.3771L22.6118 15.9499C22.7416 16.0449 22.8904 16.0891 23.0377 16.0891C23.272 16.0891 23.5032 15.9744 23.6488 15.7598C23.8847 15.4109 23.8024 14.9309 23.4668 14.6868V14.6884Z" fill="white"/>
+            <path d="M5.55869 1.71322L3.38806 0.140478C3.05083 -0.103625 2.58694 -0.0184349 2.35104 0.328879C2.11513 0.677832 2.19746 1.15785 2.53311 1.40195L4.70374 2.97469C4.83356 3.06971 4.98239 3.11395 5.12963 3.11395C5.36395 3.11395 5.5951 2.99927 5.74076 2.78465C5.97666 2.4357 5.89434 1.95569 5.55869 1.71158V1.71322Z" fill="white"/>
+          </svg>
+          <div class="warmup-hint-body" id="warmup-hint-body"></div>
+        </div>
+        <button class="warmup-hint-back" type="button" onclick="warmupCloseHint()">العودة إلى السؤال</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Report dialogs — markup contract of ../unit-js/25-report.js (verbatim from
+       methodica-math-ratio-01). Outside #app: full-viewport, not scaled with the canvas. -->
+  <div id="report-modal"
+         class="report-modal-overlay"
+         hidden
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="report-modal-title">
+      <div class="report-modal-box">
+        <button class="report-close-btn" onclick="tryCloseReportModal()" aria-label="إغلاق">&#10005;</button>
+        <h2 class="report-modal-title" id="report-modal-title">الإبلاغ عن مشكلة</h2>
+        <p class="report-modal-body">هل هناك شيء غير واضح أو لا يعمل كما ينبغي؟<br>أخبرونا بما حدث لنتولّى الأمر.</p>
+
+        <div class="report-field">
+          <label class="report-label" for="report-type"><span class="required-star">*</span> ما نوع المشكلة</label>
+                    <div class="report-custom-select" id="report-type-wrapper">
+            <button class="report-select-btn is-placeholder" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <span class="report-select-value">اختاروا نوع المشكلة</span>
+            </button>
+            <ul class="report-select-list" role="listbox" hidden>
+              <li class="report-select-option" data-value="technical" role="option">خلل تقني أو شيء لا يعمل</li>
+              <li class="report-select-option" data-value="unclear" role="option">شيء غير واضح لي</li>
+              <li class="report-select-option" data-value="other" role="option">أخرى</li>
+            </ul>
+            <input type="hidden" id="report-type" value="">
+          </div>
+          <span class="report-field-error" id="report-type-error" hidden>اختاروا نوع المشكلة</span>
+        </div>
+
+        <div class="report-field">
+          <label class="report-label" for="report-text"><span class="required-star">*</span> ماذا حدث؟</label>
+          <textarea class="report-textarea" id="report-text" maxlength="250" rows="4" placeholder="اشرحوا ما حدث لنتمكّن من فهم المشكلة" onblur="reportTextBlur()"></textarea>
+          <span class="report-field-error" id="report-text-error" hidden>اكتبوا ما حدث</span>
+          <span class="report-char-count" id="report-char-count">0 / 250</span>
+        </div>
+
+        <div class="report-actions">
+          <button class="report-cancel-btn" onclick="tryCloseReportModal()">إلغاء</button>
+          <button class="report-submit-btn" onclick="submitReport()" disabled>إرسال البلاغ</button>
+        </div>
+      </div>
+    </div>
+  <div id="report-confirm-modal"
+         class="report-modal-overlay"
+         hidden
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="confirm-modal-title">
+      <div class="report-modal-box report-confirm-box">
+        <h2 class="report-modal-title" id="confirm-modal-title">هل أنتم متأكدون من إغلاق النافذة؟</h2>
+        <p class="report-modal-body">عند الإغلاق لن يُرسَل البلاغ</p>
+        <div class="report-actions">
+          <button class="report-cancel-btn" onclick="forceCloseReportModal()">إغلاق النافذة</button>
+          <button class="report-submit-btn" onclick="backToReportForm()">أريد الإبلاغ</button>
+        </div>
+      </div>
+    </div>
+  <div id="report-thanks-modal"
+         class="report-modal-overlay"
+         hidden
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="thanks-modal-title">
+      <div class="report-modal-box report-confirm-box">
+        <h2 class="report-modal-title" id="thanks-modal-title">تم إرسال البلاغ، شكرًا!</h2>
+        <p class="report-modal-body">استلمنا بلاغكم وسنتولّى معالجته في أقرب وقت.</p>
+        <div class="report-actions">
+          <button class="report-submit-btn" onclick="closeReportThanks()">إغلاق</button>
+        </div>
+      </div>
+    </div>
+
+  <script src="../unit-js/10-identity.js?v=2"></script>
+  <script src="../unit-js/20-xapi.js?v=3"></script>
+  <script src="../unit-js/25-report.js?v=1"></script>
+  <script src="../unit-js/40-resume.js?v=6"></script>
+  <script src="../unit-js/50-loader.js?v=3"></script>
+  <script src="../unit-js/motion.js?v=1"></script>
+  <script src="../unit-js/05-core.js?v=3"></script>
+  <script src="script.js?v=55"></script>
+  <script src="../unit-js/90-boot.js?v=1"></script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+{
+  "id": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-03/",
+  "title": "זמן תרגול 2",
+  "learningUnitId": "methodica-math-percent-06",
+  "componentPurpose": "practice",
+  "isAssessment": false,
+  "recommendedAfterFail": ["https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-02/"],
+  "isRequired": false,
+  "relativeDifficulty": 2,
+  "masteryLevel": null,
+  "order": 3,
+  "depthLevel": "core-curriculum-basic",
+  "cognitiveLevels": ["algorithmic-thinking"],
+  "languages": ["Hebrew"],
+  "skills": [],
+  "estimatedTimeInMinutes": 14,
+  "createdAt": "2026-09-28T00:00:00.000Z",
+  "updatedAt": "2026-09-28T00:00:00.000Z",
+  "subContent": [
+    {
+      "id": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-03/methodica-math-percent-06-03-001/",
+      "title": "מבחן במתמטיקה – טבלת תשובות נכונות",
+      "informationToBot": "מטרת הפריט: לתרגל השלמת טבלה מלאה - מעבר משבר (מתוך 20 שאלות) להרחבה למכנה 100 ולאחוז - עבור 3 תלמידים שענו נכון על כמויות שונות של שאלות במבחן בן 20 שאלות. כיווני חשיבה: לכל שורה (אנה 15, דניאל 18, אפרת 20) הלומד ממלא שבר פשוט מתוך 20, מרחיב אותו למכנה 100, וקורא את האחוז. טעויות נפוצות: שגיאה בזיהוי מקדם ההרחבה (20 כפול 5 = 100); אי-הכפלת המונה באותו מקדם. מידע נוסף: רמז זמין תמיד; 2 ניסיונות; אין תמונת תוכן במסך זה. מבוסס שקף 33 בתסריט המקורי; שדה 'כמות שאלות שנענו נכונה' נתון (לא לקלט).",
+      "contentType": "practice",
+      "mediaFormat": "interactive-content",
+      "questions": [
+        {
+          "questionId": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-03/methodica-math-percent-06-03-001/q1",
+          "questionType": "fill-in",
+          "questionText": "במבחן במתמטיקה היו 20 שאלות. התלמידים והתלמידות ענו נכון על כמות שונה של שאלות. השלימו את הטבלה עבור כל תלמיד/ה: ייצוג בשבר פשוט (מתוך 20), השבר לאחר הרחבת המכנה ל-100, ואחוז. אנה ענתה נכון על 15 שאלות. דניאל ענה נכון על 18 שאלות. אפרת ענתה נכון על 20 שאלות.",
+          "answers": [],
+          "correctAnswers": ["אנה: 15/20, 75/100, 75%; דניאל: 18/20, 90/100, 90%; אפרת: 20/20, 100/100, 100%"]
+        }
+      ]
+    },
+    {
+      "id": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-03/methodica-math-percent-06-03-002/",
+      "title": "אתגר הצעדים באפליקציה",
+      "informationToBot": "מטרת הפריט: לתרגל סיווג ערך יחסי (קטן/שווה/גדול מהשלם) בהקשר של אתגר צעדים באפליקציה, שבו היעד (10,000 צעדים) מיוצג כ-100%. כיווני חשיבה: הלומד מסווג 3 נתונים - 25% ביצוע (קטן מהיעד, לא הגיע ליעד), 200% ביצוע (גדול מהיעד, עבר את היעד), ו-8,999/10,000 ביצוע (כמעט אך לא הגיע - קרוב ל-90%, עדיין לא הגיע ליעד). טעויות נפוצות: פירוש שגוי של 200% כ'הגיע בדיוק ליעד'; אי-זיהוי ש-8,999/10,000 קטן מ-1 (100%). מידע נוסף: לפני השאלה מוצג הסבר על אפליקציית אתגר הצעדים; ניקוד הוליסטי על 3 השורות יחד, 2 ניסיונות, רמז זמין מתחילת השאלה. מבוסס שקפים 34-35 בתסריט המקורי.",
+      "contentType": "practice",
+      "mediaFormat": "interactive-content",
+      "questions": [
+        {
+          "questionId": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-03/methodica-math-percent-06-03-002/q1",
+          "questionType": "choice",
+          "questionText": "עבור כל נתון קבעו האם: לא הגיע ליעד, הגיע ליעד או עבר את היעד. סטטוס צעדים: 25% ביצוע.",
+          "answers": ["לא הגיע ליעד", "הגיע ליעד", "עבר את היעד"],
+          "correctAnswers": ["לא הגיע ליעד"]
+        },
+        {
+          "questionId": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-03/methodica-math-percent-06-03-002/q2",
+          "questionType": "choice",
+          "questionText": "סטטוס צעדים: 200% ביצוע.",
+          "answers": ["לא הגיע ליעד", "הגיע ליעד", "עבר את היעד"],
+          "correctAnswers": ["עבר את היעד"]
+        },
+        {
+          "questionId": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-03/methodica-math-percent-06-03-002/q3",
+          "questionType": "choice",
+          "questionText": "סטטוס צעדים: 8,999 / 10,000 ביצוע.",
+          "answers": ["לא הגיע ליעד", "הגיע ליעד", "עבר את היעד"],
+          "correctAnswers": ["לא הגיע ליעד"]
+        }
+      ]
+    },
+    {
+      "id": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-03/methodica-math-percent-06-03-003/",
+      "title": "סקר בחירת צבע לנעלי ספורט",
+      "informationToBot": "מטרת הפריט: לתרגל המרת שבר (מתוך 40 משתתפים) לאחוז, בהקשר של סקר בחירת צבע לעיצוב נעלי ספורט חדש. כיווני חשיבה: הלומד משלים את עמודת האחוזים עבור 4 צבעים, כאשר השבר (מתוך 40) נתון: שחור 6/40, בורדו 10/40, כחול 20/40, ירוק 4/40. מומלץ לצמצם תחילה את השבר ולאחר מכן להרחיב למכנה 100. טעויות נפוצות: ניסיון להרחיב ישירות מ-40 ל-100 בלי צמצום קודם (קשה כי 100 אינו כפולה שלמה של 40 בלי צמצום); טעויות עיגול. מידע נוסף: רמז נפתח רק לאחר ניסיון שגוי ראשון (לא מתחילת השאלה); 2 ניסיונות; מוצגת תמונת הקשר (תלמידים בוחנים נעליים). מבוסס שקף 37 בתסריט המקורי.",
+      "contentType": "practice",
+      "mediaFormat": "interactive-content",
+      "questions": [
+        {
+          "questionId": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-03/methodica-math-percent-06-03-003/q1",
+          "questionType": "fill-in",
+          "questionText": "בסקר שנערך לבחירת צבע לעיצוב חדש של נעלי ספורט השתתפו 40 תלמידות ותלמידים. בטבלה מופיע מספר המצביעות ומצביעים שבחרו כל צבע, מיוצג כשבר מתוך כלל המשתתפות והמשתתפים. השלימו את עמודת האחוזים: שחור 6/40, בורדו 10/40, כחול 20/40, ירוק 4/40.",
+          "answers": [],
+          "correctAnswers": ["שחור: 15%, בורדו: 25%, כחול: 50%, ירוק: 10%"]
+        }
+      ]
+    },
+    {
+      "id": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-03/methodica-math-percent-06-03-004/",
+      "title": "סרטון כיתה – השוואת לייקים",
+      "informationToBot": "מטרת הפריט: לתרגל השוואה הוגנת בין שתי קבוצות בגדלים שונים (לא לפי כמות מוחלטת אלא לפי שיעור יחסי), דרך ויכוח בין שני תלמידים (אסיף/מיכאל) על אילו משתי כיתות הצליח הסרטון יותר. כיווני חשיבה: כיתה ח1 קיבלה 28 לייקים מתוך 32 צופים (87.5%), כיתה ח2 קיבלה 30 לייקים מתוך 40 צופים (75%) - לכן אסיף (הטוען שח1 הצליחה יותר לפי האחוז) צודק. סעיף א' - הלומד קובע מי צודק; סעיף ב' - הלומד מזהה את טעות ההיגיון של מיכאל (השוואת מספר לייקים גולמי במקום שיעור). טעויות נפוצות: השוואת מספר הלייקים הגולמי (30>28) בלי לחלק במספר הצופים בכל כיתה. מידע נוסף: סעיף א' עם רמז (נפתח לאחר ניסיון ראשון שגוי), סעיף ב' ללא רמז; 2 ניסיונות לכל סעיף; קומיקס עם שתי בועיות דיבור מציג את הטיעונים של אסיף ומיכאל. מבוסס שקפים 38-39 בתסריט המקורי.",
+      "contentType": "practice",
+      "mediaFormat": "interactive-content",
+      "questions": [
+        {
+          "questionId": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-03/methodica-math-percent-06-03-004/q1",
+          "questionType": "choice",
+          "questionText": "שתי כיתות העלו סרטון לתחרות בית-ספרית. הסרטון של כיתה ח1 קיבל 28 לייקים מתוך 32 תלמידים שצפו בו. הסרטון של כיתה ח2 קיבל 30 לייקים מתוך 40 תלמידים שצפו בו. אסיף טוען שאחוז המסמנים לייק בסרטון של ח1 גבוה יותר ולכן הוא הצליח יותר; מיכאל טוען שח2 קיבלה יותר לייקים ולכן הסרטון שלה הצליח יותר. מי צודק?",
+          "answers": ["אסיף", "מיכאל", "שניהם צודקים", "לא ניתן לדעת"],
+          "correctAnswers": ["אסיף"]
+        },
+        {
+          "questionId": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-03/methodica-math-percent-06-03-004/q2",
+          "questionType": "choice",
+          "questionText": "מה הטעות בטענה של מיכאל?",
+          "answers": [
+            "הוא השווה את מספר הלייקים במקום להשוות את שיעורי ההצלחה",
+            "הוא חישב את מספר הלייקים בצורה לא נכונה",
+            "הוא היה צריך לחשב כמה תלמידים לא עשו לייק",
+            "הוא היה צריך להשוות בין מספר הצופים בלבד"
+          ],
+          "correctAnswers": ["הוא השווה את מספר הלייקים במקום להשוות את שיעורי ההצלחה"]
+        }
+      ]
+    }
+  ]
+}

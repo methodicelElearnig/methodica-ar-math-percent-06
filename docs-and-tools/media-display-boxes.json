@@ -1,0 +1,26 @@
+{
+  "_about": "Largest box each media file is DRAWN in, in 1280x710 design px, derived 2026-11-04 from each part's styles.css (object-fit applied; the zoom panel is 660x660 contain in parts 02-04 and ~930x620 in parts 05-06; part 01 has no zoom). reencode-media.py resizes to 2 x the box (cover rule: the larger ratio), never upscales, skips a shrink under 10 %. Files absent here keep their size and are only re-encoded. `_video` boxes feed the clip re-encode (2 x box, even dimensions).",
+  "s17-dani.png":  [[120, 150]],
+  "s17-gal.png":   [[120, 150]],
+  "s17-alon.png":  [[120, 150]],
+  "pointing.png":  [[260, 325]],
+  "Q2.png":        [[540, 360]],
+  "Yoav.png":      [[460, 307]],
+  "Q12.png":       [[440, 293], [660, 440]],
+  "Q13.png":       [[540, 360], [660, 440]],
+  "Q7.png":        [[540, 360], [930, 620]],
+  "Q8.png":        [[540, 360], [930, 620]],
+  "Q9.png":        [[400, 267]],
+  "Q10.png":       [[380, 253], [930, 620]],
+  "Q11.png":       [[380, 253], [930, 620]],
+  "_video": {
+    "character_one.mp4":      [[400, 400]],
+    "character_hot.mp4":      [[800, 450]],
+    "character_lifting.mp4":  [[600, 338]],
+    "character_computer.mp4": [[673, 379]],
+    "character_testb.mp4":    [[772, 435]],
+    "character_gift.mp4":     [[560, 315]],
+    "character_peakA.mp4":    [[185, 329]],
+    "character_peakB.mp4":    [[185, 329]]
+  }
+}

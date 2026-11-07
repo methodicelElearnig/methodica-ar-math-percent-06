@@ -1,0 +1,2679 @@
+/* methodica-math-percent-06 — Phase 0A/0B scaffold
+   Canvas/bottom-bar/continue-button rules ported from methodica-math-percent-04-03.
+   Subject color uses CURRENT Math Foundations tokens (var(--subject-*)), not
+   04-03's hard-coded hex — see 720-design-guidelines/colors-and-gradients.md.
+   Verified 2026-08-05 directly against Figma node 618:10116 (Foundations —
+   Colors frame, Math Mode row): every --subject-* value below is a hex-exact
+   match, no changes needed. See references/PROJECT_CONTEXT.md for the
+   recorded token table. */
+
+/* Shared rules (tokens, reset, canvas, screen shell, buttons, staged reveal) live in ../unit-css/base.css, linked before this file. */
+
+/* ============================================================
+   CONTINUE / BACK BUTTONS — ported from 04-03, gradient retargeted
+   to var(--subject-gradient) (current Math tokens, not 04-03's hex)
+   ============================================================ */
+
+.btn-back[hidden] { display: none; }
+
+/* ============================================================
+   SCREEN 0 — hook1 (pptx slide 3) — MultipleChoiceQuestion local variant
+   Figma: Screen Templates Library → Question Templates → MultipleChoiceQuestion
+   (text-pill, vertical-list variant, canonical frame "MultiplyChoiceQuestion -
+   State 01", node 525:9102) — answers block is a fixed 604px column (NOT
+   full-bleed), each pill 46px tall, option text 22px Regular (Question/Q-1),
+   checkbox 20×20px radius-2px border-2 solid var(--subject-500). No grading/
+   attempts/hint — reflection question only (see 720-templates/
+   MultipleChoiceQuestion.md). Composition (character+bubble LEFT / question+
+   answers RIGHT) follows the production-script layout — pptx slide 3's own
+   shape coordinates place the character picture at x 20.8%-35.3% and the
+   speech bubble at x 2.2%-23.6% of slide width (both LEFT), and the title/
+   answer-option groups at x 24.8%-94.4% / 40.2%-93.6% (both RIGHT). This also
+   matches the canonical Figma MultipleChoiceQuestion frame (node 525:9102):
+   its "answers" instance sits at x=636-1240 of a 1280-wide canvas (RIGHT,
+   604px wide, 40px margin from the right edge) and its illustration slot
+   sits at x=80-460 (LEFT). Corrected 2026-08-06 — a prior pass had this
+   mirrored (character right / answers left); do not flip it back based on
+   RTL assumptions or generic template defaults, per explicit production
+   direction.
+   Typography roles used:
+     screen title            → Heading/H-7   32px Bold   (matches .s17-title)
+     instruction text        → Body/B-3      24px Regular
+     option pill text        → Question/Q-1  22px Regular (Figma-verified, node 525:9102)
+     speech bubble text      → Body/B-6      20px Regular
+     feedback popup body     → Body/B-6      20px Regular (bold spans per script)
+   ============================================================ */
+.hook1-title {
+  position: absolute;
+  top: 80px;
+  right: 80px;
+  left: 24px;
+  font-size: 32px;      /* Heading/H-7 */
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--subject-800); /* dark purple subject accent, not body text */
+  text-align: right;
+}
+
+.hook1-instruction {
+  position: absolute;
+  top: 136px;
+  right: 80px;
+  left: 24px;
+  font-size: 24px;      /* Body/B-3 */
+  font-weight: 400;
+  color: var(--text-body);
+  text-align: right;
+  line-height: 1.5;
+}
+
+/* Character + speech bubble + (once revealed) feedback panel — one
+   coherent LEFT-side vertical group, per the production script's own
+   composition (slide 3): character above, feedback panel underneath it.
+   justify-content:flex-start so the group hangs from its own top. top:60px
+   (rather than a lower, more "centered" value) is deliberate — it gives the
+   feedback panel (a genuinely tall element once its two-sentence text wraps
+   — see .hook1-popup below) enough room to sit fully above the 74px bottom
+   bar without the stack overflowing it; the title/instruction above stay
+   clear because their text is short and right-aligned (see their own
+   comments — the left portion of those full-width boxes is empty).
+   Top/left/size corrected 2026-08-06 (visual QA pass): nudged right and up
+   and enlarged so the character reads as bigger and aligns with the
+   answer-options band (see .hook1-options below). gap:16px is the normal
+   inter-item spacing; .hook1-bubble below pulls itself 10px closer to the
+   image with a negative margin so the speech-bubble tail reads as attached
+   to the character. width:270px sizes the character/bubble column.
+   justify-content:flex-end bottom-anchors the group (2026-08-19 follow-up,
+   together with moving the feedback panel out to .hook1-options below) so
+   the character's feet sit on the bottom bar's top hairline — bottom:74px —
+   same convention as .s13-character, instead of hanging from the top. */
+.hook1-character {
+  position: absolute;
+  top: 30px;
+  left: 130px;
+  bottom: 74px;
+  width: 270px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.hook1-character img {
+  width: 222px;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Speech bubble — real HTML/CSS component (never an image): white interior,
+   thin purple Math-subject outline, rounded body, RTL black text, generous
+   padding, and a CSS triangular tail pointing down at the character so the
+   bubble reads as attached rather than a floating card. Never the
+   light-purple Subject/100 fill used elsewhere on this screen (selected
+   option pills, the feedback panel below); that fill is reserved for those
+   roles, not the speech bubble's interior.
+   Tail construction: two stacked CSS border-triangles (a well-established,
+   framework-free technique for a bordered speech-bubble tail) — ::before is
+   the outline color at full size, ::after is the fill color 2px smaller on
+   every edge and pulled up by the border width, so a consistent 2px purple
+   rim shows around the inner white triangle. margin-bottom:-10px shortens
+   the visual gap to the image below (see .hook1-character comment above)
+   without touching the uniform 16px gap used elsewhere in the group. */
+.hook1-bubble {
+  position: relative;
+  background: #ffffff;
+  border: 2px solid var(--subject-500);
+  border-radius: 16px;
+  padding: 18px 20px;
+  font-size: 20px;      /* Body/B-6 */
+  font-weight: 400;
+  color: var(--text-body);
+  text-align: right;
+  direction: rtl;
+  line-height: 1.4;
+  margin-bottom: -10px;
+}
+
+.hook1-bubble::before,
+.hook1-bubble::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  border-style: solid;
+  border-top-style: solid;
+  width: 0;
+  height: 0;
+}
+
+.hook1-bubble::before {
+  top: 100%;
+  border-width: 14px 12px 0 12px;
+  border-color: var(--subject-500) transparent transparent transparent;
+}
+
+.hook1-bubble::after {
+  top: calc(100% - 2px);
+  border-width: 12px 10px 0 10px;
+  border-color: #ffffff transparent transparent transparent;
+}
+
+/* The emphasized "אחוז" in this bubble's own text — dark purple subject
+   accent, same token as every other emphasized-value role in this project
+   (.guided-question/.guided-goal/.guided-bubble-pct), not plain bold black. */
+.hook1-bubble strong { color: var(--subject-800); }
+
+/* Question + answers — RIGHT side of the screen. Fixed 604px column
+   (Figma-verified width, node 525:9102 "answers", which sits at x=636-1240
+   of a 1280-wide canvas — a 40px margin from the right edge), not
+   full-bleed — leaves comfortable whitespace before the character column
+   on the left. justify-content:flex-start so the pill list hangs from its
+   own top. top: 168 → 208 (2026-08-06 visual QA pass, together with
+   .hook1-title/.hook1-instruction above) moves the whole heading+
+   instruction+answers group down as one unit, toward the vertical center
+   of the content area — do not offset this block's top independently of
+   theirs again. */
+.hook1-options {
+  position: absolute;
+  top: 208px;
+  right: 80px;
+  bottom: 74px;
+  width: 604px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.hook1-opt {
+  display: flex;
+  flex-direction: row-reverse; /* under direction:rtl, puts the checkbox at the pill's right end */
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  width: 100%;
+  height: 46px;
+  padding: 12px 20px;
+  border-radius: 1000px;
+  border: 2px solid var(--subject-500);
+  background: #ffffff;
+  cursor: pointer;
+  direction: rtl;
+  font-family: Calibri, 'Segoe UI', Tahoma, sans-serif;
+  box-sizing: border-box;
+}
+
+.hook1-opt:hover:not(:disabled),
+.hook1-opt:focus-visible {
+  border-color: var(--subject-700);
+  outline: none;
+}
+
+.hook1-opt.is-selected {
+  border-color: var(--subject-500);
+  background: var(--subject-100);
+}
+
+.hook1-opt:disabled { cursor: default; }
+
+.hook1-opt-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 22px;      /* Question/Q-1 — Figma-verified (node 525:9102) */
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--text-body);
+  text-align: right;
+}
+
+.hook1-checkbox {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
+  border: 2px solid var(--subject-500);
+  background: #ffffff;
+  position: relative;
+}
+
+.hook1-opt.is-selected .hook1-checkbox {
+  background: var(--subject-500);
+  border-color: var(--subject-500);
+}
+
+.hook1-opt.is-selected .hook1-checkbox::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 10px;
+  height: 5px;
+  border-left: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+/* Feedback panel — "message" type (no correct/incorrect grading), styled with
+   the Math Subject purple accent rather than a neutral white popup, per the
+   production script's own feedback shape (pptx slide 3, shape "מלבן: פינות
+   מעוגלות 8"). Background/border follow the same role pattern as the sibling
+   .s17-popup correct/incorrect states (light subject-family tint + darker
+   same-hue border) using the "light tints and fills" token role
+   (720-design-guidelines/colors-and-gradients.md) rather than a hardcoded
+   hex — Subject/100 fill, Subject/500 border.
+   Deliberately NOT the shared draggable/absolutely-positioned feedback-popup
+   pattern (720-templates/_global-components.md "Feedback popup system") —
+   local, documented exception: nested as a flex child of .hook1-options
+   (after the last distractor, 2026-08-19 follow-up — previously under the
+   character; moved so the feedback reads directly under the distractors
+   it's grading), so it lays out in normal flow at the options column's own
+   604px width (no explicit width needed — .hook1-options's default
+   align-items:stretch already fills it, matching the option pills). It
+   keeps the "-popup" id suffix so the shared nav-cleanup selector
+   (`[id$="-popup"]`) still hides it on screen change, and the
+   ".no-drag" class (see the pointerdown guard in the draggable-popup script)
+   opts it out of the generic drag handler, since position:static makes any
+   inline top/left the handler sets inert but there's no reason to invite
+   the pointer-capture dead code. No close button, per the current
+   no-manual-close contract. */
+.hook1-popup {
+  border-radius: 12px;
+  padding: 24px;
+  direction: rtl;
+  text-align: right;
+  background: var(--subject-100);
+  border: 2px solid var(--subject-500);
+  box-sizing: border-box;
+  /* Extra breathing room above the panel, on top of .hook1-options' own
+     12px inter-item gap — keeps the 4 distractor pills at their normal
+     spacing while pulling the feedback further away from them. */
+  margin-top: 20px;
+}
+
+.hook1-popup[hidden] { display: none; }
+
+.hook1-popup-body {
+  font-size: 20px;      /* Body/B-6 */
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text-body);
+  direction: rtl;
+  text-align: right;
+  /* Orphan-word / line-balance pass (unit-wide feedback typography QA):
+     redistributes this block's own wrapped lines evenly so a long sentence
+     doesn't strand a single trailing word alone on its last line. Alignment
+     stays right/RTL — balance only changes where the soft line-breaks fall,
+     not text-align. No-op in browsers without support (falls back to
+     normal wrapping, same as before). */
+  text-wrap: balance;
+  margin: 0;
+}
+
+/* ============================================================
+   SCREEN 1 — whypercent (pptx slide 4) — "למה דווקא אחוזים?"
+   FlipCardsReveal "Before interaction" TEXT layout only (Figma node
+   405:8027) — card row / video toggle intentionally omitted, the script
+   supplies no content for them. Plain content screen, Continue always on.
+   Typography: Heading/H-5 40px Bold (title) + 28px body, centered —
+   Figma-verified sizes (node 405:8027). Column widened to 950px (2026-08-06
+   — an earlier 640px forced two of the script's own single lines, "כי הם
+   מאפשרים...מחדש" and "לפעמים תפגשו...0.65", into an extra unintended wrap;
+   950px is the narrowest width that lets every script line-break be a real
+   line-break rather than an accidental one — verified by measuring each
+   line's rendered width at Body/B-1 28px: the "לפעמים תפגשו..." line needs
+   787px and the closing "כדי להבין..." line needs 908px, so 950px clears
+   both with a small margin. The longest paragraph, "כי הם מאפשרים...מחדש"
+   (~1223px), still wraps onto two lines at any width the 1280px canvas can
+   fit with side margins — that wrap is unavoidable, not a defect). Anchored
+   near the top of the content area (rather than vertical-dead-center) so it
+   reads as a compact paragraph block, matching the production-script
+   composition — with one paragraph per script blank-line break, plus the
+   script's own intentional single line-break between "אבל.. לא תמיד..."
+   and "לפעמים תפגשו...".
+   ============================================================ */
+.whypercent-content {
+  position: absolute;
+  top: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 950px;
+  max-width: calc(100% - 100px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.whypercent-title {
+  font-size: 40px;      /* Heading/H-5 */
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--subject-800); /* dark purple subject accent, not body text */
+  text-align: center;
+  width: 100%;
+  margin: 0 0 24px;
+}
+
+.whypercent-body {
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--text-body);
+  text-align: center;
+  width: 100%;
+  margin: 0 0 24px;
+}
+
+.whypercent-body:last-child { margin-bottom: 0; }
+
+.whypercent-body strong { font-weight: 700; color: var(--subject-800); }
+
+/* ============================================================
+   SCREEN 2 — hook2 (pptx slide 5) — HOOK_002
+   Composition corrected 2026-08-06 per user-supplied reference image:
+   a bold heading centered above the character group (not a body paragraph
+   beside it), then the character (RIGHT) + speech bubble (LEFT) as a
+   second, centered row. Plain content screen, Continue always on.
+   ============================================================ */
+.hook2-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 760px;
+  max-width: calc(100% - 160px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 48px;
+}
+
+/* width:100% (of the 760px .hook2-content column) comfortably clears both
+   explicit <br> lines below (measured at Body/B-1 28px Bold: 571px / 675px)
+   without inviting a further, unintended wrap — the line break itself is
+   the script's own, not the browser's, per the same reasoning as
+   .whypercent-content. */
+.hook2-text {
+  width: 100%;
+  font-size: 28px;      /* 28px Bold has no entry in the approved 720
+                           typography token table (closest approved token
+                           is Body/B-2, 28px SemiBold) — kept as an explicit,
+                           deliberate exception per producer request. */
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--text-body);
+  text-align: center;
+  margin: 0;
+}
+
+.hook2-group {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  direction: rtl;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.hook2-character {
+  flex-shrink: 0;
+  width: 220px;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Speech bubble — same real HTML/CSS component as .hook1-bubble (white
+   interior, thin purple Math-subject outline, black RTL text), but the
+   character sits to its RIGHT here (not below), so the tail is a
+   horizontal variant of the same two-triangle border technique: pointing
+   right into the character instead of down. Fixed width (rather than
+   flex:1) so its own text wraps predictably instead of depending on
+   .hook2-group's shrink-to-fit width. */
+.hook2-bubble {
+  position: relative;
+  width: 460px;
+  background: #ffffff;
+  border: 2px solid var(--subject-500);
+  border-radius: 16px;
+  padding: 18px 20px;
+  font-size: 20px;      /* Body/B-6 */
+  font-weight: 400;
+  color: var(--text-body);
+  text-align: right;
+  direction: rtl;
+  line-height: 1.4;
+}
+
+.hook2-bubble::before,
+.hook2-bubble::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+
+.hook2-bubble::before {
+  left: 100%;
+  border-width: 14px 0 14px 12px;
+  border-color: transparent transparent transparent var(--subject-500);
+}
+
+.hook2-bubble::after {
+  left: calc(100% - 2px);
+  border-width: 12px 0 12px 10px;
+  border-color: transparent transparent transparent #ffffff;
+}
+
+/* ============================================================
+   TYPOGRAPHY HIERARCHY — 720-design-guidelines approved token table
+   (references/typography.md). One role → one token, applied consistently;
+   no arbitrary per-element sizes. Roles used across this segment:
+     screen title            → Heading/H-7   32px Bold
+     intro/instruction text  → Body/B-3      24px Regular
+     panel/question heading  → Question/Q-3  22px SemiBold
+     normal body text        → Body/B-6      20px Regular
+     character names         → Body/B-8      20px Bold
+     character data          → Body/B-6      20px Regular
+     answer text / emphasized values → Body/B-5  24px Bold
+     bottom nav buttons       → Button/B-3    20px Regular (already applied
+                                to .btn-continue/.btn-back — unchanged here)
+   ============================================================ */
+
+.guided-title {
+  position: absolute;
+  top: 32px;
+  left: 0;
+  right: 0;
+  width: 100%;
+  font-size: 32px;      /* Heading/H-7 */
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text-body);
+  text-align: center;
+  margin: 0;
+}
+
+.guided-instruction {
+  position: absolute;
+  top: 88px;
+  right: 80px;
+  left: 24px;
+  font-size: 24px;      /* Body/B-3 */
+  font-weight: 400;
+  color: var(--text-body);
+  text-align: right;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Screen 5 (s14) has no left panel yet — the instruction sits alone under
+   the centered title, so it's centered too (matches the pptx: this
+   textbox's own left/right bounds are roughly symmetric on the slide,
+   unlike every later screen in this segment where it shares the row with
+   a left-side card/panel and stays right-aligned). Scoped to #s14 only. */
+#s14 .guided-instruction {
+  right: 0;
+  left: 0;
+  text-align: center;
+}
+
+/* Guided Practice family layout rule (applies to every screen in this
+   family): RIGHT = characters/given data/visual context, rendered in
+   .guided-card (neutral white card — matches 04-03's own card role:
+   static/contextual content). LEFT = question/learner interaction/
+   answer options, rendered in .guided-panel (tinted work-area — matches
+   04-03's own panel role: interactive content). Under direction:rtl +
+   flex-direction:row, first DOM child = right edge, so .guided-card must
+   stay first and .guided-panel second — never reorder to "fix" RTL, that
+   would flip the rule this comment documents. */
+.guided-layout {
+  position: absolute;
+  top: 168px;
+  right: 80px;
+  left: 24px;
+  bottom: 100px;
+  display: flex;
+  flex-direction: row;
+  direction: rtl;
+  gap: 32px;
+  align-items: stretch;
+}
+
+/* Screen 5 (s14) has no left panel yet (nothing to solve) — center the
+   solo .guided-card instead of leaving it pinned to the right edge. */
+.guided-layout--solo { justify-content: center; }
+.guided-layout--solo .guided-card { width: 720px; }
+
+.guided-card {
+  width: 560px;
+  flex-shrink: 0;
+  background: #ffffff;
+  border: 2px solid var(--subject-200);
+  border-radius: 16px;
+  padding: 28px 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* balance against .guided-panel's own centering */
+  gap: 20px;
+  direction: rtl;
+  overflow: hidden;
+}
+
+.guided-sub {
+  font-size: 20px;      /* Body/B-6 */
+  font-weight: 400;
+  color: var(--text-body);
+  text-align: right;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Lead-in explanation sentence inside a gvi step's panel (s17/s21) — sized
+   to match .guided-instruction (Body/B-3, 24px) rather than .guided-sub,
+   and centered since it isn't paired with right-aligned data like the
+   friend card's stats are. */
+.guided-intro {
+  font-size: 24px;      /* Body/B-3 — matches .guided-instruction */
+  font-weight: 400;
+  color: var(--text-body);
+  text-align: center;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Groups a .guided-intro sentence with an inline fraction (e.g. "אפשר
+   לייצג את השבר [8/10] גם כשבר 0.8.") so the fraction reads as a real
+   stacked fraction, part of the sentence — same pattern as
+   .gvi-feedback-row, sized to this context's 24px intro text instead of
+   the feedback's smaller 20px labels. */
+.guided-intro-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.guided-intro-row .gvi-fraction { font-size: 24px; }
+
+.guided-question {
+  font-size: 22px;      /* Question/Q-3 — panel/question heading role */
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--subject-800);
+  text-align: right;
+  margin: 0;
+}
+
+.guided-goal {
+  font-size: 22px;      /* Question/Q-3 — panel/question heading role */
+  font-weight: 400;  /* script: regular */
+  line-height: 1.4;
+  color: var(--subject-800);
+  text-align: right;
+  margin: 0;
+}
+
+/* Fraction-equation row, shared by every gvi (guided value-input) step
+   (s17/s19/s21): e.g. 7/10 = [input]/100 = 70%. Emphasized/bold-values
+   role → Body/B-5, 24px Bold, applied consistently to every number/sign/
+   input in the equation. */
+.gvi-equation {
+  display: flex;
+  flex-direction: row; /* direction:ltr + DOM order already reads left-to-
+                           right (7/10 = ?/100 = 70%) — row-reverse would
+                           flip it backwards, confirmed visually and fixed. */
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 18px;
+  direction: ltr;
+  margin: 8px 0;
+}
+
+.gvi-fraction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 24px;      /* Body/B-5 */
+  font-weight: 400;
+  color: var(--text-body);
+}
+
+.gvi-fraction .den {
+  padding: 2px 12px;
+  line-height: 1.3;
+}
+
+/* Fixed height, matching .gvi-answer-box below, so every numerator slot —
+   plain digits or the input box — occupies the exact same vertical space.
+   Without this, a plain-text num (~35px tall) and an is-input num (the
+   44px-tall answer box + its own padding) ended up different total
+   heights, so .gvi-equation's align-items:center centered each fraction on
+   a different point and their vinculums (this border-bottom) landed at
+   different heights instead of lining up across the "=" signs. Content
+   bottom-aligned so it sits flush against the line in both variants. */
+.gvi-fraction .num {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 44px;
+  box-sizing: border-box;
+  padding: 0 12px 2px;
+  border-bottom: 2px solid var(--text-body);
+}
+
+/* The input itself carries its own full rectangle border and already fills
+   the fixed 44px height above — no extra padding/line-height needed here. */
+.gvi-fraction .num.is-input { padding: 0; border-bottom-color: var(--subject-700); }
+
+/* Real rectangle box — required so the missing numerator reads as a
+   fillable field, not just an underline sitting on top of the fraction
+   bar. */
+.gvi-answer-box {
+  width: 80px;
+  height: 44px;
+  text-align: center;
+  font-family: Calibri, 'Segoe UI', Tahoma, sans-serif;
+  font-size: 24px;      /* Body/B-5 */
+  font-weight: 400;
+  color: var(--subject-800);
+  border: 2px solid var(--subject-700);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  outline: none;
+}
+
+.gvi-answer-box:focus { background: var(--subject-100); border-color: var(--subject-800); }
+
+.gvi-answer-box:disabled {
+  color: var(--text-body);
+  border-color: #C9CED8;
+  background: #F4F4F6;
+  box-shadow: none;
+}
+
+/* Step 1 of the gvi flow — the learner's numerator marked green if
+   correct, red if wrong (matches .lpv-input.is-correct/.is-wrong). */
+.gvi-answer-box.is-correct,
+.gvi-answer-box.is-correct:disabled {
+  color: var(--correct-text);
+  font-weight: 700;
+  border-color: var(--correct-border);
+  background: var(--correct-bg);
+  -webkit-text-fill-color: var(--correct-text);
+  opacity: 1;
+}
+
+.gvi-answer-box.is-wrong,
+.gvi-answer-box.is-wrong:disabled {
+  color: var(--incorrect-text);
+  font-weight: 700;
+  border-color: var(--incorrect-border);
+  background: var(--incorrect-bg);
+  -webkit-text-fill-color: var(--incorrect-text);
+  opacity: 1;
+}
+
+.gvi-eq-sign { font-size: 24px; font-weight: 400; /* script: equation results regular */ color: var(--text-body); } /* Body/B-5 */
+
+.gvi-percent {
+  font-size: 24px;      /* Body/B-5 */
+  font-weight: 400; /* script: equation results regular */
+  color: var(--subject-800);
+  align-self: center;
+}
+
+/* Marks the equation's final /100 fraction as a percent, per the production
+   script (missing from the live gvi-equation before this fix — only the
+   post-submit feedback's separate .gvi-percent "70%" text had it). A plain
+   sign, not a value: aria-hidden, same convention as .lpv-pct. Sits as a
+   .gvi-equation flex child so align-items:center naturally lands it level
+   with the fraction's own vertical center (i.e. the vinculum), not the
+   baseline. margin-inline-start pulls it in from the row's normal 18px gap
+   so it reads as attached to "100" rather than a separate equation term. */
+.gvi-fraction-pct {
+  font-size: 30px;      /* Slightly larger than .gvi-fraction's 24px so the sign reads clearly next to the fraction */
+  font-weight: 400;
+  color: var(--text-body);
+  margin-inline-start: -10px;
+  /* .gvi-equation's align-items:center centers this span on the fraction's
+     overall geometric height, but the vinculum (.num's border-bottom) sits
+     below that geometric center (.num is taller than .den) — nudge down so
+     the % lands ON the line itself, not merely level with the fraction's
+     midpoint. */
+  position: relative;
+  top: 4px;
+}
+
+/* Wraps a gvi step's instructional text + equation (s17/s19/s21) so
+   gviSubmit() can swap the whole thing at once for the worked-solution
+   feedback — a full replacement, never a partial overlay/popup. */
+.gvi-panel-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+}
+
+.gvi-feedback-label {
+  font-size: 20px;      /* Body/B-6 */
+  font-weight: 600;
+  color: var(--text-body);
+  text-align: center;
+  line-height: 1.4;
+  margin: 0;
+  width: 100%;
+  text-wrap: balance;   /* orphan/line-balance QA pass — see .hook1-popup-body */
+}
+
+/* s19/s21's feedback explanation stands alone (no inline equation next to
+   it — that would just duplicate the boxed final answer below it), so it
+   reads as a normal sentence rather than a small caption; bumps to the
+   same 24px as .guided-intro instead of the default 20px. */
+.gvi-feedback-label--lg { font-size: 24px; }
+
+/* Feedback block's own heading (e.g. "נעבוד ב-2 שלבים:") — matches the
+   right-hand .guided-context-title's size/weight (Body/B-5, 24px Bold) so
+   both panels' headings read at the same scale, with extra bottom margin
+   since a bigger heading needs more breathing room than the 20px labels
+   below it get from .gvi-panel-body's own gap. */
+.gvi-feedback-title {
+  font-size: 24px;      /* Body/B-5 */
+  font-weight: 700;
+  color: var(--text-body);
+  text-align: center;
+  line-height: 1.3;
+  margin: 0 0 8px;
+  width: 100%;
+  text-wrap: balance;   /* orphan/line-balance QA pass — see .hook1-popup-body */
+}
+
+/* Groups a feedback label with its equation so the fraction reads as part
+   of the sentence (e.g. "...ומקבלים: 21/30 → 7/10") instead of sitting on
+   its own centered line below the text. */
+.gvi-feedback-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.gvi-feedback-row .gvi-feedback-label { width: auto; }
+
+/* Keep the inline fraction/sign the same size as the sentence text around
+   it (feedback rows read as one sentence, not text next to a bigger
+   equation) — overrides .gvi-fraction/.gvi-eq-sign's larger 24px default. */
+.gvi-feedback-row .gvi-fraction,
+.gvi-feedback-row .gvi-eq-sign {
+  font-size: 20px;
+}
+
+/* Intermediate step row inside the feedback (e.g. 21/30 → 7/10) — same
+   stacked-fraction markup as .gvi-equation, smaller and unboxed since the
+   final equation below is the one meant to stand out. */
+.gvi-feedback-eq {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  direction: ltr;
+}
+
+/* The finale — the same fraction chain plus "= X%", boxed and enlarged so
+   it reads as the answer, not another intermediate step. */
+.gvi-equation--final {
+  margin-top: 4px;
+  padding: 14px 28px;
+  background: #ffffff;
+  border: 2px solid var(--subject-200);
+  border-radius: 12px;
+}
+
+.gvi-equation--final .gvi-fraction,
+.gvi-equation--final .gvi-eq-sign,
+.gvi-equation--final .gvi-percent {
+  font-size: 28px;
+}
+
+.guided-panel {
+  flex: 1;
+  align-self: stretch;
+  background: var(--subject-700);
+  border-radius: 16px;
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  direction: rtl;
+  overflow: hidden;
+}
+
+/* Every plain-text element rendered directly on .guided-panel's own solid
+   purple fill (question/instruction/equation copy — not the white
+   .guided-opt pills, which already carry their own readable-on-any-bg
+   styling) needs to flip to white for contrast. Scoped under .guided-panel
+   rather than changed at the base class, since .gvi-fraction/.gvi-eq-sign/
+   .gvi-feedback-* are also reused by .warmup-solution elsewhere on a plain
+   white background, where the original dark text must stay unchanged. */
+.guided-panel .guided-question,
+.guided-panel .guided-sub,
+.guided-panel .guided-intro,
+.guided-panel .guided-hint,
+.guided-panel .gvi-fraction,
+.guided-panel .gvi-eq-sign,
+.guided-panel .gvi-fraction-pct,
+.guided-panel .gvi-percent,
+.guided-panel .gvi-feedback-label,
+.guided-panel .gvi-feedback-title {
+  color: #ffffff;
+}
+
+.guided-panel .gvi-fraction .num { border-bottom-color: #ffffff; }
+.guided-panel .gvi-fraction .num.is-input { border-bottom-color: transparent; }
+
+/* .gvi-equation--final keeps its own white boxed background (the answer
+   "stands out" from the panel, same role as the white .guided-opt pills) —
+   so its own text must stay dark, not follow the white override above. */
+.guided-panel .gvi-equation--final .gvi-fraction,
+.guided-panel .gvi-equation--final .gvi-eq-sign {
+  color: var(--text-body);
+}
+.guided-panel .gvi-equation--final .gvi-fraction .num { border-bottom-color: var(--text-body); }
+.guided-panel .gvi-equation--final .gvi-percent { color: var(--subject-800); }
+
+.guided-panel-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+/* Inline hint text (s21) — permanently visible, per the pptx's own
+   layout (a printed line, not a toggleable hint button/popup). */
+.guided-hint {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-body);
+  text-align: right;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Screen 7 (s16)'s panel (and the percentage-reveal screens 9/11/13 —
+   s18/s20/s22, which reuse this same character+bubble composition) shows
+   the character + explanation bubble instead of instructional text/an
+   equation. No outer frame here — per the pptx these two elements sit
+   free-standing on white, unlike .guided-panel's own tinted+bordered
+   default (that default is for the equation/question work-area role). */
+.guided-panel--character {
+  flex-direction: row;
+  direction: rtl;
+  gap: 16px;
+  padding: 20px 24px;
+  background: #ffffff;
+  border: none;
+}
+
+/* Context sub-heading, inside the right-hand .guided-card — distinct from
+   both the screen title (32px) and normal body text (20px); reuses the
+   emphasized-values token (Body/B-5, 24px Bold) since it's a bolded label
+   introducing the card's content, not a separate one-off size. */
+.guided-context-title {
+  font-size: 24px;      /* Body/B-5 */
+  font-weight: 400;  /* script: regular */
+  line-height: 1.3;
+  color: var(--text-body);
+  text-align: right;
+  margin: 0;
+}
+
+.guided-friend-row {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  width: 100%;
+  justify-content: center;
+}
+
+.guided-friend-card {
+  position: relative; /* anchors .guided-highlight/.guided-pct-badge — no
+                          transform/filter/z-index here, so it never traps
+                          an ascendant stacking context (see the RTL flex
+                          + stacking-context pointers in the skill docs). */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 14px 10px;
+  width: 150px;
+}
+
+/* The currently-active friend's calculation stands out; the others stay
+   present but visually secondary — per the segment's own character-
+   emphasis rule (task brief + slide 17/19's "X 'בולט' יותר משאר הדמויות"
+   production notes). */
+.guided-friend-card.is-focus {
+  border: 2px solid var(--subject-700);
+  box-shadow: 0 0 0 3px var(--subject-200);
+}
+
+.guided-friend-row:has(.is-focus) .guided-friend-card:not(.is-focus) {
+  opacity: 0.6;
+}
+
+.guided-friend-card img {
+  width: 120px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* Character name → Body/B-8 (20px Bold); character data/stat → Body/B-6
+   (20px Regular) — same size, weight distinguishes the two roles. */
+.guided-friend-card .name {
+  font-size: 20px;
+  font-weight: 400;  /* script: regular */
+  line-height: 1.3;
+  color: var(--text-body);
+  text-align: center;
+}
+
+.guided-friend-card .stat {
+  position: relative; /* anchors .guided-highlight against this element's own
+                          box, not the card's — correct regardless of how
+                          many lines the stat text wraps to */
+  display: inline-block;
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--text-body);
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* Screen 7 (s16) — animated emphasis over each friend's fraction data.
+   Reveals via the standard data-reveal staged-entrance system (motion.css/
+   motion.js — see index.html), not a permanently-painted highlight;
+   points the learner toward the differing denominators without
+   overwhelming the screen. */
+.guided-highlight {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px; /* just under the .stat text's own bottom edge */
+  height: 3px;
+  border-radius: 2px;
+  background: var(--subject-500);
+}
+
+/* Running percentage tally — a small badge attached to a friend's own
+   mini-card once their result is resolved (screens 10/12/14, s19/s21/s23),
+   keeping "Danny → 70%" etc. part of the persistent comparison rather
+   than a separate, disconnected summary list. */
+.guided-friend-card .guided-pct-badge {
+  position: static;
+  margin-top: 2px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--subject-500);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* ============================================================
+   SCREEN 4 (s13) — pptx slide 13 — TransitionScreen
+   ============================================================ */
+.s13-content {
+  position: absolute;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 760px;
+  max-width: calc(100% - 100px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.s13-headline {
+  font-size: 40px;      /* Heading/H-5 */
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--subject-800);
+  text-align: center;
+  margin: 0;
+}
+
+.s13-subline {
+  font-size: 24px;      /* Body/B-3 */
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--text-body);
+  text-align: center;
+  margin: 0;
+}
+
+/* Bottom-anchored so its feet sit right on the bottom bar's top hairline
+   (.screen::after, 74px bar) instead of floating mid-canvas with the text —
+   pulled out of .s13-content's own flex flow into its own absolute
+   position for that (2026-08-19 follow-up). */
+.s13-character {
+  position: absolute;
+  bottom: 74px;
+  left: 50%;
+  /* margin-left (not transform:translateX(-50%)) — this element also
+     carries data-reveal-on-ready, whose .is-revealed animation drives
+     `transform` itself (see motion.css's documented transform-conflict
+     note) and would silently wipe out a transform-based center once
+     revealed, same fix as 06-02's s27 already uses. */
+  margin-left: -200px;
+  width: 400px;
+  height: auto;
+  object-fit: contain;
+}
+
+/* s25's warm-up character (the stove vignette) reads better bigger than
+   s13's default size — scoped to this screen only so s13's
+   character_one.mp4 stays untouched. character_hot.mp4 is landscape
+   (16:9), so even at a wide width it stays well clear of the text above
+   and the 74px bottom bar below; margin-left is re-paired with width per
+   the base .s13-character rule's centering technique (-halfwidth). */
+#s25 .s13-character { width: 800px; margin-left: -400px; }
+
+/* ============================================================
+   Character + speech bubble component — shared by screen 7 (s16) and the
+   percentage-reveal screens 9/11/13 (s18/s20/s22), all via
+   .guided-panel--character. Character (right) + speech bubble (left, tail
+   pointing right into the character) — same real HTML/CSS component as
+   .hook2-character/.hook2-bubble, reused verbatim.
+   ============================================================ */
+.guided-char {
+  flex-shrink: 0;
+  width: 260px;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.guided-bubble {
+  position: relative;
+  width: 460px;
+  background: #ffffff;
+  border: 2px solid var(--subject-500);
+  border-radius: 16px;
+  padding: 18px 20px;
+  font-size: 22px;      /* Body/B-2 */
+  font-weight: 400;  /* script: regular */
+  color: var(--text-body);
+  text-align: right;
+  direction: rtl;
+  line-height: 1.4;
+}
+
+.guided-bubble::before,
+.guided-bubble::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+
+.guided-bubble::before {
+  left: 100%;
+  border-width: 14px 0 14px 12px;
+  border-color: transparent transparent transparent var(--subject-500);
+}
+
+.guided-bubble::after {
+  left: calc(100% - 2px);
+  border-width: 12px 0 12px 10px;
+  border-color: transparent transparent transparent #ffffff;
+}
+
+.guided-bubble-pct {
+  font-weight: 400;  /* script: regular */
+  color: var(--subject-800);
+}
+
+/* ============================================================
+   Local SCQ variant (no feedback) — screens 6/14 (s15/s23). Selecting an
+   option immediately marks the correct one and never marks a wrong pick;
+   no feedback popup/panel exists for this variant at all (see script.js
+   s15Select()/s23Select()).
+   ============================================================ */
+.guided-opt-col {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.guided-opt {
+  display: flex;
+  flex-direction: row-reverse; /* under direction:rtl, puts the radio at the pill's right end */
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  width: 100%;
+  height: 46px;
+  padding: 12px 20px;
+  border-radius: 1000px;
+  border: 2px solid var(--subject-500);
+  background: #ffffff;
+  cursor: pointer;
+  direction: rtl;
+  font-family: Calibri, 'Segoe UI', Tahoma, sans-serif;
+  box-sizing: border-box;
+}
+
+.guided-opt:hover:not(:disabled),
+.guided-opt:focus-visible { border-color: var(--subject-700); outline: none; }
+
+.guided-opt.is-selected { border-color: var(--subject-500); background: var(--subject-100); }
+
+.guided-opt:disabled { cursor: default; }
+
+.guided-opt-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 22px;      /* Question/Q-1 */
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--text-body);
+  text-align: right;
+}
+
+.guided-opt-radio {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--subject-500);
+  background: #ffffff;
+  position: relative;
+}
+
+/* Correct-only mark — CSS-drawn checkmark (border technique, matching
+   .hook1-checkbox's existing checkmark construction), never a font glyph.
+   No .is-wrong counterpart exists for this variant, per its own
+   no-feedback production note. */
+.guided-opt.is-correct { border-color: var(--correct-border); background: var(--correct-bg); }
+.guided-opt.is-correct .guided-opt-radio { border-color: var(--correct-border); background: var(--correct-border); }
+
+.guided-opt.is-correct .guided-opt-radio::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 10px;
+  height: 5px;
+  border-left: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+/* ============================================================
+   SCREEN 15 (s24) — pptx slide 24 — guided-practice summary
+   Character + speech bubble, matching the pptx (character beside a
+   white/purple-outlined bubble carrying the summary text) — reuses
+   .guided-char/.guided-bubble verbatim, including its default right-
+   pointing tail (character right / bubble left, same arrangement as
+   s16/s18/s20/s22); only this wrapper + the bubble's width/paragraph-
+   spacing are screen-specific, since the summary bubble carries three
+   short paragraphs instead of the family's usual one-liner.
+   ============================================================ */
+.s24-reveal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: row;
+  direction: rtl;
+  align-items: center;
+  gap: 24px;
+  max-width: calc(100% - 100px);
+}
+
+.s24-bubble {
+  flex-shrink: 0;
+  width: 480px;
+  max-width: 100%;
+}
+
+.s24-bubble p { margin: 0 0 14px; }
+.s24-bubble p:last-child { margin-bottom: 0; }
+.s24-bubble strong { font-weight: 700; color: var(--subject-800); }
+
+/* ============================================================
+   SCREEN 4 — Learning Phase scroll sequence (pptx slides 6-10)
+   ONE scrolling screen, five internal sections. Global chrome
+   (.btn-continue/.btn-back/.screen::after bar) stays exactly as on every
+   other screen, positioned over the canvas; only #lp-scroll scrolls.
+   Typography roles used (720-design-guidelines/typography.md):
+     section title (slide 6 only) → Heading/H-5   40px Bold  (Figma-verified
+                                      pptx run size, matches .whypercent-title)
+     narrative body               → Body/B-6      20px Regular
+     narrative body, bold runs    → Body/B-8      20px Bold  (source-explicit
+                                      emphasis preserved per-run, not per-screen)
+     question stem                → SCQ default   24px Bold, Subject/500
+     answer option text           → Question/Q-1  22px Regular
+     feedback popup                → Body/B-6      20px Regular (bold spans per script)
+   ============================================================ */
+#learningphase { overflow: hidden; } /* only .lp-scroll scrolls; the screen itself never does */
+
+/* A visible native scrollbar is required throughout this whole scroll
+   sequence (explicit correction — a previous pass hid it entirely, relying
+   on .lp-scroll-indicator alone as the only progression affordance). Flip
+   only this container's own `direction` to `ltr` — the same scrollbar-only
+   trick already used for .lpv-popup-body/the scroll-gated-popup contract
+   (_global-components.md "Right-side scrollbar in RTL") — so the native
+   scrollbar renders on the physical right edge under the page's ambient
+   RTL. Every .lp-section/.lp-text-col already sets its own explicit
+   `direction: rtl`, so content is unaffected by this flip.
+   Branded scrollbar (QA fix — the plain OS-default scrollbar this rule used
+   to rely on read as a generic dark/thin browser chrome element, out of
+   step with the unit's own visual language). Ported verbatim from
+   methodica-math-percent-06-03/styles.css, which itself ported `.lp-scroll`
+   from here and later added this exact fix — subject-purple thumb on a
+   light track, same technique already established project-wide, not a new
+   invention. */
+.lp-scroll {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 12px; /* Figma 2808:22566: the scroll track sits 12px in from the screen edge, not flush with it */
+  bottom: 74px; /* stop above the persistent bottom bar — global chrome untouched */
+  overflow-y: auto;
+  overflow-x: hidden;
+  direction: ltr;
+}
+/* Scrollbar per Figma 720 UI Templates "gesture hint" (2808:22566) — an
+   in-page rounded track (12px, rgba(201,206,216,0.4), radius 16) with a
+   rounded thumb (radius 24), inset from the screen edge rather than the
+   browser's own edge-flush bar. Thumb stays Subject/500 purple (Math).
+   Chrome drops ALL ::-webkit-scrollbar styling once scrollbar-width/
+   scrollbar-color are set, so those standard props are Firefox-only. */
+.lp-scroll::-webkit-scrollbar { width: 12px; }
+.lp-scroll::-webkit-scrollbar-track {
+  background: rgba(201, 206, 216, 0.4);
+  border: 0.5px solid #F3F4F5;
+  border-radius: 16px;
+  margin: 16px 0;
+}
+.lp-scroll::-webkit-scrollbar-thumb { background: var(--subject-500); border-radius: 24px; }
+.lp-scroll::-webkit-scrollbar-thumb:hover { background: var(--subject-700); }
+@supports (-moz-appearance: none) {
+  .lp-scroll { scrollbar-width: auto; scrollbar-color: var(--subject-500) rgba(201, 206, 216, 0.4); }
+}
+
+/* ---- Scroll gesture hint — Figma "gesture hint" (3287:32535): the
+   "Cursor Click" pointing hand + Ripple Ring 1/2 + 8 spark dots on a 2s
+   click loop (keyframes from the Figma motion data), drifting down the
+   scroll track like Cursor Drag (2904:27290 — click bursts along a
+   vertical path). Ported from methodica-math-percent-04's approved
+   scroll-screen hint; created/removed by scrollGestureEnter() in
+   script.js. The frame is 300px wide with its click point at 150px;
+   right:-132px centers that click ON the scroll track (12px wide, 12px in
+   from the screen edge — see .lp-scroll). Ripple/spark SVGs recolored
+   from 4.4's science blue to Math Subject/* purples. */
+.click-hint {
+  position: absolute;
+  width: 300px; height: 300px;
+  pointer-events: none;
+  z-index: 20;
+}
+.click-hint[id$="-hint-scroll"] {
+  right: -132px; top: 60px;
+  animation: hintDrift 4s ease-in-out infinite;
+}
+.click-hint__ripple1 {
+  position: absolute; left: 95px; top: 95px; width: 110px; height: 110px;
+  animation: hintR1Op 2s linear infinite, hintR1Scale 2s linear infinite;
+}
+.click-hint__ripple2 {
+  position: absolute; left: 136px; top: 136px; width: 28px; height: 28px;
+  animation: hintR2Op 2s linear infinite, hintR2Scale 2s linear infinite;
+}
+.click-hint__spark {
+  position: absolute; left: 148px; top: 148px; width: 5px; height: 5px;
+  animation: hintSparkOp 2s linear infinite, hintSparkMove 2s linear infinite;
+  animation-delay: var(--d, 0ms);
+}
+.click-hint__cursor {
+  /* Figma "Cursor Click" pointing hand (3287:22205, 28x33) — fingertip
+     (~12px in, top edge) on the frame's click point (150,150) */
+  position: absolute; left: 138px; top: 150px; width: 28px; height: 33px;
+}
+.click-hint img { width: 100%; height: 100%; display: block; }
+
+@keyframes hintDrift {
+  0%, 15%  { transform: translateY(0); }
+  60%, 70% { transform: translateY(90px); }
+  100%     { transform: translateY(0); }
+}
+@keyframes hintR1Op {
+  0%   { animation-timing-function: cubic-bezier(0.2, 0.4, 0.4, 1); opacity: 0; }
+  5%   { animation-timing-function: ease-out; opacity: 0.85; }
+  35%  { animation-timing-function: ease-out; opacity: 0.65; }
+  45%  { animation-timing-function: cubic-bezier(0.6, 0, 1, 1); opacity: 0.35; }
+  50%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+@keyframes hintR1Scale {
+  0%    { animation-timing-function: cubic-bezier(0.2, 0.4, 0.4, 1); scale: 0.05 0.05; }
+  7.5%  { animation-timing-function: ease-out; scale: 0.22 0.22; }
+  22.5% { animation-timing-function: ease-out; scale: 0.6 0.6; }
+  37.5% { animation-timing-function: ease-out; scale: 0.85 0.85; }
+  50%   { scale: 1 1; }
+  100%  { scale: 1 1; }
+}
+@keyframes hintR2Op {
+  0%   { animation-timing-function: cubic-bezier(0.05, 0.9, 0.1, 1); opacity: 0; }
+  3%   { animation-timing-function: cubic-bezier(0.4, 0, 1, 1); opacity: 0.75; }
+  10%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+@keyframes hintR2Scale {
+  0%   { animation-timing-function: cubic-bezier(0.05, 0.9, 0.1, 1); scale: 0.2 0.2; }
+  3%   { animation-timing-function: cubic-bezier(0.4, 0, 1, 1); scale: 1 1; }
+  10%  { scale: 1.1 1.1; }
+  100% { scale: 1.1 1.1; }
+}
+@keyframes hintSparkOp {
+  0%    { animation-timing-function: cubic-bezier(0.05, 0.9, 0.1, 1); opacity: 0; }
+  8.5%  { animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94); opacity: 0.9; }
+  30%   { animation-timing-function: cubic-bezier(0.4, 0, 1, 1); opacity: 0.7; }
+  47.5% { opacity: 0; }
+  100%  { opacity: 0; }
+}
+@keyframes hintSparkMove {
+  0%    { animation-timing-function: cubic-bezier(0.05, 0.9, 0.1, 1); translate: 0 0; }
+  8.5%  { animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          translate: calc(var(--dx, 0px) * 0.725) calc(var(--dy, 0px) * 0.725); }
+  24%   { translate: var(--dx, 0px) var(--dy, 0px); }
+  100%  { translate: var(--dx, 0px) var(--dy, 0px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .click-hint { display: none !important; }
+}
+
+/* ---------------- Entry reveal — Learning Phase sections ----------------
+   Reuses the system-animation skill's canonical engine (motion.css/motion.js,
+   copied verbatim into this project) for the staged first-visit content
+   reveal across sections 1-7. Same tokens/keyframes/vocabulary as the
+   engine (--m-reveal-duration/--m-reveal-stagger/--m-distance/--m-ease,
+   m-float-in/m-fade-in) — nothing new invented here.
+   The engine's own selectors are scoped to `.screen.m-animate [data-reveal]`
+   because it assumes one reveal per discrete screen (wired into goTo()).
+   This screen (#learningphase) is a single continuous scroll flow holding
+   seven independently-revealed sections instead, so each .lp-section needs
+   its own seen-flag/trigger — script.js's lpSectionObserver
+   (IntersectionObserver) calls Motion.reveal(sectionEl) directly per
+   section the moment it enters #lp-scroll's viewport, which adds
+   `.m-animate` to that .lp-section element itself. This block only widens
+   which container class the existing engine rules key off of — the
+   duration/stagger/distance/easing tokens and keyframes are the engine's,
+   untouched. */
+.lp-section.m-animate [data-reveal] {
+  animation: m-float-in var(--m-reveal-duration) var(--m-ease) both;
+}
+.lp-section.m-animate [data-reveal="2"] { animation-delay: var(--m-reveal-stagger); }
+.lp-section.m-animate [data-reveal="3"] { animation-delay: calc(var(--m-reveal-stagger) * 2); }
+.lp-section.m-animate [data-reveal="4"] { animation-delay: calc(var(--m-reveal-stagger) * 3); }
+/* Same extension as motion.css's own — per-paragraph/per-option granularity
+   needs more than 4 tiers on some sections (e.g. section 7's 8 paragraphs). */
+.lp-section.m-animate [data-reveal="5"] { animation-delay: calc(var(--m-reveal-stagger) * 4); }
+.lp-section.m-animate [data-reveal="6"] { animation-delay: calc(var(--m-reveal-stagger) * 5); }
+.lp-section.m-animate [data-reveal="7"] { animation-delay: calc(var(--m-reveal-stagger) * 6); }
+.lp-section.m-animate [data-reveal="8"] { animation-delay: calc(var(--m-reveal-stagger) * 7); }
+.lp-section.m-animate [data-reveal][data-reveal-fade] { animation-name: m-fade-in; }
+.lp-section.m-animate.m-hold [data-reveal] { animation-play-state: paused; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-section.m-animate [data-reveal] { animation: none !important; }
+}
+
+/* ---------------- Staged-reveal motion variant (Component 01 only) ----------------
+   The shared engine's single --m-reveal-duration/--m-ease pair (600ms/ease)
+   reads as abrupt for the runStagedSequence()-driven screens (hook1/
+   whypercent/hook2/learningphase/s13): the default `ease` curve front-loads
+   most of the opacity change into the first third of the duration, so each
+   element looks like it "snaps" in place rather than settling in. This is a
+   scoped, Component-01-local variant (per-project motion.css/styles.css
+   copies — see 720-templates skill — nothing shared with other components):
+   same m-float-in keyframe, same is-revealed trigger, same JS-driven
+   sequencing/delays — only each element's OWN entrance duration/easing is
+   recalibrated per role, never the delays between elements. Higher
+   specificity than the base [data-reveal-on-ready].is-revealed rule above
+   (3 selector segments vs 2) so these always win when both classes present.
+
+   2026-08-15 pass: durations raised substantially (headings/body 480ms→850ms,
+   popups 500ms→820ms, characters 620ms→1000ms) plus a new m-stage-card tier
+   for answer options (750ms) — the previous values read as a quick pop even
+   with the calm curve. This alone doesn't slow the felt pacing: script.js's
+   runStagedSequence() previously measured each step's `wait` from the START
+   of the current reveal rather than from when its animation actually
+   finished, so a slower duration here would have just eaten further into the
+   storytelling pause. See runStagedSequence()'s own comment for the paired
+   fix — the two changes only read as "slower" together.
+
+   2026-08-16 pass: that 850/750/820/1000ms set (paired with unchanged
+   1-2s `wait` pauses in script.js) read as roughly 2x too slow once actually
+   watched end-to-end — halved back down to ~420/375/420/525ms (script.js's
+   own `wait` literals halved to match, same proportion) so the total staged
+   sequence lands at approximately half its previous wall-clock length while
+   keeping the exact same reveal→settle→pause→next architecture and calm
+   easing curve. */
+:root {
+  --m-ease-calm: cubic-bezier(0.4, 0, 0.2, 1);
+  --m-stage-duration-text: 420ms;
+  --m-stage-duration-card: 375ms;
+  --m-stage-duration-popup: 420ms;
+  --m-stage-duration-visual: 525ms;
+}
+[data-reveal-on-ready].is-revealed.m-stage-popup {
+  animation-duration: var(--m-stage-duration-popup);
+  animation-timing-function: var(--m-ease-calm);
+}
+
+/* Scrolling-question reveal speed — scoped to #lp-sec-3 ONLY (the one
+   .lp-section that's an SCQ answer-card question, per lpSec3StagedSteps'
+   own comment in script.js), not the rest of #learningphase's guided
+   narrative sections, which keep their own explicitly-approved 2026-08-16
+   pacing (see the "Staged-reveal motion variant" comment above). Same
+   m-float-in keyframe, shortened, not a new animation; script.js's
+   lpSec3StagedSteps was updated to pass a matching `dur:300` so the JS
+   stagger clock and the actual CSS animation length stay in sync. */
+#lp-sec-3 {
+  --m-reveal-duration: 300ms;
+}
+
+.lp-section {
+  min-height: 560px; /* ≈ the 636px content area minus breathing room — one section per scroll "page" */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  direction: rtl;
+  align-items: center;
+  justify-content: center;
+  gap: 56px;
+  padding: 48px 80px;
+}
+
+/* Text column — RIGHT (first DOM child under direction:rtl + row) */
+.lp-text-col {
+  width: 560px;
+  flex-shrink: 0;
+  direction: rtl;
+}
+
+.lp-title {
+  font-size: 40px;      /* Heading/H-5 */
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--text-body);
+  text-align: right;
+  margin: 0 0 36px;     /* QA: 20px read as too tight under the 40px heading */
+}
+
+.lp-body {
+  font-size: 20px;      /* Body/B-6, Body/B-8 where <strong> */
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text-body);
+  text-align: right;
+  margin: 0 0 6px; /* tight — consecutive source paragraphs with no blank line between them */
+}
+
+.lp-body:last-child { margin-bottom: 0; }
+
+/* An explicit blank PPTX paragraph before this line → one real line-height
+   gap (per 720-templates/_question-template-defaults.md "Paragraph structure
+   maps to line-height, not invented spacing"), not the tight default above. */
+.lp-body.lp-gap { margin-bottom: 30px; }
+
+.lp-body strong { font-weight: 700; }
+
+/* Inline stacked-fraction equation inside an .lp-body sentence (section 7:
+   "כלומר: 2/10 = 20/100 = 20%."). LTR so the math reads left-to-right while
+   the surrounding Hebrew sentence stays RTL; fractions sized down so the
+   stacked pair fits the 20px body line without looking like a separate
+   equation block. */
+.lp-eq {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  direction: ltr;
+  vertical-align: middle;
+  margin: 6px 2px;
+}
+
+.lp-frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 20px;      /* same as the surrounding .lp-body text */
+  line-height: 1.15;
+}
+
+.lp-frac .num {
+  padding: 0 4px;
+  border-bottom: 2px solid currentColor;
+}
+
+.lp-frac .den { padding: 0 4px; }
+
+/* Image column — LEFT (second DOM child) */
+.lp-img-col {
+  flex-shrink: 0;
+  width: 444px;
+  display: flex;
+  justify-content: center;
+}
+
+.lp-img-col img {
+  width: 444px;
+  height: auto;
+  border-radius: 16px;
+  object-fit: contain;
+  display: block;
+}
+
+/* LearningPhase_003/004 are wider-framed (overhead) photos exported at a
+   different native size than 001/002 — displayed at the same 444px column
+   width for visual consistency across the sequence, aspect ratio intact. */
+.lp-img-wide { width: 444px; height: auto; }
+
+.lp-img-frame {
+  position: relative; /* anchors .lp-alert — no transform/filter/z-index here (see
+                          _global-components.md "Image zoom" stacking rule; same
+                          principle applies to any overlay anchored on an image) */
+}
+
+/* "סוללה חלשה" alert — real HTML/CSS speech-bubble-with-tail, matching this
+   project's own established bubble language (.hook1-bubble/.hook2-bubble:
+   white interior, 2px Subject/500 outline, RTL black text) rather than the
+   pptx's own raw fill hex (a producer authoring convenience, not a mandated
+   color — see _question-template-defaults.md "Shape/box fill color..."). The
+   battery glyph's "low" segment stays a plain red fill — a universally-read
+   status color, not a themed accent, matching how LearningPhase_003/004's
+   own photographed battery icons render "low."
+   Position corrected 2026-08-10 (was flush with the image's top-left corner,
+   floating above the photo entirely per the pptx's own raw shape geometry —
+   that placement read as attached to nothing in particular, not the left
+   child's phone). LearningPhase_001.png is a fixed 444×296 asset rendered
+   1:1 (no scaling), so these are direct pixel measurements off the source
+   image: the left child's face ends at the chin around y≈153px, and his
+   phone (held in both hands) sits at roughly x:65–220px, y:205–250px — a
+   clean ~50px gap between them with no face pixels in it. top/left below
+   place the bubble in that gap so it sits directly above the left phone,
+   its existing fixed tail (left: 24px, unchanged) landing inside the
+   phone/hands at x≈124px — never touching either child's face.
+   Nudged slightly up/left same day, follow-up — still the same gap, just
+   centered a bit better over the phone (was shifted a bit right of it). */
+.lp-alert {
+  position: absolute;
+  top: 150px;
+  left: 85px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 2px solid var(--subject-500);
+  border-radius: 14px;
+  padding: 10px 14px;
+  direction: rtl;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+
+  /* Minimal, scoped entrance animation — this project's shared engine
+     (motion.css/motion.js) provides only the generic 16px float-in; this
+     small notification-style badge keeps its own tailored, shorter
+     fade+float (~320ms, no scale/bounce) instead. Values intentionally
+     mirror the system-animation skill's popup-motion contract without
+     pulling in its engine/JS — a local @keyframes below, scoped to this
+     element only.
+     Trigger: JS-driven (.is-revealed, added by script.js's
+     runStagedSequence('lp-sec-1', ...) once the section's image finishes
+     entering) rather than a fixed CSS animation-delay — this used to fire
+     on a flat 350ms delay from whenever the section mounted, regardless of
+     the image's own reveal timing; now genuinely sequenced to it, and
+     once-per-session like the rest of the section's staged reveal (not a
+     replay-every-open notification anymore). Hidden by default until then. */
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+.lp-alert.is-revealed {
+  animation: lpAlertIn 320ms ease-out both;
+}
+
+@keyframes lpAlertIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-alert { opacity: 1; transform: none; }
+  .lp-alert.is-revealed { animation: none; }
+}
+
+.lp-alert::before,
+.lp-alert::after {
+  content: '';
+  position: absolute;
+  left: 24px;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+
+.lp-alert::before {
+  top: 100%;
+  border-width: 12px 10px 0 10px;
+  border-color: var(--subject-500) transparent transparent transparent;
+}
+
+.lp-alert::after {
+  top: calc(100% - 2px);
+  border-width: 10px 8px 0 8px;
+  border-color: #ffffff transparent transparent transparent;
+}
+
+.lp-alert-icon {
+  flex-shrink: 0;
+  width: 26px;
+  height: 13px;
+  color: var(--subject-500);
+}
+
+.lp-alert-text {
+  font-size: 20px;      /* Body/B-7 */
+  font-weight: 600;
+  color: var(--text-body);
+  white-space: nowrap;
+}
+
+/* ---------------- SECTION 3 — checkpoint (SingleChoiceQuestion local variant) ---------------- */
+/* justify-content:flex-start (overriding .lp-section's vertical centering)
+   raises the question+options+button block toward the top of the section,
+   instead of splitting the leftover space evenly above and below it — this
+   is what actually needed to move up; the block itself was never repositioned
+   independently of the section. */
+.lp-checkpoint { flex-direction: column; justify-content: flex-start; gap: 24px; }
+
+.lp-q-panel {
+  width: 720px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  direction: rtl;
+}
+
+/* Card wrapper for the question stem + its 4 pills — same border/radius/
+   background recipe as .lpv-frame below (section 6's card), unified to the
+   same dark-purple border token (--subject-800) per explicit 2026-08-19
+   request. Wraps only the stem + answers, not the "צדקתי?" button —
+   matches the scope given for this fix.
+   Width fixed at 880px (narrowed from an initial 960px per follow-up
+   feedback), wider than the 720px .lp-q-panel it sits inside — it
+   deliberately overflows that panel's own box (.lp-q-panel has no
+   overflow:hidden, and its align-items:center keeps the wider card centered
+   on the same x=640 axis). .lp-q-answers below is pinned to its previous
+   664px rendered width so the 4 pills themselves don't grow; the extra
+   room becomes side padding around them instead.
+   Vertical padding raised 28px→56px (2026-08-19 follow-up: "increase the
+   height more") — taller card via its own padding, not by touching the
+   stem/answers gap or the pills' own spacing. */
+.lp-q-frame {
+  width: 880px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  /* flex-start, not center — under this card's inherited direction:rtl
+     that hugs the stem/answers to the frame's right inner edge, while the
+     frame itself stays centered on screen via .lp-q-panel's own
+     align-items:center. */
+  align-items: flex-start;
+  gap: 20px;
+  border: 2px solid var(--subject-800);
+  border-radius: 16px;
+  background: #ffffff;
+  padding: 56px 28px;
+}
+
+.lp-q-text {
+  font-size: 24px;      /* SCQ default: question stem — source marks this run explicitly bold */
+  font-weight: 700;
+  color: var(--subject-500);
+  text-align: right;
+  margin: 0;
+}
+
+/* Fixed at 664px — the width it already rendered at inside the old 720px
+   .lp-q-frame (720 - 2×28px padding) — so widening that frame to 960px
+   (2026-08-19) adds side breathing room around the pills instead of
+   growing the pills themselves. */
+.lp-q-answers {
+  width: 664px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lp-q-opt {
+  display: flex;
+  flex-direction: row-reverse; /* under direction:rtl, puts the radio at the pill's right end */
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  width: 100%;
+  height: 46px;
+  padding: 12px 20px;
+  border-radius: 1000px;
+  border: 2px solid var(--subject-500);
+  background: #ffffff;
+  cursor: pointer;
+  direction: rtl;
+  font-family: Calibri, 'Segoe UI', Tahoma, sans-serif;
+  box-sizing: border-box;
+}
+
+.lp-q-opt:hover:not(:disabled),
+.lp-q-opt:focus-visible { border-color: var(--subject-700); outline: none; }
+
+.lp-q-opt.is-selected { border-color: var(--subject-500); background: var(--subject-100); }
+
+.lp-q-opt:disabled { cursor: default; }
+
+.lp-q-opt-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 22px;      /* Question/Q-1 */
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--text-body);
+  text-align: right;
+}
+
+.lp-q-radio {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--subject-500);
+  background: #ffffff;
+  position: relative;
+}
+
+.lp-q-opt.is-selected .lp-q-radio {
+  border-color: var(--subject-500);
+  /* Figma 196:3445 (SingleChoiceQuestionImage, Selected): solid fill, no inner dot. */
+  background: var(--subject-500);
+}
+
+/* Locked-answer states — same theme-independent feedback tokens as .s17-popup
+   (--correct-… and --incorrect-…), CSS-drawn checkmark/X (border technique,
+   matching .hook1-checkbox's existing checkmark construction) — never a font glyph. */
+.lp-q-opt.is-correct { border-color: var(--correct-border); background: var(--correct-bg); }
+.lp-q-opt.is-wrong { border-color: var(--incorrect-border); background: var(--incorrect-bg); }
+
+.lp-q-opt.is-correct .lp-q-radio { border-color: var(--correct-border); background: var(--correct-border); }
+.lp-q-opt.is-wrong .lp-q-radio { border-color: var(--incorrect-border); background: var(--incorrect-border); }
+
+.lp-q-opt.is-correct .lp-q-radio::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 10px;
+  height: 5px;
+  border-left: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  border-radius: 0;
+  background: transparent;
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.lp-q-opt.is-wrong .lp-q-radio::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 2px;
+  background: #ffffff;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.lp-q-opt.is-wrong .lp-q-radio::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 2px;
+  background: #ffffff;
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.lp-check-btn {
+  height: 39px;
+  padding: 0 36px;
+  border: none;
+  border-radius: 50px;
+  background: var(--subject-gradient);
+  color: #ffffff;
+  font-family: Calibri, 'Segoe UI', Tahoma, sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lp-check-btn[hidden] { display: none; } /* author display:flex above would otherwise beat the UA [hidden] rule */
+
+.lp-check-btn:hover:not(:disabled) { filter: brightness(0.92); }
+
+.lp-check-btn:disabled {
+  background: #AEAEAE !important;
+  color: #6E6E6E !important;
+  cursor: not-allowed !important;
+}
+
+/* ---------------- Feedback popup — same contract as .s17-popup ---------------- */
+/* Neutral "message" popup, not correct/incorrect feedback — this checkpoint's
+   reveal is the same regardless of which pill the learner picked, so it uses
+   the subtle-purple-fill/dark-purple-border template style (same tokens as
+   .hook1-popup) instead of the graded green/red palette. */
+.lp-popup {
+  position: absolute;
+  top: 40px;
+  left: 40px;
+  z-index: 20;
+  width: fit-content; /* hugs its own text instead of matching the full answers width — see lpPositionPopupBelowAnswers() in script.js, which centers it under the answers column based on this measured width */
+  max-width: 720px; /* safety cap — never wider than the question column it sits under */
+  border-radius: 12px;
+  padding: 24px;
+  direction: rtl;
+  text-align: right;
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--text-dark);
+  cursor: move;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  background: var(--subject-100);
+  border: 2px solid var(--subject-500);
+}
+
+.lp-popup[hidden] { display: none; }
+
+.lp-popup-title { font-size: 20px; font-weight: 700; margin: 0 0 4px; text-align: right; text-wrap: balance; }   /* orphan/line-balance QA pass — see .hook1-popup-body */
+.lp-popup-title:empty { display: none; }
+.lp-popup-body p { margin: 0 0 4px; text-align: right; text-wrap: balance; }   /* orphan/line-balance QA pass — see .hook1-popup-body */
+.lp-popup-body p:last-child { margin-bottom: 0; }
+
+/* ---------------- SECTION 6 — slide 11 — embedded ValueInputQuestion ----------------
+   Local variant of 720-templates/ValueInputQuestion.md Variant A (single inline
+   value input), used twice with one shared submission. Layout reuses
+   .lp-checkpoint/.lp-q-panel verbatim (same centered-column checkpoint shell as
+   section 3); only the panel's own content markup differs. */
+
+/* This section's own content (heading + two examples + button, inside the
+   purple .lpv-frame) plus its feedback popup are taller than the generic
+   .lp-section min-height (560px, sized for a one-image/one-paragraph "page").
+   With the shared 560px cap, the feedback's default centered position
+   (lpCenterFeedbackPopup() in script.js) had nowhere to fit and overflowed
+   into section 7 below. Sized to the section's own real content instead of
+   the generic default: 48px padding-top + 331.5px .lpv-frame (measured,
+   Math-mode typography unchanged) + 214px feedback popup (compact 2-column
+   layout) + 48px padding-bottom = 673.5px bare minimum, plus 2×16px (the
+   same GAP constant lpCenterFeedbackPopup() uses elsewhere) so the popup
+   centers with real breathing room instead of sitting flush at the minimum
+   — not an arbitrary number, the sum of this section's own measured parts. */
+#lp-sec-6 { min-height: 706px; }
+
+.lpv-panel { gap: 24px; }
+
+/* Purple outer question container — required by the producer's storyboard for
+   this specific screen (not present in the generic Figma ValueInputQuestion
+   template, node 1045:13096, which is itself borderless). Wraps only the
+   question's own static content (heading, both inputs, button) — the
+   feedback popup keeps its own graded correct/incorrect styling per
+   _global-components.md's Feedback popup system contract (never purple) and
+   continues to render as its own element positioned directly below, same as
+   every other question template in this project.
+   Border unified to the dark-purple --subject-800 token (2026-08-19 request)
+   to match the new section-3 .lp-q-frame card, replacing the lighter
+   --subject-alpha-200 this used previously. */
+.lpv-frame {
+  width: 720px;
+  max-width: 100%;
+  box-sizing: border-box;
+  border: 2px solid var(--subject-800);
+  border-radius: 16px;
+  background: #ffffff;
+  padding: 28px 28px;
+}
+
+.lpv-frame .lpv-panel { width: 100%; }
+
+.lpv-heading {
+  font-size: 24px;      /* SCQ default role, matching .lp-q-text's size/color */
+  font-weight: 400;     /* source marks only part of this heading bold — see .lpv-heading strong */
+  color: var(--subject-500);
+  text-align: center;
+  margin: 0;
+}
+
+.lpv-heading strong { font-weight: 700; }
+
+.lpv-example { width: 100%; }
+
+/* Two blank PPTX paragraphs separate the Alon example from Yonatan's (vs. one
+   blank before Yonatan's, already represented by .lpv-panel's own 24px gap) —
+   one extra 24px on top of that gap approximates the doubled paragraph break. */
+.lpv-example + .lpv-example { margin-top: 24px; }
+
+/* Fill-in-the-blank slot: "%" suffix + input, grouped as one inline unit so it
+   flows correctly inside the surrounding RTL sentence (Figma "fill sentence"
+   slot pattern, node 1045:13074). DOM order is suffix-then-input: under the
+   ambient RTL direction this renders visually as [input][%] — matching how
+   the pptx source itself orders the run ("% 50") and how a percentage reads
+   left-to-right. */
+.lpv-blank {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  vertical-align: middle;
+}
+
+.lpv-pct {
+  font-family: Calibri, 'Segoe UI', Tahoma, sans-serif;
+  font-size: 24px;      /* Body/B-5, matches the input's own emphasized-value size */
+  font-weight: 700;
+  color: var(--text-body);
+}
+
+/* Design tokens per ValueInputQuestion.md (Figma node 1045:13096): 92×48,
+   border rgba(174,174,174,.5), radius 10, Assistant Bold 24, Subject/500 focus
+   border. type="text"/inputmode="numeric" (not type="number") matches this
+   project's own established numeric-input precedent (.s17-answer-box,
+   04-03's .table-input) — avoids the native number-spinner chrome that isn't
+   part of the Figma template. */
+.lpv-input {
+  width: 92px;
+  height: 48px;
+  box-sizing: border-box;
+  border: 1.5px solid rgba(174, 174, 174, 0.5);
+  border-radius: 10px;
+  background: #ffffff;
+  font-family: Calibri, 'Segoe UI', Tahoma, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-body);
+  text-align: center;
+  outline: none;
+}
+
+.lpv-input:focus { border-color: var(--subject-500); }
+
+.lpv-input:disabled { cursor: not-allowed; }
+
+/* Locked-answer states — same theme-independent feedback tokens as
+   .s17-answer-box/.lp-q-opt (Correct/incorrect icon system, Type 1 — bare
+   icon inside the input's own colored border; icon glyph itself not yet
+   inserted here, see session notes). */
+.lpv-input.is-correct { border-color: var(--correct-border); background: var(--correct-bg); color: var(--correct-text); }
+.lpv-input.is-wrong { border-color: var(--incorrect-border); background: var(--incorrect-bg); color: var(--incorrect-text); }
+
+/* ---------------- Feedback popup — graded (correct/incorrect), same contract
+   as .s17-popup, positioned/dragged/scroll-scoped like .lp-popup ---------------- */
+.lpv-popup {
+  position: absolute;
+  z-index: 20;
+  width: fit-content;
+  /* 700px, matching .s17-popup's cap (this popup's own "same contract as
+     .s17-popup" comment above) — was 420px, which forced the closing
+     sentence to wrap across two lines and orphan "20%" on a third. Widening
+     the cap (not the font) lets fit-content size the box to the sentence's
+     natural single-line width, same as .s17-popup/.lp-popup already do. */
+  max-width: 700px;
+  border-radius: 12px;
+  padding: 24px;
+  direction: rtl;
+  text-align: right;
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--fb-text);
+  cursor: move;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  /* Long-feedback variant (_global-components.md "Long-feedback variant —
+     scroll-gated popup"), fixed-footprint/internal-scroll part only — this
+     section's popup sits at the bottom of a tall scrolled column, so the
+     canvas-bounds clamp (script.js clampPopupToCanvas) can leave less room
+     below the question than this feedback's full height needs. No button
+     gating is applied (per this section's own single-submission contract,
+     progression must not depend on reading the feedback) — only the
+     fixed-height + internal-scroll half of that pattern. */
+  max-height: 300px;
+  display: flex;
+  flex-direction: column;
+}
+
+.lpv-popup[hidden] { display: none; }
+
+/* Border stays the same neutral gray in both correct/incorrect states —
+   only the tint fill signals the outcome (720 UI Templates "Popup Feedback"
+   component set, node 217:4135). Uses the popup-scoped --fb-* tokens, not
+   --correct-bg/--incorrect-bg/--correct-border/--incorrect-border, which
+   stay reserved for the non-popup UI (.lpv-input.is-correct/.is-wrong
+   above, etc.). */
+.lpv-popup.feedback-success { background: var(--fb-bg-correct); border: 0.3px solid var(--fb-border); }
+.lpv-popup.feedback-error { background: var(--fb-bg-incorrect); border: 0.3px solid var(--fb-border); }
+/* Title stays neutral in BOTH states, matching the Figma popup-
+   feedback template (720 UI Templates, node 716-24031) — the pink/green
+   card background alone carries the correct/wrong signal, the title text
+   itself isn't recolored. Was --correct-text/--incorrect-text, then
+   --text-dark; now the popup-scoped --fb-text (#222222) per the template. */
+.lpv-popup-title { flex: none; font-size: 20px; font-weight: 700; margin: 0 0 4px; text-align: right; color: var(--fb-text); text-wrap: balance; }   /* orphan/line-balance QA pass — see .hook1-popup-body */
+.lpv-popup-title:empty { display: none; }
+
+/* Scroll container for overflow content only — direction:ltr is a
+   scrollbar-only flip (renders the native scrollbar on the physical right
+   edge under RTL, per the scroll-gated popup contract); every element
+   inside stays centered/RTL-appropriate on its own. */
+.lpv-popup-body {
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  direction: ltr;
+}
+
+.lpv-popup-body p { direction: rtl; margin: 0 0 4px; text-align: right; text-wrap: balance; }   /* orphan/line-balance QA pass — see .hook1-popup-body */
+.lpv-popup-body p:last-child { margin-bottom: 0; }
+
+/* Blank-PPTX-paragraph group break (per _question-template-defaults.md
+   "Paragraph structure maps to line-height, not invented spacing") — sized
+   to this popup's own line-height (16px * 1.55 ≈ 25px), placed as margin-top
+   on the paragraph that follows the break, not margin-bottom on the one
+   before it. */
+.lpv-popup-body p.lpv-para-gap { margin-top: 25px; }
+
+/* Inline math row (e.g. "2/4 = 50%") — reuses the existing stacked-fraction
+   treatment from .s17-fraction (num over den, divider under the numerator),
+   scaled to this popup's own type size instead of s17's 24px equation scale. */
+.lpv-popup-body p.lpv-eq {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  direction: ltr;
+  font-weight: 700;
+}
+
+.lpv-fraction {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+}
+
+.lpv-fraction-num { border-bottom: 1.5px solid currentColor; padding: 0 3px 1px; }
+.lpv-fraction-den { padding: 1px 3px 0; }
+
+/* Yonatan/Alon side-by-side comparison row — direction:rtl so the first
+   column (Yonatan) renders on the right, matching source order to reading
+   order regardless of .lpv-popup-body's own ltr (scrollbar-flip) direction.
+   Each .lpv-compare-col reuses the existing .lpv-popup-body p / .lpv-eq
+   rules untouched (name line, then fraction row) — only the outer grouping
+   is new, so typography/colors/states are unchanged from the stacked
+   version this replaces. */
+.lpv-compare {
+  display: flex;
+  direction: rtl;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 32px;
+  margin: 0;
+}
+
+.lpv-compare-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* ---------------- SECTION 7 — slide 12 — percentage reveal ----------------
+   Narrative section, same .lp-section/.lp-text-col/.lp-img-col shell as
+   sections 1/2/4/5 (image LEFT, text RIGHT) — no new layout language.
+   #lp-sec-7 reuses LearningPhase_004.png, the same asset already displayed
+   by section 5 (the storyboard revisits that same photo to add the
+   percentage callouts, it is not a new/different image). */
+#lp-sec-7 .lp-img-frame { position: relative; }
+
+/* Percentage callout bubbles — reuse the exact speech-bubble language
+   already established by .lp-alert (section 1): white fill, 2px Subject/500
+   border, 14px radius, drop shadow, downward tail pointing into the image
+   below it, and the same battery-icon SVG (.lp-alert-icon, reused as-is —
+   see markup) with an 8px gap before the percentage text. Percentage text
+   uses the project's existing "emphasized percentage" role (Body/B-5, 24px
+   Bold — same token as .s17-percent/.lpv-pct) rather than inventing a new
+   size.
+   Positions corrected 2026-08-10 (were straddling the image's top corners,
+   landing on the two children's heads — an artifact of approximating the
+   pptx's own callout geometry without accounting for this project's 444px
+   crop). LearningPhase_004.png is the same fixed-size asset .lp-alert
+   already measures pixel-for-pixel off of; each phone sits roughly centered
+   at ~35% / ~70% of the frame's width, well inside the two heads at the
+   outer edges — left/right below re-center each bubble's tail over its own
+   phone instead.
+   Nudged down same day, twice (top: -30px→-15px→2px / -14px→1px→18px) —
+   same horizontal alignment throughout, just progressively closer over the
+   phones instead of hovering high above the frame. */
+.lp-callout {
+  position: absolute;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 2px solid var(--subject-500);
+  border-radius: 14px;
+  padding: 8px 20px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+  font-size: 24px;      /* Body/B-5 */
+  font-weight: 700;
+  color: var(--subject-500);
+  white-space: nowrap;
+  direction: ltr; /* "50%"/"20%" read left-to-right regardless of the ambient RTL */
+
+  /* Pop-in entrance — part of lp-sec-7's staged reveal sequence (script.js
+     lpSec7StagedSteps()/runStagedSequence('lp-sec-7', ...)): the image
+     appears, then callout-50, then +0.5s callout-20, each independently
+     triggered via its own .is-shown class (added by the sequence's onShow
+     callbacks) rather than one section-level class with a baked-in internal
+     stagger — the two callouts' actual gap is now real elapsed time (500ms,
+     per the approved motion plan), not a fixed CSS animation-delay. Reuses
+     .lp-alert's own exact fade+float values (320ms ease-out, translateY
+     14px→0) — same @keyframes, no new animation style invented. */
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+.lp-callout-a { top: 36px; left: 95px; }
+.lp-callout-b { top: 55px; right: 70px; }
+
+.lp-callout.is-shown { animation: lpAlertIn 320ms ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-callout { opacity: 1; transform: none; }
+  .lp-callout.is-shown { animation: none; }
+}
+
+.lp-callout::before,
+.lp-callout::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+
+.lp-callout::before {
+  top: 100%;
+  border-width: 12px 10px 0 10px;
+  border-color: var(--subject-500) transparent transparent transparent;
+}
+
+.lp-callout::after {
+  top: calc(100% - 2px);
+  border-width: 10px 8px 0 8px;
+  border-color: #ffffff transparent transparent transparent;
+}
+
+#learningphase-continue-btn:not(:disabled),
+#whypercent-continue-btn:not(:disabled),
+#hook2-continue-btn:not(:disabled),
+#s13-continue:not(:disabled),
+#s26-continue:not(:disabled),
+#hook1-action-btn.is-pulsing {
+  animation: btnAdvanceGrow 1100ms ease-in-out infinite;
+  /* #hook1-action-btn is also governed by [data-reveal-on-ready]'s own
+     `animation` shorthand (its entrance fill-mode "both" is what holds
+     opacity:1 after the reveal finishes) — this rule's higher ID
+     specificity replaces that shorthand wholesale the moment .is-pulsing
+     is added, dropping the opacity along with it, since btnAdvanceGrow
+     never touches opacity. Pin it back explicitly so the button doesn't
+     vanish the instant it starts pulsing (only hook1's button is affected;
+     the other four here were never reveal-on-ready elements). */
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #learningphase-continue-btn:not(:disabled),
+  #whypercent-continue-btn:not(:disabled),
+  #hook2-continue-btn:not(:disabled),
+  #s13-continue:not(:disabled),
+  #s26-continue:not(:disabled),
+  #hook1-action-btn.is-pulsing { animation: none; }
+}
+
+/* ============================================================
+   SCREEN 17 (s26) — pptx slide 26 — Warm-up question (circular-budget
+   diagram, 5 fillable percentages). Custom ValueInputQuestion-family
+   variant — see index.html's own header comment on #s26 for the source
+   classification and the explicit list of what was flagged instead of
+   invented (hint content, feedback body copy, popup dragging).
+   ============================================================ */
+/* Stacked layout (producer request): the three text paragraphs span the
+   full content width as a ~3-line block on top, and the chart takes all
+   remaining height below. The chart image is wide (1222×560), so in the
+   old side-by-side split it was width-capped and left empty space above
+   and below; stacked, it is sized by whichever of width/height runs out
+   first (container-query units on .warmup-chart-col). */
+.warmup-layout {
+  position: absolute;
+  top: 96px;
+  right: 80px;
+  left: 24px;
+  bottom: 100px;
+  display: flex;
+  flex-direction: column;
+  direction: rtl;
+  gap: 20px;
+}
+
+.warmup-text-col {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  direction: rtl;
+}
+
+.warmup-text-col p {
+  font-size: 22px;      /* Question/Q-3 */
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text-body);
+  text-align: right;
+  margin: 0;
+}
+
+.warmup-text-col strong { font-weight: 700; color: var(--subject-800); }
+
+.warmup-chart-col {
+  flex: 1;
+  min-height: 0;
+  container-type: size;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.warmup-chart-wrap {
+  position: relative;
+  /* 1222/560 = the image's own aspect ratio, so the height-bound width
+     keeps the whole image inside the column. */
+  width: min(100cqw, 100cqh * 1222 / 560, 1000px);
+}
+
+.warmup-chart-img { display: block; width: 100%; height: auto; }
+
+/* Positioned as a percentage of the chart image's own box (right/top set
+   inline per input — see index.html) — measured directly from the
+   image's pixel content (white-square detection), not from the pptx
+   shapes' own coordinates (those were checked and found unreliable for
+   this image). `right` is anchored to each marker's own right edge (the
+   box grows leftward into the wedge's open space) rather than centered
+   on the marker, so the box never grows into the "%" sign baked into the
+   image immediately to the marker's right. Percentage placement keeps
+   every box aligned with its wedge regardless of the image's rendered
+   size. */
+.warmup-input {
+  position: absolute;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 40px;
+  box-sizing: border-box;
+  text-align: center;
+  font-family: Calibri, 'Segoe UI', Tahoma, sans-serif;
+  font-size: 20px;      /* Body/B-6 */
+  font-weight: 700;
+  color: var(--subject-800);
+  border: 2px solid var(--subject-700);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  outline: none;
+}
+
+.warmup-input:focus { background: var(--subject-100); border-color: var(--subject-800); }
+
+.warmup-input:disabled { cursor: not-allowed; box-shadow: none; }
+
+.warmup-input.is-correct {
+  border-color: var(--correct-border);
+  background: var(--correct-bg);
+  color: var(--correct-text);
+}
+
+.warmup-input.is-error {
+  border-color: var(--incorrect-border);
+  background: var(--incorrect-bg);
+  color: var(--incorrect-text);
+}
+
+/* Feedback popup — fixed position, non-draggable. A scoped simplification
+   of the canonical draggable feedback-popup system (_global-components.md
+   → Feedback popup system), proportional to this single screen; reuses
+   that system's shared visual tokens (--correct-* / --incorrect-* — the
+   same theme-independent variables every other feedback state in this
+   project already uses) rather than the full drag/clamp machinery.
+
+   Card treatment (session correction): fully outcome-tinted background +
+   2px solid border, matching the actual shipped feedback-popup pattern
+   used elsewhere in this project (.lpv-popup.feedback-success/
+   .feedback-error in this same file; .tq-feedback--floating[data-outcome]
+   in methodica-math-percent-06-03) — a prior version of this comment
+   claimed the white-card-with-colored-accent-bar treatment matched that
+   shipped pattern, which was incorrect; that treatment was actually this
+   screen's own one-off deviation from it.
+
+   Long-feedback variant (_global-components.md → "Long-feedback variant —
+   scroll-gated popup"): fixed footprint, only the body scrolls — same
+   column-flex + max-height contract as .lpv-popup/.lpv-popup-body. The
+   scroll-completion gate (rules 5-9 of that section) is NOT implemented —
+   this question locks after its 2nd attempt regardless of outcome, so
+   there is nothing for a gate to usefully hold back; only the fixed-header
+   + internal-scroll half of the pattern applies here. */
+.warmup-popup {
+  /* Position (left/top) is set in JS by warmupPositionPopup() — see
+     script.js — using the same plain pixel left/top contract as
+     .lp-popup/.lpv-popup, not left:50%+transform:translateX(-50%). That
+     combo previously fought the shared drag handler (script.js
+     clampPopupToCanvas), which writes raw-pixel style.left/top assuming no
+     transform: translateX(-50%) shifts the rendered box left by half its
+     own width on top of whatever style.left the drag math computed, so the
+     popup could be dragged ~300px past the canvas's left edge while
+     stopping ~300px short of the right edge — the reported asymmetric drag
+     bug. */
+  position: absolute;
+  width: 600px;
+  max-width: calc(100% - 64px);
+  max-height: 460px;
+  border-radius: 12px;
+  cursor: move; /* draggable via the same pointerdown handler as .lp-popup/
+    .lpv-popup — was missing here, a pre-existing affordance gap unrelated
+    to the popup normalization pass (QA fix). */
+  /* 24px on top/left/right per the shared feedback-popup card spec (720 UI
+     Templates "Popup Feedback", node 217:4135). Bottom kept reduced (14px,
+     was 22px 20px 14px before the top/sides were normalized) — deliberate,
+     documented exception: fixed header, does not grow the popup's own
+     max-height, only reapportions the flex column between the fixed title
+     and the flex:1 scroll body immediately below it. */
+  padding: 24px 24px 14px;
+  direction: rtl;
+  text-align: right;
+  box-sizing: border-box;
+  /* Border stays the same neutral gray in both correct/incorrect states —
+     only the tint fill signals the outcome. Popup-scoped --fb-* tokens,
+     not --correct-bg/--correct-border (those stay reserved for non-popup
+     UI elsewhere in the file). */
+  background: var(--fb-bg-correct);
+  border: 0.3px solid var(--fb-border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+}
+
+.warmup-popup[hidden] { display: none; }
+
+/* Retry is a title-only two-line nudge (empty body) — shrink-wrap it to its
+   own text like every other retry card in the unit (.scq-fb: max-content,
+   400px cap) instead of the 600px solution-popup width, which left it an
+   oversized, mostly-empty box (QA fix). */
+.warmup-popup.is-retry { width: max-content; max-width: min(400px, calc(100% - 64px)); padding: 24px; }
+.warmup-popup.is-retry .warmup-popup-title { margin: 0; }
+.warmup-popup.is-retry .warmup-popup-body { display: none; }
+
+.warmup-popup.feedback-error {
+  background: var(--fb-bg-incorrect);
+  border-color: var(--fb-border);
+}
+
+.warmup-popup-title {
+  flex: none;
+  font-size: 20px;      /* Body/B-6 */
+  font-weight: 700;
+  /* Bottom margin widened from 8px so the title reads as visually
+     separated from the scrollable solutions below it, not just the first
+     line of the scroll area. */
+  margin: 0 0 18px;
+  text-align: right;
+  /* Neutral in BOTH states, matching the Figma popup-feedback template —
+     the tinted card background alone carries the correct/wrong signal, the
+     title text itself isn't recolored. Was --correct-text/--incorrect-text. */
+  color: var(--fb-text);
+  text-wrap: balance;   /* orphan/line-balance QA pass — see .hook1-popup-body */
+}
+
+/* Scroll container for overflow content only — direction:ltr is a
+   scrollbar-only flip (renders the native scrollbar on the physical right
+   edge under RTL, per the scroll-gated popup contract), while every
+   element inside (.warmup-solution and its children) keeps its own
+   explicit direction:rtl/text-align:right so the Hebrew content itself is
+   unaffected. */
+.warmup-popup-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  direction: ltr;
+}
+/* Same Figma rounded scroll track as .lp-scroll (2808:22566), instead of
+   the browser's default bar — standard props Firefox-only for the same
+   Chrome reason documented there. */
+.warmup-popup-body::-webkit-scrollbar { width: 12px; }
+.warmup-popup-body::-webkit-scrollbar-track {
+  background: rgba(201, 206, 216, 0.4);
+  border: 0.5px solid #F3F4F5;
+  border-radius: 16px;
+}
+.warmup-popup-body::-webkit-scrollbar-thumb { background: var(--subject-500); border-radius: 24px; }
+.warmup-popup-body::-webkit-scrollbar-thumb:hover { background: var(--subject-700); }
+@supports (-moz-appearance: none) {
+  .warmup-popup-body { scrollbar-width: auto; scrollbar-color: var(--subject-500) rgba(201, 206, 216, 0.4); }
+}
+/* Its scroll hint (warmupScrollHint in script.js) anchors to the popup, not
+   the screen edge: the body's 12px bar sits flush with the popup's 24px
+   right padding, so its center is 30px in → right:-120px puts the frame's
+   click point (150px) on it. Same (0,2,0) specificity as the base
+   -hint-scroll rule, so it wins by coming later; top is set inline. */
+.click-hint.click-hint--in-popup { right: -120px; }
+
+.warmup-solution {
+  direction: rtl;
+  text-align: center;
+  padding: 2px 4px;
+}
+
+.warmup-solution + .warmup-solution {
+  margin-top: 14px; /* modest gap between items — still clearly more than the 4px within one item */
+}
+
+/* Heading line: category name + its original fraction read as one unit
+   ("<name>: 1/4") — first child (name) sits on the right under RTL, the
+   fraction follows to its left, per the reference layout. */
+.warmup-solution-heading {
+  display: flex;
+  flex-direction: row;
+  direction: rtl;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.warmup-solution-name {
+  font-size: 18px;      /* Body/B-6 */
+  font-weight: 700;
+  color: var(--text-body);
+}
+
+/* Compact fraction glyph, scoped to the warm-up feedback only — tighter
+   padding/line-height than the base .gvi-fraction (shared with the s17/
+   s19/s21 guided-practice feedback, left untouched) so the stacked num/
+   den doesn't inflate this block's line height. */
+.warmup-solution .gvi-fraction { font-size: 20px; }
+
+.warmup-solution .gvi-fraction .num,
+.warmup-solution .gvi-fraction .den { padding: 0 10px; line-height: 1.15; }
+
+/* The conversion line's own fractions (both sides of the "1/4 = 25/100"
+   equation) read as bold next to the heading's bold name — pull them
+   down to the regular weight so only the heading sentence above reads bold. */
+.warmup-solution-conversion .gvi-fraction .num,
+.warmup-solution-conversion .gvi-fraction .den { font-weight: 400; }
+
+/* Conversion line: label + full equation as one unit, directly under the
+   heading — small gap so the two lines read as a single grouped block. */
+.warmup-solution-conversion {
+  display: flex;
+  flex-direction: row;
+  direction: rtl;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* Matches .gvi-feedback-label (20px/600) — the s17/s19/s21 guided-practice
+   feedback's own label size/weight — so this reads at the same scale as
+   the rest of the app's feedback copy instead of a smaller caption. */
+.warmup-solution-label {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-body);
+  white-space: nowrap;
+}
+
+/* Match the equals-sign/percent size to the (already-scoped) 20px
+   fraction above — the base .gvi-eq-sign/.gvi-percent are 24px, which
+   here read as an oversized, mismatched token next to the fraction. */
+.warmup-solution .gvi-eq-sign,
+.warmup-solution .gvi-percent { font-size: 20px; }
+
+.warmup-solution .gvi-feedback-eq { margin: 0; gap: 12px; }
+
+/* Bottom-left button group (hint + continue) — ported from
+   methodica-math-percent-06-02's .scq-left-actions/.btn-hint (same 39px
+   pill family as .btn-back, 16px flex gap per _global-components.md "Nav
+   bar button geometry"), ADDED this session so s26 follows the unit's
+   standard maxAttempts:2 + hint-enabled contract instead of its previous
+   single-submission/no-hint exception. */
+.scq-left-actions {
+  position: absolute;
+  bottom: 16px;
+  left: 32px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Hint modal — same subject-accent popup family as
+   methodica-math-percent-06-02's #scq-hint-overlay/.scq-hint-panel,
+   scoped to this screen (id prefix warmup- instead of scq-, since this
+   part has only one hint-bearing question, not several sharing one
+   overlay). Id ends in "-hint-overlay" per the shared close-on-navigate
+   contract (script.js's goTo() already closes any [id$="-hint-overlay"]). */
+#warmup-hint-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, 0.32);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#warmup-hint-overlay.hidden { display: none; }
+
+.warmup-hint-panel {
+  width: 560px;
+  max-width: calc(100% - 64px);
+  max-height: 520px;
+  overflow-y: auto;
+  background: var(--subject-500);
+  border-radius: 48px;
+  padding: 40px 44px;
+  color: #ffffff;
+  text-align: center;
+}
+/* Hint Card — no "רמז" title; white lamp icon to the right of the hint
+   text (RTL: first flex child renders rightmost), per the 720 "Hint Card"
+   component (QA fix, applied unit-wide). */
+.warmup-hint-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0 0 28px;
+}
+ /* centers on the first 36px text line */
+.warmup-hint-content .warmup-hint-body { flex: 1 1 auto; min-width: 0; margin: 0; }
+.warmup-hint-body {
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.5;
+  margin: 0 0 28px;
+}
+.warmup-hint-body strong { font-weight: 700; }
+
+.warmup-hint-back {
+  height: 39px;
+  padding: 0 32px;
+  border: none;
+  border-radius: 50px;
+  background: #ffffff;
+  color: var(--subject-500);
+  font-family: Calibri, 'Segoe UI', Tahoma, sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.warmup-hint-back:hover { filter: brightness(0.95); }
+

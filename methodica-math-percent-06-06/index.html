@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>methodica-math-percent-06-06</title>
+  <!-- The shared xAPI library is fetched by unit-js/50-loader.js at the END of the body, after the
+       parser has queued every image below; live, its request waited for the last image, which put the
+       resume restore 20-45 s behind a slow line (2026-11-03). Preloading it from the head queues it FIRST.
+       The href must equal what 50-loader.js builds (no ?v=, no crossorigin) or the browser fetches it
+       twice; the library letter here changes together with LIB720 there (the harness asserts it). -->
+  <link rel="preload" as="script" fetchpriority="high" href="https://lomdot.education.gov.il/metodica/720active/common/xapiwrapper.min.js">
+  <link rel="preload" as="script" fetchpriority="high" href="https://lomdot.education.gov.il/metodica/720active/common/xapi-720-l.js">
+  <link rel="preconnect" href="https://kata.cet.ac.il">
+  <link rel="stylesheet" href="../unit-css/base.css?v=1">
+  <link rel="stylesheet" href="../unit-css/questions.css?v=1">
+  <link rel="stylesheet" href="../unit-css/25-report.css?v=1">
+  <link rel="stylesheet" href="styles.css?v=13">
+  <link rel="stylesheet" href="../unit-css/motion.css?v=1">
+</head>
+<body>
+  <!-- Boot cover (ADDING-REPORTING-AND-RESUME.md §8.11): hides screen 0 until the resume
+       decision is known, so a returning learner never sees the first screen flash before their
+       own. Removed by dropBootCover() (../unit-js/40-resume.js) on every loader exit path; the
+       inline net below needs no other file: it lifts the cover after 800ms, or — while
+       50-loader.js has set window.__resumeInFlight — waits for the restore up to a hard 11s
+       ceiling (the metadata poll alone may take 10s). A loader that failed to load gives back
+       exactly the 800ms behaviour. From methodica-math-ratio-01. -->
+  <div id="boot-cover" style="position:fixed;inset:0;z-index:9999;background:#ffffff"></div>
+  <script>
+  (function () {
+    /* A Kata launch (registration in the query) may have a document to restore: raise the
+     flag HERE, before any script is fetched. bootXAPI raises it too, but it runs from the
+     last script tag, and on a cold cache those scripts arrive after the 800 ms below - so
+     the cover used to drop before the flag existed, exposing screen 0 for the whole wait
+     (2026-11-03). Without a registration (local, dev) the 800 ms behaviour is unchanged. */
+  if (/[?&]registration=/.test(location.search)) window.__resumeInFlight = true;
+  var t0 = Date.now();
+    function tick() {
+      var c = document.getElementById('boot-cover');
+      if (!c || !c.parentNode) return;
+      if (window.__resumeInFlight && Date.now() - t0 < 11000) { setTimeout(tick, 100); return; }
+      c.parentNode.removeChild(c);
+    }
+    setTimeout(tick, 800);
+  })();
+  </script>
+  <div id="app">
+
+    <!-- Report / Issue button ("מצאתם בעיה?") — global, outside all .screen divs; top-left,
+         z-index 30 (720-templates _global-components.md). Glyph is inline SVG on currentColor,
+         styles in ../unit-css/25-report.css, behaviour in ../unit-js/25-report.js. -->
+    <button class="flag-btn" id="flag-btn" type="button" onclick="openReportModal()" aria-label="هل وجدتم مشكلة؟">
+      <span class="flag-btn-icon">
+        <span class="flag-btn-glyph" aria-hidden="true">
+          <svg class="flag-btn-glyph-pole" viewBox="0 0 0.794329 17.0005" preserveAspectRatio="none" fill="none"><path d="M0.397164 17C0.177722 17 0 16.8239 0 16.6065V0.393501C0 0.176082 0.177722 0 0.397164 0C0.616607 0 0.794329 0.176082 0.794329 0.393501V16.607C0.794329 16.8245 0.616607 17.0005 0.397164 17.0005V17Z" fill="currentColor"/></svg>
+          <svg class="flag-btn-glyph-banner" viewBox="0 0 12 9.31542" preserveAspectRatio="none" fill="none"><path d="M2.76227 9.31542C1.91972 9.31542 1.06958 9.15545 0.213483 8.71363C0.0823588 8.64599 0 8.51124 0 8.36469V0.950975C0 0.814619 0.0715221 0.687925 0.188558 0.615989C0.305594 0.54459 0.45189 0.537611 0.574886 0.598811C0.577053 0.599884 0.578679 0.600958 0.580846 0.602032C2.31309 1.49586 4.05563 1.046 5.90003 0.569821C7.80946 0.0770055 9.78336 -0.431915 11.7865 0.601495C11.9176 0.669136 12 0.803882 12 0.950438V8.36415C12 8.4946 11.9344 8.617 11.8255 8.69001C11.7166 8.76302 11.5774 8.77805 11.4555 8.72974C11.443 8.7249 11.4311 8.71954 11.4197 8.71363C9.68745 7.8198 7.94491 8.26967 6.10051 8.7453C5.00709 9.02714 3.89199 9.31489 2.76281 9.31489L2.76227 9.31542ZM0.793787 8.11935C2.45559 8.87307 4.13094 8.44038 5.90003 7.98407C7.62469 7.53903 9.40191 7.08057 11.2062 7.75806V1.19631C9.54441 0.442591 7.86906 0.875281 6.09997 1.33159C4.37531 1.77663 2.59755 2.23509 0.793787 1.5576V8.11935Z" fill="currentColor"/></svg>
+        </span>
+      </span>
+      <span class="flag-btn-label">هل وجدتم مشكلة؟</span>
+    </button>
+
+    <!-- ================================================================
+         SCREEN 0 (s54) — pptx slide 54, item methodica-math-percent-06-06-001
+         Launch/TransitionScreen into Peak Question B (מועד ב'). Reuses the
+         .s13-content/.s13-text-group composition verbatim (06-01/06-02/
+         06-04/06-05) — 5 separately-staged lines (this screen's source
+         textbox has 5 distinct paragraphs), the FIRST line ("משימת שיא 2")
+         emphasized in this unit's purple per explicit instruction, then the
+         character, then Continue enables + pulses.
+         Asset: assets/videos/character_peakB.mp4 — animated replacement
+         for the former static character_3_4.png fallback (real pptx media,
+         ppt/media/image70.png, also used by methodica-math-percent-06-05's
+         s48). Resolves the slide notes' request for an animated "2-finger
+         gesture" ("הגיף שנבחר... עושה תנועה של 2 עם האצבעות") — the
+         supplied video shows the mascot holding up two fingers, closing
+         out that flag (previously precedent-matched to flags #21/#22/#27
+         elsewhere in this project as an unmet request). Portrait-
+         orientation video (2160x3840, same aspect family as the PNG it
+         replaced) — it's placed as a flex child below .s13-text-group (not
+         .s13-character's usual absolute bottom-pin) so the 5-line text
+         block above it can never overlap it. See 06-05's s48 for the same fix.
+         ================================================================ -->
+    <section class="screen active" data-screen="0" id="s54">
+      <div class="s13-content s54-content">
+        <div class="s13-text-group">
+          <p class="s54-line m-stage-text" id="s54-line1" data-reveal-on-ready>كلّ الاحترام!</p>
+          <p class="s54-line m-stage-text" id="s54-line2" data-reveal-on-ready>إذا لم تتمكن من الإجابة بشكل صحيح على بعض الأسئلة،</p>
+          <p class="s54-line m-stage-text" id="s54-line3" data-reveal-on-ready>من المهم أن تفهم ما الذي لا يزال غير واضح، وأن تلجأ إلى الدردشة أو إلى المعلّم للحصول على شرح إضافي.</p>
+          <p class="s54-emphasis m-stage-text" id="s54-line4" data-reveal-on-ready>والآن حان وقت سؤال التحدّي</p>
+          <p class="s54-line m-stage-text" id="s54-line5" data-reveal-on-ready>تتكون من 4 بنود. عليكم النجاح في 3 منها على الأقل.</p>
+        </div>
+        <div class="s54-character-crop">
+          <video class="s13-character s54-character" id="s54-character-img" data-reveal-on-ready src="assets/videos/character_peakB-opt.mp4" autoplay muted loop playsinline aria-label="شخصية فرائية بيضاء ترتدي قميصاً أخضر عليه رمز النسبة المئوية، وتحمل لافتة عليها الكسر ثلاثة أرباع"></video>
+        </div>
+      </div>
+
+      <button class="btn-back" id="s54-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <button class="btn-continue" id="s54-continue" onclick="goTo(1)" disabled>متابعة</button>
+    </section>
+
+    <!-- ================================================================
+         SCREENS 1-5 (s55-s59) — pptx slides 55-59, item methodica-math-
+         percent-06-06-001. Each former scroll "page" is now its own
+         discrete .screen, navigated with the same goTo()/goBack()/
+         NAV_FLOW system every other screen in this unit uses — converted
+         from the original one-long-scroll design (see git history) per
+         explicit instruction to remove inter-section scrolling. No text,
+         asset, question logic, answer, feedback, hint, attempt, or
+         interaction changed — only the container/navigation mechanism.
+         The progress-question nav (same markup/state machine as 06-05's
+         own peakProgress) now renders once per screen instead of once
+         "outside the scroll", each with its own #sXX-progress id; each
+         graded screen's own check button doubles as its Continue (same
+         "שנמשיך?" relabel-on-resolve convention already used by every
+         other graded screen in 06-01–06-05 — see scqAdvance()/mcqCheck()/
+         scqCheck()/dndCheck() in script.js), so no new/second Continue
+         button was added. Feedback popups (#sXX-popup) moved inside their
+         own screen — same draggable, canvas-clamped .pk-popup markup as
+         before, just no longer scroll-scoped since screen visibility now
+         handles show/hide.
+         ================================================================ -->
+
+    <!-- SCREEN 1 (s55) — opening/context text (no question). Production
+         note: "ליצור כגלילה. הנתונים שהתפרסמו צריכים לצוף עבור השאלה
+         הראשונה (במקום התמונה)" — this screen shows the full scenario +
+         data narrative once; the same data reappears as a floating card
+         alongside sections א'/ב' (s56/s57).
+         Asset: assets/images/Q9.png (production name "Q9", real pptx
+         media ppt/media/image76.png — parents' WhatsApp-group argument
+         scene, thought-bubbles show the grade letters in dispute). -->
+    <section class="screen" data-screen="1" id="s55">
+      <div class="lp-section lp-section--opening">
+        <div class="lp-opening-row">
+          <!-- Text + data stacked together as ONE right-side column (same
+             width, so their right/left edges align and they read as one
+             block) — per explicit QA fix. Image sits separately on the
+             left, vertically centered against this column. -->
+          <div class="lp-opening-col">
+            <div class="lp-text-col">
+              <p class="lp-body" id="s55-p1" data-reveal-on-ready>في مجموعة الواتساب الخاصة بأولياء الأمور من المدارس الإعدادية في مدينة أشدود، دار نقاش.<br>ادّعت كل مرحلة عمرية أن نسب المشاركة في حركات الشباب البلدية<br>هي الأعلى لديها.</p>
+            </div>
+
+            <!-- "Published data" block — same content reused verbatim as
+                 the floating card content on s56/s57. -->
+            <div class="pk-data-card pk-data-card--opening" id="s55-data-block" data-reveal-on-ready>
+              <p class="pk-data-title">الأرقام المنشورة:</p>
+              <p class="pk-data-line">في الصف السابع <span class="gvi-fraction q1-inline-fraction"><span class="num">4</span><span class="den">5</span></span> من الطلاب أعضاء في الحركات الشبابية.</p>
+              <p class="pk-data-line">في الصف الثامن <span class="pk-percent-highlight">78%</span> من الطلاب أعضاء في الحركات الشبابية.</p>
+              <p class="pk-data-line">في الصف التاسع 7 من أصل 10 طلاب أعضاء في حركة شبابية.</p>
+            </div>
+          </div>
+
+          <div class="lp-img-col">
+            <div class="lp-img-frame" data-reveal-on-ready><img src="assets/images/Q9-opt.png" alt="مجموعة من الآباء تتجادل حول هاتف محمول، وفوق رؤوسهم فقاعات تفكير تحمل حروف الفئات العمرية المتنازع عليها" loading="lazy"></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-back" id="s55-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <button class="btn-continue" id="s55-continue" onclick="goTo(2)" disabled>متابعة</button>
+    </section>
+
+    <!-- SCREEN 2 (s56) — סעיף א' — MultipleChoiceQuestion (select-all). No
+         graded multi-select precedent exists in this unit (06-01's hook1
+         MCQ is an ungraded reflection variant) — reuses .hook1-checkbox's
+         square-checkbox indicator verbatim on the standard .scq-opt pill
+         (same border/radius/color as every SCQ answer in this unit) rather
+         than inventing new checkbox styling; grading/retry/feedback logic
+         mirrors the established scq engine (2-attempt gate, retry/correct/
+         wrong2). Correct: ב + ג (the fraction and percent restatements of
+         the same true value; א and ד conflate percent with headcount).
+         Floating data: production note "נתונים צפים" — a floating card,
+         not a static image, per instruction.
+         NOTE: this slide's own shapes have no "هل من تلميح؟" trigger button
+         (confirmed absent from the raw XML, unlike s58/s59 which do have
+         one) even though full hint content IS authored off-canvas — added
+         the standard hint button here to expose that already-written
+         content, consistent with every other question in this unit;
+         flagged in the build report rather than silently added. -->
+    <section class="screen" data-screen="2" id="s56">
+      <div class="lp-page">
+        <div class="scq-flow">
+          <div class="scq-question-col scq-question-col--flow">
+            <p class="scq-qtext pk-instruction" data-reveal-on-ready><strong>أ. حدّدوا جميع العبارات الصحيحة:</strong></p>
+            <div class="scq-answers" role="group" aria-label="جمل للتحقق">
+              <button class="scq-opt m-stage-card" type="button" role="checkbox" aria-checked="false" data-id="a" data-reveal-on-ready onclick="mcqToggle('s56','a')">
+                <span class="scq-opt-text">في الصف التاسع يوجد 70 طالبًا أعضاء في الحركات الشبابية</span>
+                <span class="hook1-checkbox" aria-hidden="true"></span>
+              </button>
+              <button class="scq-opt m-stage-card" type="button" role="checkbox" aria-checked="false" data-id="b" data-reveal-on-ready onclick="mcqToggle('s56','b')">
+                <span class="scq-opt-text">من بين كل 10 طلاب في الصف التاسع، 7 أعضاء في حركات الشبيبة.</span>
+                <span class="hook1-checkbox" aria-hidden="true"></span>
+              </button>
+              <button class="scq-opt m-stage-card" type="button" role="checkbox" aria-checked="false" data-id="c" data-reveal-on-ready onclick="mcqToggle('s56','c')">
+                <span class="scq-opt-text">70% من طلاب الصف التاسع أعضاء في الحركات الشبابية</span>
+                <span class="hook1-checkbox" aria-hidden="true"></span>
+              </button>
+              <button class="scq-opt m-stage-card" type="button" role="checkbox" aria-checked="false" data-id="d" data-reveal-on-ready onclick="mcqToggle('s56','d')">
+                <span class="scq-opt-text">عدد الطلاب في كل صف هو 100</span>
+                <span class="hook1-checkbox" aria-hidden="true"></span>
+              </button>
+            </div>
+          </div>
+
+          <div class="pk-data-card pk-data-card--sticky pk-data-card--lg" id="s56-data-card" data-reveal-on-ready>
+            <p class="pk-data-title">البيانات التي تم نشرها:</p>
+            <p class="pk-data-line">في الصف السابع <span class="gvi-fraction q1-inline-fraction"><span class="num">4</span><span class="den">5</span></span> من الطلاب أعضاء في الحركات الشبابية.</p>
+            <p class="pk-data-line">في الصف الثامن <span class="pk-percent-highlight">78%</span> من الطلاب أعضاء في الحركات الشبابية.</p>
+            <p class="pk-data-line">في الصف التاسع 7 من أصل 10 طلاب أعضاء في حركة شبابية.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="pk-popup" id="s56-popup" hidden>
+        <div class="scq-fb" data-fb="retry">
+          <div class="scq-fb-head"><p class="scq-fb-title">هذا غير دقيق،<br><span class="fb-regular">هل نحاول مرة أخرى؟</span></p></div>
+        </div>
+        <div class="scq-fb" data-fb="correct">
+          <div class="scq-fb-head"><p class="scq-fb-title">أحسنتم!</p></div>
+          <div class="scq-fb-body"><p>الإجابتان ب وج صحيحتان.</p></div>
+        </div>
+        <div class="scq-fb" data-fb="wrong2">
+          <div class="scq-fb-head"><p class="scq-fb-title">أخطأتم في إجابة واحدة على الأقل:</p></div>
+          <div class="scq-fb-body"><p>الإجابتان الصحيحتان هما ب وج.</p></div>
+        </div>
+      </div>
+
+      <div class="scq-left-actions scq-left-actions--bar" id="s56-actions" data-reveal-on-ready>
+        <button class="btn-hint" id="s56-hint" onclick="scqOpenHint('s56')">هل من تلميح؟</button>
+        <button class="btn-continue" id="s56-check" onclick="mcqCheck('s56')" disabled>هل إجابتي صحيحة؟</button>
+      </div>
+      <button class="btn-back" id="s56-back-btn" onclick="goBack()" hidden>رجوع</button>
+    </section>
+
+    <!-- SCREEN 3 (s57) — סעיף ב' — SingleChoiceQuestion. Same floating data
+         card as s56 (production note: "נתונים צפים" also applies here —
+         image90.png on this slide is the identical bordered data-card crop
+         supplied for this section). Correct: ט' (70%, the lowest of
+         80%/78%/70%). Asset: assets/images/Q10.png (production name "Q10",
+         real pptx media ppt/media/image79.png). Feedback equations
+         reconstructed from this slide's own hidden AlternateContent
+         correct/wrong2 image text (image91.png/image92.png) — real
+         content, not invented. -->
+    <section class="screen" data-screen="3" id="s57">
+      <div class="lp-page">
+        <div class="scq-flow">
+          <div class="scq-question-col scq-question-col--flow">
+            <p class="scq-qtext" data-reveal-on-ready><strong>ب. أيّ صفّ لديه أدنى نسبة مئوية<br>من الطلاب في الحركات الشبابية؟</strong></p>
+            <div class="scq-answers" role="radiogroup" aria-label="خيارات الإجابة">
+              <button class="scq-opt m-stage-card" type="button" role="radio" aria-checked="false" data-id="a" data-reveal-on-ready onclick="scqSelect('s57','a')">
+                <span class="scq-opt-text">الصف السابع</span>
+                <span class="scq-radio"></span>
+              </button>
+              <button class="scq-opt m-stage-card" type="button" role="radio" aria-checked="false" data-id="b" data-reveal-on-ready onclick="scqSelect('s57','b')">
+                <span class="scq-opt-text">الصف الثامن</span>
+                <span class="scq-radio"></span>
+              </button>
+              <button class="scq-opt m-stage-card" type="button" role="radio" aria-checked="false" data-id="c" data-reveal-on-ready onclick="scqSelect('s57','c')">
+                <span class="scq-opt-text">الصف التاسع</span>
+                <span class="scq-radio"></span>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Family photo + data card grouped into one stacked visual
+               column (photo ABOVE the data, per explicit QA fix — the
+               data card is narrower than the photo and centered under
+               it) so they read as one visual area, instead of 3 separate
+               row columns that left the data card off on its own at the
+               far side of the screen. -->
+          <div class="pk-visual-stack">
+            <div class="scq-img m-stage-visual pk-scq-img" id="s57-img" data-reveal-on-ready>
+              <div class="scq-img-clip">
+                <img src="assets/images/Q10-opt.png" alt="مجموعة من الآباء تتجادل حول هاتف محمول، وفوق رؤوسهم فقاعات تفكير تحتوي على حروف لشرائح العمر المختلف عليها." loading="lazy">
+              </div>
+              <button class="img-zoom-btn" type="button" aria-label="تكبير الصورة" data-zoom-src="assets/images/Q10-opt.png" data-zoom-alt="مجموعة من الآباء تتجادل حول هاتف محمول، وفوق رؤوسهم فقاعات تفكير تحمل حروف الفئات العمرية المختلف عليها">
+                <svg class="img-zoom-btn__icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="8.5" cy="8.5" r="6.5" stroke="currentColor" stroke-width="1.6"/><line x1="13.4" y1="13.4" x2="18" y2="18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+
+            <div class="pk-data-card pk-data-card--narrow" id="s57-data-card" data-reveal-on-ready>
+              <p class="pk-data-title">البيانات التي نُشرت:</p>
+              <p class="pk-data-line">في الصف السابع <span class="gvi-fraction q1-inline-fraction"><span class="num">4</span><span class="den">5</span></span> من الطلاب أعضاء في الحركات الشبابية.</p>
+              <p class="pk-data-line">في الصف الثامن <span class="pk-percent-highlight">78%</span> من الطلاب أعضاء في الحركات الشبابية.</p>
+              <p class="pk-data-line">في الصف التاسع 7 من أصل 10 طلاب أعضاء في حركة شبابية.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pk-popup" id="s57-popup" hidden>
+        <div class="scq-fb" data-fb="retry">
+          <div class="scq-fb-head"><p class="scq-fb-title">هذا غير دقيق،<br><span class="fb-regular">هل نحاول مرة أخرى؟</span></p></div>
+        </div>
+        <div class="scq-fb" data-fb="correct">
+          <div class="scq-fb-head"><p class="scq-fb-title">أحسنتم!</p></div>
+          <div class="scq-fb-body">
+            <p>لكي نقارن بين البيانات، سنحوّلها إلى نسب مئوية.<br>بعد التحويل يسهل أن نرى أيّ نسبة مئوية أعلى.</p>
+            <div class="gvi-feedback-eq">
+              <span class="gvi-eq-sign">الصف السابع:</span>
+              <div class="gvi-fraction"><span class="num">4</span><span class="den">5</span></div>
+              <span class="gvi-eq-sign">=</span>
+              <div class="gvi-fraction"><span class="num">80</span><span class="den">100</span></div>
+              <span class="gvi-eq-sign">=</span>
+              <span class="gvi-eq-result">80%</span>
+            </div>
+            <div class="gvi-feedback-eq">
+              <span class="gvi-eq-sign">الصف الثامن:</span>
+              <span class="gvi-eq-result">78%</span>
+              <span class="gvi-eq-sign">(معطى)</span>
+            </div>
+            <div class="gvi-feedback-eq">
+              <span class="gvi-eq-sign">الصف التاسع:</span>
+              <div class="gvi-fraction"><span class="num">7</span><span class="den">10</span></div>
+              <span class="gvi-eq-sign">=</span>
+              <div class="gvi-fraction"><span class="num">70</span><span class="den">100</span></div>
+              <span class="gvi-eq-sign">=</span>
+              <span class="gvi-eq-result">70%</span>
+            </div>
+          </div>
+        </div>
+        <div class="scq-fb" data-fb="wrong2">
+          <div class="scq-fb-head"><p class="scq-fb-title">الإجابة غير صحيحة.<br>الإجابة الصحيحة معروضة.</p></div>
+          <div class="scq-fb-body">
+            <p>لكي نقارن بين البيانات، سنحوّلها إلى نسب مئوية.<br>بعد التحويل يسهل أن نرى أيّ نسبة مئوية أعلى.</p>
+            <div class="gvi-feedback-eq">
+              <span class="gvi-eq-sign">الصف السابع:</span>
+              <div class="gvi-fraction"><span class="num">4</span><span class="den">5</span></div>
+              <span class="gvi-eq-sign">=</span>
+              <div class="gvi-fraction"><span class="num">80</span><span class="den">100</span></div>
+              <span class="gvi-eq-sign">=</span>
+              <span class="gvi-eq-result">80%</span>
+            </div>
+            <div class="gvi-feedback-eq">
+              <span class="gvi-eq-sign">الصف الثامن:</span>
+              <span class="gvi-eq-result">78%</span>
+              <span class="gvi-eq-sign">(معطى)</span>
+            </div>
+            <div class="gvi-feedback-eq">
+              <span class="gvi-eq-sign">الصف التاسع:</span>
+              <div class="gvi-fraction"><span class="num">7</span><span class="den">10</span></div>
+              <span class="gvi-eq-sign">=</span>
+              <div class="gvi-fraction"><span class="num">70</span><span class="den">100</span></div>
+              <span class="gvi-eq-sign">=</span>
+              <span class="gvi-eq-result">70%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scq-left-actions scq-left-actions--bar" id="s57-actions" data-reveal-on-ready>
+        <button class="btn-hint" id="s57-hint" onclick="scqOpenHint('s57')">هل من تلميح؟</button>
+        <button class="btn-continue" id="s57-check" onclick="scqCheck('s57')" disabled>هل إجابتي صحيحة؟</button>
+      </div>
+      <button class="btn-back" id="s57-back-btn" onclick="goBack()" hidden>رجوع</button>
+    </section>
+
+    <!-- SCREEN 4 (s58) — סעיף ג' — DragAndDropQuestion. Reuses the .dnd-*
+         engine from methodica-math-percent-06-05's s51 verbatim (drag
+         items/drop zones/hover/occupied/correct/incorrect/retry/attempt-
+         count/feedback) — only the domain changes (3 grade-count chips
+         instead of 3 company names). Floating table: the "تذكير:"
+         reference table (שכבה/ייצוג/אחוז — אחוז column added in the 30.09.26 script fix) — this slide's own hidden
+         native-table AlternateContent content (image93.png/image94.png),
+         reusing .dnd-reference/.dnd-ref-table verbatim.
+         Answer key (30.09.26 script fix, slide 57): ז'→80, ח'→156, ט'→105.
+         Pool display order 80/105/156 per the script; chip ids are the
+         grade they belong to (z/h/t), mapping in DND_CONFIG.s58.correctOrder. -->
+    <section class="screen" data-screen="4" id="s58">
+      <div class="lp-page">
+        <p class="dnd-instruction pk-dnd-instruction" id="s58-instruction" data-reveal-on-ready>
+          لنفترض أن أعداد الطلاب تختلف بين الصفوف:<br>
+          في الصف السابع – 100 طالب.<br>
+          في الصف الثامن – 200 طالب.<br>
+          في الصف التاسع – 150 طالبًا.
+        </p>
+
+        <div class="dnd-row-layout">
+          <div class="dnd-table-col">
+            <!-- Question line at the top of the drop-table column, so the
+                 reference's "تذكير:" title runs parallel to it, as on the
+                 slide (user fix). -->
+            <p class="dnd-instruction pk-dnd-instruction pk-dnd-question" id="s58-question" data-reveal-on-ready><strong>ج. كم عدد الطلاب الأعضاء فعليًا في الحركات الشبابية؟</strong><br>اسحبوا المعطى إلى المكان المناسب:</p>
+            <div class="dnd-table" id="s58-table" role="table" aria-label="عدد الطلاب في حركات الشباب في كل صف" data-reveal-on-ready>
+            <div class="dnd-row" role="row">
+              <div class="dnd-cell dnd-cell--rank">في الصف السابع</div>
+              <div class="dnd-cell dnd-cell--drop">
+                <button type="button" class="dnd-slot" id="s58-slot0"
+                        data-name-z="80" data-name-h="156" data-name-t="105"
+                        onclick="dndSlotClick('s58',0)"
+                        ondragover="dndSlotDragOver('s58',0,event)"
+                        ondragleave="dndSlotDragLeave('s58',0)"
+                        ondrop="dndSlotDrop('s58',0,event)"
+                        aria-label="في الصف السابع، اضغطوا لوضع العدد المختار، أو اسحبوه إلى هنا">
+                  <span class="dnd-slot-placeholder">اسحبوا إلى هنا</span>
+                  <span class="dnd-slot-label"></span>
+                </button>
+              </div>
+              <div class="dnd-cell dnd-cell--rank dnd-cell--suffix">طلاب مشاركون في الحركات الشبابية</div>
+            </div>
+            <div class="dnd-row" role="row">
+              <div class="dnd-cell dnd-cell--rank">في الصف الثامن</div>
+              <div class="dnd-cell dnd-cell--drop">
+                <button type="button" class="dnd-slot" id="s58-slot1"
+                        data-name-z="80" data-name-h="156" data-name-t="105"
+                        onclick="dndSlotClick('s58',1)"
+                        ondragover="dndSlotDragOver('s58',1,event)"
+                        ondragleave="dndSlotDragLeave('s58',1)"
+                        ondrop="dndSlotDrop('s58',1,event)"
+                        aria-label="في الصف الثامن، اضغطوا لوضع العدد المختار، أو اسحبوه إلى هنا">
+                  <span class="dnd-slot-placeholder">اسحبوا إلى هنا</span>
+                  <span class="dnd-slot-label"></span>
+                </button>
+              </div>
+              <div class="dnd-cell dnd-cell--rank dnd-cell--suffix">طلاب مشاركون في الحركات الشبابية</div>
+            </div>
+            <div class="dnd-row" role="row">
+              <div class="dnd-cell dnd-cell--rank">في الصف التاسع</div>
+              <div class="dnd-cell dnd-cell--drop">
+                <button type="button" class="dnd-slot" id="s58-slot2"
+                        data-name-z="80" data-name-h="156" data-name-t="105"
+                        onclick="dndSlotClick('s58',2)"
+                        ondragover="dndSlotDragOver('s58',2,event)"
+                        ondragleave="dndSlotDragLeave('s58',2)"
+                        ondrop="dndSlotDrop('s58',2,event)"
+                        aria-label="في الصف التاسع، اضغطوا لوضع العدد المختار، أو اسحبوه إلى هنا">
+                  <span class="dnd-slot-placeholder">اسحبوا إلى هنا</span>
+                  <span class="dnd-slot-label"></span>
+                </button>
+              </div>
+              <div class="dnd-cell dnd-cell--rank dnd-cell--suffix">طلاب مشاركون في الحركات الشبابية</div>
+            </div>
+            </div>
+          </div>
+
+          <div class="dnd-reference" id="s58-reference" data-reveal-on-ready>
+            <p class="dnd-reference-title">تذكير:</p>
+            <div class="dnd-ref-table" role="table" aria-label="بيانات المشاركة المعروضة">
+              <div class="dnd-ref-row dnd-ref-row--head" role="row">
+                <div class="dnd-ref-cell dnd-ref-cell--head" role="columnheader">الصف</div>
+                <div class="dnd-ref-cell dnd-ref-cell--head" role="columnheader">تمثيل</div>
+                <div class="dnd-ref-cell dnd-ref-cell--head" role="columnheader">النسبة المئوية</div>
+              </div>
+              <div class="dnd-ref-row" role="row">
+                <div class="dnd-ref-cell" role="cell">السابع</div>
+                <div class="dnd-ref-cell" role="cell"><div class="gvi-fraction dnd-ref-fraction"><span class="num">4</span><span class="den">5</span></div></div>
+                <div class="dnd-ref-cell" role="cell">80%</div>
+              </div>
+              <div class="dnd-ref-row" role="row">
+                <div class="dnd-ref-cell" role="cell">الثامن</div>
+                <div class="dnd-ref-cell" role="cell">78%</div>
+                <div class="dnd-ref-cell" role="cell">78%</div>
+              </div>
+              <div class="dnd-ref-row" role="row">
+                <div class="dnd-ref-cell" role="cell">التاسع</div>
+                <div class="dnd-ref-cell" role="cell">7 من 10</div>
+                <div class="dnd-ref-cell" role="cell">70%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dnd-pool-wrap" id="s58-pool-wrap" data-reveal-on-ready>
+          <p class="dnd-pool-title">بنك الإجابات:</p>
+          <div class="dnd-pool" id="s58-pool" ondragover="dndPoolDragOver(event)" ondrop="dndPoolDrop('s58',event)">
+            <button type="button" class="dnd-chip" data-chip="z" draggable="true" aria-pressed="false"
+                    onclick="dndPickChip('s58','z')" ondragstart="dndDragStart('s58','z',event)">80</button>
+            <button type="button" class="dnd-chip" data-chip="t" draggable="true" aria-pressed="false"
+                    onclick="dndPickChip('s58','t')" ondragstart="dndDragStart('s58','t',event)">105</button>
+            <button type="button" class="dnd-chip" data-chip="h" draggable="true" aria-pressed="false"
+                    onclick="dndPickChip('s58','h')" ondragstart="dndDragStart('s58','h',event)">156</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="pk-popup" id="s58-popup" hidden>
+        <div class="scq-fb" data-fb="retry">
+          <div class="scq-fb-head"><p class="scq-fb-title">هذا غير دقيق،<br><span class="fb-regular">هل نحاول مرة أخرى؟</span></p></div>
+        </div>
+        <div class="scq-fb" data-fb="correct">
+          <div class="scq-fb-head"><p class="scq-fb-title">أحسنتم!</p></div>
+          <div class="scq-fb-body">
+            <p><strong>في الصف السابع</strong> 80% من الطلاب أعضاء في حركة شبابية ويوجد بالضبط 100 طالب في الصف. لذلك 80% هم 80 طالبًا.</p>
+            <p><strong>في الصف الثامن</strong> 78% تعني 78 طالبًا من كل 100. في الصف 200 طالب (أي ضعف 100) ولذلك يتضاعف عدد الأعضاء في الحركة الشبابية: <span dir="ltr">78 · 2 = <strong>156</strong></span>.</p>
+            <p><strong>في الصف التاسع</strong> 7 من أصل 10 تعني 7 من كل مجموعة من 10. في 150 توجد 15 مجموعة من 10 ولذلك: <span dir="ltr">7 · 15 = <strong>105</strong></span>.</p>
+          </div>
+        </div>
+        <div class="scq-fb" data-fb="wrong2">
+          <div class="scq-fb-head"><p class="scq-fb-title">لقد أخطأتم في إجابة واحدة على الأقل، لنشرح:</p></div>
+          <div class="scq-fb-body">
+            <p><strong>في الصف السابع</strong> 80% من الطلاب أعضاء في حركة شبابية ويوجد بالضبط 100 طالب في الصف. لذلك 80% هم 80 طالبًا.</p>
+            <p><strong>في الصف الثامن</strong> 78% تعني 78 طالبًا من كل 100. في الصف 200 طالب (أي ضعف 100) ولذلك يتضاعف عدد الأعضاء في الحركة الشبابية: <span dir="ltr">78 · 2 = <strong>156</strong></span>.</p>
+            <p><strong>في الصف التاسع</strong> 7 من أصل 10 تعني 7 من كل مجموعة من 10. في 150 توجد 15 مجموعة من 10 ولذلك: <span dir="ltr">7 · 15 = <strong>105</strong></span>.</p>
+          </div>
+          <button class="scq-popup-reveal-btn" type="button" id="s58-reveal-btn" onclick="dndToggleReveal('s58')">الإجابة الصحيحة</button>
+        </div>
+      </div>
+
+      <div class="scq-left-actions scq-left-actions--bar" id="s58-actions" data-reveal-on-ready>
+        <button class="btn-hint" id="s58-hint" onclick="scqOpenHint('s58')">هل من تلميح؟</button>
+        <button class="btn-continue" id="s58-check" onclick="dndCheck('s58')" disabled>هل إجابتي صحيحة؟</button>
+      </div>
+      <button class="btn-back" id="s58-back-btn" onclick="goBack()" hidden>رجوع</button>
+    </section>
+
+    <!-- SCREEN 5 (s59) — סעיף ד' — SingleChoiceQuestion, the final section
+         (last slide in the deck — no further screen exists, so this
+         component's overall Continue stays a disabled dead end after
+         resolving, same precedent as every prior component's chain-end,
+         e.g. methodica-math-percent-06-05's own s52).
+         Asset: assets/images/Q11.png (real pptx media ppt/media/
+         image87.png). Correct: option ב (percent-based comparison is fair
+         across differently-sized grades). -->
+    <section class="screen" data-screen="5" id="s59">
+      <div class="lp-page">
+        <!-- Question text sits OUTSIDE the row below (not stacked above the
+             answers inside .scq-question-col--flow, like s57's own single
+             scq-flow column) — QA fix: the image used to align to the TOP
+             OF THIS ROW, which put it flush with the question heading
+             instead of the answer options underneath it. Pulling the
+             heading out into its own full-width block above leaves the row
+             containing only the answers column + image, so the row's own
+             align-items:flex-start (inherited from .scq-flow, unchanged)
+             aligns the image's top with the answers' top automatically —
+             no hardcoded offset needed, stays correct if the heading's own
+             height ever changes. -->
+        <div class="scq-qtext">
+          <p data-qrole="context" data-reveal-on-ready>بعد نشر البيانات، ناقش الأهالي أفضل طريقة للمقارنة بين الصفوف.</p>
+          <p data-qrole="question" data-reveal-on-ready><strong>أيّ الادّعاءات التالية هو الأصحّ؟</strong></p>
+        </div>
+        <div class="scq-flow">
+          <div class="scq-question-col scq-question-col--flow">
+            <div class="scq-answers" role="radiogroup" aria-label="خيارات الإجابة">
+              <button class="scq-opt m-stage-card" type="button" role="radio" aria-checked="false" data-id="a" data-reveal-on-ready onclick="scqSelect('s59','a')">
+                <span class="scq-opt-text">يُفضَّل المقارنة بين الصفوف حسب <strong>عدد الطلاب</strong> الأعضاء في حركة شبابية.<br>هكذا نعرف المشاركة الفعلية.</span>
+                <span class="scq-radio"></span>
+              </button>
+              <button class="scq-opt m-stage-card" type="button" role="radio" aria-checked="false" data-id="b" data-reveal-on-ready onclick="scqSelect('s59','b')">
+                <span class="scq-opt-text">يُفضَّل المقارنة بين الصفوف <strong>حسب النسب المئوية</strong>، لأن النسب المئوية تتيح المقارنة<br>بين مجموعات مختلفة الأحجام.</span>
+                <span class="scq-radio"></span>
+              </button>
+              <button class="scq-opt m-stage-card" type="button" role="radio" aria-checked="false" data-id="c" data-reveal-on-ready onclick="scqSelect('s59','c')">
+                <span class="scq-opt-text">ما دام عدد الطالبات والطلاب في كل صف غير متساوٍ، لا يمكن إجراء المقارنة.</span>
+                <span class="scq-radio"></span>
+              </button>
+            </div>
+
+          </div>
+
+          <div class="scq-img m-stage-visual pk-scq-img" id="s59-img" data-reveal-on-ready>
+            <div class="scq-img-clip">
+              <img src="assets/images/Q11-opt.png" alt="مجموعة من الأهالي يتجادلون حول هاتف محمول، وفوق رؤوسهم فقاعات تفكير تحتوي على علامات نسبة مئوية و X أحمر" loading="lazy">
+            </div>
+            <button class="img-zoom-btn" type="button" aria-label="تكبير الصورة" data-zoom-src="assets/images/Q11-opt.png" data-zoom-alt="مجموعة من الآباء تتجادل حول هاتف محمول، وفوق رؤوسهم فقاعات تفكير فيها علامات النسبة المئوية وعلامة X حمراء">
+              <svg class="img-zoom-btn__icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="8.5" cy="8.5" r="6.5" stroke="currentColor" stroke-width="1.6"/><line x1="13.4" y1="13.4" x2="18" y2="18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="pk-popup" id="s59-popup" hidden>
+        <div class="scq-fb" data-fb="retry">
+          <div class="scq-fb-head"><p class="scq-fb-title">هذا غير دقيق،<br><span class="fb-regular">هل نحاول مرة أخرى؟</span></p></div>
+        </div>
+        <div class="scq-fb" data-fb="correct">
+          <div class="scq-fb-head"><p class="scq-fb-title">أحسنتم!</p></div>
+          <div class="scq-fb-body"><p>عند مقارنة مجموعات مختلفة الأحجام، تعبّر النسب المئوية عن نسبة الأشخاص، لا عن عددهم فقط، ولذلك تتيح المقارنة بين المجموعات بشكل عادل.</p></div>
+        </div>
+        <div class="scq-fb" data-fb="wrong2">
+          <div class="scq-fb-head"><p class="scq-fb-title">الإجابة غير صحيحة.<br>الإجابة الصحيحة مُعلَّمة.</p></div>
+          <div class="scq-fb-body"><p>عند مقارنة مجموعات مختلفة الأحجام، تعبّر النسب المئوية عن نسبة الأشخاص، لا عن عددهم فقط، ولذلك تتيح المقارنة بين المجموعات بشكل عادل.</p></div>
+        </div>
+      </div>
+
+      <div class="scq-left-actions scq-left-actions--bar" id="s59-actions" data-reveal-on-ready>
+        <button class="btn-hint" id="s59-hint" onclick="scqOpenHint('s59')">هل من تلميح؟</button>
+        <button class="btn-continue" id="s59-check" onclick="scqCheck('s59')" disabled>هل إجابتي صحيحة؟</button>
+      </div>
+      <button class="btn-back" id="s59-back-btn" onclick="goBack()" hidden>رجوع</button>
+    </section>
+
+    <!-- Shared hint overlay — outside all .screen divs, per established convention. -->
+    <div id="scq-hint-overlay" class="m-popup hidden" hidden>
+      <div class="scq-hint-panel" role="dialog" aria-modal="true" aria-label="تلميح">
+        <div class="scq-hint-content">
+          <svg class="hint-lamp" width="36" height="31" viewBox="0 0 26 22.2883" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M17.7925 2.76345C16.3676 1.37911 14.5057 0.68776 12.5488 0.815545C9.07995 1.04163 6.27286 3.9168 6.01796 7.50134C5.85646 9.77363 6.7035 11.9443 8.34374 13.4548C9.23036 14.2723 9.74016 15.465 9.74016 16.7265H11.2284H14.7733H16.2615C16.2615 15.4847 16.7919 14.2707 17.7181 13.3959C19.17 12.0263 20.0012 10.0751 20.0012 8.04361C20.0012 6.01215 19.1953 4.12486 17.7909 2.76018L17.7925 2.76345ZM13.0001 5.54524C11.6701 5.54524 10.5856 6.66582 10.5856 8.04525C10.5856 8.46956 10.2515 8.81524 9.84149 8.81524C9.43143 8.81524 9.09736 8.46956 9.09736 8.04525C9.09736 5.8172 10.8484 4.00527 13.0001 4.00527C13.4133 4.00527 13.7473 4.35094 13.7473 4.77525C13.7473 5.19957 13.4133 5.54524 13.0001 5.54524Z" fill="white"/>
+            <path d="M9.73858 19.6245C9.73858 20.3289 9.99823 20.9908 10.478 21.4904L10.4938 21.5068C10.9783 22.0098 11.6242 22.2883 12.3114 22.2883H13.6888C14.3775 22.2883 15.025 22.0114 15.5111 21.5052C15.9956 21.0039 16.2631 20.3355 16.2631 19.6277V17.9895H9.73858V19.6245ZM11.2268 19.5294H14.7717V19.6277C14.7717 19.9243 14.6609 20.2077 14.4566 20.419C14.254 20.6254 13.9753 20.7483 13.6888 20.7483H12.3114C12.028 20.7483 11.7588 20.6336 11.5561 20.4305L11.5451 20.4174C11.3424 20.211 11.2268 19.9226 11.2268 19.6261V19.5311V19.5294Z" fill="white"/>
+            <path d="M25.2558 7.27531H22.607C22.1954 7.27531 21.8629 7.62099 21.8629 8.0453C21.8629 8.46961 22.197 8.81529 22.607 8.81529H25.2558C25.6674 8.81529 25.9999 8.46961 25.9999 8.0453C25.9999 7.62099 25.6658 7.27531 25.2558 7.27531Z" fill="white"/>
+            <path d="M4.1386 8.0453C4.1386 7.61935 3.80453 7.27531 3.39447 7.27531H0.744124C0.332481 7.27531 0 7.62099 0 8.0453C0 8.46961 0.334064 8.81529 0.744124 8.81529H3.39289C3.80453 8.81529 4.13701 8.46961 4.13701 8.0453H4.1386Z" fill="white"/>
+            <path d="M20.8702 3.11398C21.0175 3.11398 21.1663 3.06811 21.2961 2.97472L23.4667 1.40198C23.804 1.15788 23.8847 0.677863 23.6488 0.328911C23.4129 -0.0200418 22.949 -0.105232 22.6118 0.140509L20.4412 1.71325C20.1039 1.95736 20.0232 2.43737 20.2591 2.78632C20.4032 3.00094 20.6343 3.11562 20.8702 3.11562V3.11398Z" fill="white"/>
+            <path d="M4.70372 13.1172L2.53309 14.69C2.19586 14.9341 2.11512 15.4141 2.35102 15.763C2.49509 15.9777 2.72625 16.0923 2.96215 16.0923C3.10939 16.0923 3.25822 16.0465 3.38804 15.9531L5.55867 14.3803C5.8959 14.1362 5.97665 13.6562 5.74074 13.3073C5.50484 12.9583 5.04095 12.8731 4.70372 13.1189V13.1172Z" fill="white"/>
+            <path d="M23.4668 14.6884L21.2961 13.1157C20.9589 12.8716 20.495 12.9567 20.2591 13.3041C20.0232 13.653 20.1055 14.133 20.4412 14.3771L22.6118 15.9499C22.7416 16.0449 22.8904 16.0891 23.0377 16.0891C23.272 16.0891 23.5032 15.9744 23.6488 15.7598C23.8847 15.4109 23.8024 14.9309 23.4668 14.6868V14.6884Z" fill="white"/>
+            <path d="M5.55869 1.71322L3.38806 0.140478C3.05083 -0.103625 2.58694 -0.0184349 2.35104 0.328879C2.11513 0.677832 2.19746 1.15785 2.53311 1.40195L4.70374 2.97469C4.83356 3.06971 4.98239 3.11395 5.12963 3.11395C5.36395 3.11395 5.5951 2.99927 5.74076 2.78465C5.97666 2.4357 5.89434 1.95569 5.55869 1.71158V1.71322Z" fill="white"/>
+          </svg>
+          <div class="scq-hint-body" id="scq-hint-body"></div>
+        </div>
+        <button class="scq-hint-back" type="button" onclick="scqCloseHint()">العودة إلى السؤال</button>
+      </div>
+    </div>
+
+    <!-- Shared image-zoom modal — outside all .screen divs. -->
+    <div id="img-zoom-modal" class="hidden" aria-hidden="true">
+      <div class="img-zoom-panel" role="dialog" aria-modal="true">
+        <button class="img-zoom-close" type="button" data-zoom-close="true" aria-label="إغلاق"><svg viewBox="0 0 15 15" fill="none"><path d="M1 1l13 13M14 1L1 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+        <img id="img-zoom-stage-img" src="" alt="">
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Report dialogs — markup contract of ../unit-js/25-report.js (verbatim from
+       methodica-math-ratio-01). Outside #app: full-viewport, not scaled with the canvas. -->
+  <div id="report-modal"
+         class="report-modal-overlay"
+         hidden
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="report-modal-title">
+      <div class="report-modal-box">
+        <button class="report-close-btn" onclick="tryCloseReportModal()" aria-label="إغلاق">&#10005;</button>
+        <h2 class="report-modal-title" id="report-modal-title">الإبلاغ عن مشكلة</h2>
+        <p class="report-modal-body">هل هناك شيء غير واضح أو لا يعمل كما ينبغي؟<br>أخبرونا بما حدث لنتولّى الأمر.</p>
+
+        <div class="report-field">
+          <label class="report-label" for="report-type"><span class="required-star">*</span> ما نوع المشكلة</label>
+                    <div class="report-custom-select" id="report-type-wrapper">
+            <button class="report-select-btn is-placeholder" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <span class="report-select-value">اختاروا نوع المشكلة</span>
+            </button>
+            <ul class="report-select-list" role="listbox" hidden>
+              <li class="report-select-option" data-value="technical" role="option">خلل تقني أو شيء لا يعمل</li>
+              <li class="report-select-option" data-value="unclear" role="option">شيء غير واضح لي</li>
+              <li class="report-select-option" data-value="other" role="option">أخرى</li>
+            </ul>
+            <input type="hidden" id="report-type" value="">
+          </div>
+          <span class="report-field-error" id="report-type-error" hidden>اختاروا نوع المشكلة</span>
+        </div>
+
+        <div class="report-field">
+          <label class="report-label" for="report-text"><span class="required-star">*</span> ماذا حدث؟</label>
+          <textarea class="report-textarea" id="report-text" maxlength="250" rows="4" placeholder="اشرحوا ما حدث لنتمكّن من فهم المشكلة" onblur="reportTextBlur()"></textarea>
+          <span class="report-field-error" id="report-text-error" hidden>اكتبوا ما حدث</span>
+          <span class="report-char-count" id="report-char-count">0 / 250</span>
+        </div>
+
+        <div class="report-actions">
+          <button class="report-cancel-btn" onclick="tryCloseReportModal()">إلغاء</button>
+          <button class="report-submit-btn" onclick="submitReport()" disabled>إرسال البلاغ</button>
+        </div>
+      </div>
+    </div>
+  <div id="report-confirm-modal"
+         class="report-modal-overlay"
+         hidden
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="confirm-modal-title">
+      <div class="report-modal-box report-confirm-box">
+        <h2 class="report-modal-title" id="confirm-modal-title">هل أنتم متأكدون من إغلاق النافذة؟</h2>
+        <p class="report-modal-body">عند الإغلاق لن يُرسَل البلاغ</p>
+        <div class="report-actions">
+          <button class="report-cancel-btn" onclick="forceCloseReportModal()">إغلاق النافذة</button>
+          <button class="report-submit-btn" onclick="backToReportForm()">أريد الإبلاغ</button>
+        </div>
+      </div>
+    </div>
+  <div id="report-thanks-modal"
+         class="report-modal-overlay"
+         hidden
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="thanks-modal-title">
+      <div class="report-modal-box report-confirm-box">
+        <h2 class="report-modal-title" id="thanks-modal-title">تم إرسال البلاغ، شكرًا!</h2>
+        <p class="report-modal-body">استلمنا بلاغكم وسنتولّى معالجته في أقرب وقت.</p>
+        <div class="report-actions">
+          <button class="report-submit-btn" onclick="closeReportThanks()">إغلاق</button>
+        </div>
+      </div>
+    </div>
+
+  <script src="../unit-js/10-identity.js?v=2"></script>
+  <script src="../unit-js/20-xapi.js?v=3"></script>
+  <script src="../unit-js/25-report.js?v=1"></script>
+  <script src="../unit-js/40-resume.js?v=6"></script>
+  <script src="../unit-js/50-loader.js?v=3"></script>
+  <script src="../unit-js/motion.js?v=1"></script>
+  <script src="../unit-js/05-core.js?v=3"></script>
+  <script src="script.js?v=12"></script>
+  <script src="../unit-js/90-boot.js?v=1"></script>
+</body>
+</html>

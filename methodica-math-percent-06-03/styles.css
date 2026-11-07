@@ -1,0 +1,1573 @@
+/* methodica-math-percent-06-03 — רכיב 2, תרגול בסיסי וסטנדרטי מועד ב'
+   (מסכים 33-40 בתסריט, pptx slides 32-39). Canvas/buttons/subject tokens,
+   .s13- / .hook1-bubble / .scq- / .gvi- / .lp-scroll / .lp-scroll-indicator
+   families ported verbatim from methodica-math-percent-06-01/06-02 so this
+   component reads as one continuous unit with them — see
+   references/PROJECT_CONTEXT.md. New in this file: .tq- (table
+   ValueInputQuestion — Figma "Screen Templates/FillInTheBlankTableQuestion",
+   node 1046:26887), .s13-aside/.s13-character-wrap (secondary bubble beside
+   a TransitionScreen character), .cls- (classification pill-rows),
+   .cbub-/.tqs- (two-part scroll SCQ + comic speech bubbles).
+   NOTE: never write a bare asterisk-then-slash sequence inside a comment's
+   own text (e.g. writing two dash-prefixed class families shorthand-style
+   as ".foo-" immediately followed by "/.bar") — it prematurely closes the
+   CSS comment and silently invalidates everything after it; this exact
+   mistake has bitten this project before (see PROJECT_CONTEXT.md's
+   2026-08-11 session note) and was just caught again in this very file. */
+
+/* Shared rules (tokens, reset, canvas, screen shell, buttons, staged reveal, SCQ options, zoom, hint overlay) live in ../unit-css/base.css and ../unit-css/questions.css, linked before this file. */
+
+/* ============================================================
+   CONTINUE / BACK / HINT BUTTONS — ported from 06-01/06-02
+   ============================================================ */
+
+.btn-back[hidden],
+.btn-continue[hidden] { display: none; }
+
+/* Secondary "hint" pill — same visual family as .btn-back, sits bottom-left
+   next to .btn-continue per 720-templates/_global-components.md "Nav bar
+   button geometry". Wrapped together in .scq-left-actions so the 16px gap
+   is a flex gap, not a hand-measured offset. */
+.scq-left-actions {
+  position: absolute;
+  bottom: 16px;
+  left: 32px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+/* Same gotcha .btn-back[hidden] already guards against above — the
+   [hidden] attribute and a class selector tie in specificity, so this
+   rule's own display:flex would otherwise beat the UA [hidden]{display:
+   none} default and the button row stayed visible after being hidden
+   from script.js (found while verifying the cls-actions/tqs-*-actions
+   hide-on-resolve fix). */
+.scq-left-actions[hidden] { display: none; }
+
+/* ============================================================
+   STAGED-REVEAL MOTION VARIANT — [data-reveal-on-ready]/.is-revealed,
+   ported verbatim from methodica-math-percent-06-01 (hook1/s13/Learning
+   Phase sections). Companion to script.js's runStagedSequence(): an
+   element marked [data-reveal-on-ready] starts hidden IN-FLOW (occupies
+   its normal layout slot, no reflow when revealed); script.js adds
+   .is-revealed the moment its own step in the sequence fires. Same
+   m-float-in keyframe/tokens as the base engine (motion.css) — only each
+   element's own entrance duration/easing is recalibrated per role
+   (m-stage-text/card/popup/visual), never the pauses BETWEEN elements
+   (those live in script.js's own `wait:` literals).
+   Used for s32/s36's TransitionScreen sequencing (ending in a gated,
+   pulsing Continue) and for s3435/s3839's per-scroll-page reveal —
+   deliberately kept OUT of the shared engine's plain [data-reveal]
+   mechanism so the whole-screen Motion.reveal() call already wired into
+   goTo() never sweeps a scroll page's content before the learner has
+   actually scrolled to it (querySelectorAll('[data-reveal]') would
+   otherwise find every page's elements the instant the screen becomes
+   active, since it searches the whole subtree regardless of nesting —
+   see script.js's own comment on this exact collision). */
+
+:root {
+  --m-ease-calm: cubic-bezier(0.4, 0, 0.2, 1);
+  --m-stage-duration-text: 420ms;
+  --m-stage-duration-card: 375ms;
+  --m-stage-duration-popup: 420ms;
+  --m-stage-duration-visual: 525ms;
+}
+[data-reveal-on-ready].is-revealed.m-stage-popup {
+  animation-duration: var(--m-stage-duration-popup);
+  animation-timing-function: var(--m-ease-calm);
+}
+
+/* Scrolling-question reveal speed — scoped to #s3435/#s3839 (the two
+   staged-scroll screens) ONLY, so s33/s37's own unrelated staged reveal
+   keeps the unit's normal 600/420/375/525ms timings. Same reasoning/values
+   as 06-06's own #s5559 override (see that file) — each page here stages
+   3-5 elements per section and the base timings made every "advance"
+   noticeably slow to settle. Same m-float-in keyframe, shortened, not a
+   new animation; script.js's per-page StagedSteps functions were updated
+   to pass matching `dur`/`wait` values so the JS stagger clock and the
+   actual CSS animation length stay in sync. */
+#s3435, #s3839 {
+  --m-reveal-duration: 300ms;
+  --m-stage-duration-text: 260ms;
+  --m-stage-duration-card: 220ms;
+  --m-stage-duration-visual: 320ms;
+}
+
+#s32-continue:not(:disabled),
+#s36-continue:not(:disabled),
+#s3435-continue:not(:disabled),
+#s3839-continue:not(:disabled) {
+  animation: btnAdvanceGrow 1100ms ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  #s32-continue:not(:disabled),
+  #s36-continue:not(:disabled),
+  #s3435-continue:not(:disabled),
+  #s3839-continue:not(:disabled) { animation: none; }
+}
+
+/* ============================================================
+   TransitionScreen — .s13-content/.s13-text-group/.s13-headline/
+   .s13-subline/.s13-character ported verbatim from 06-01 (s13/s25) and
+   06-02 (s27). Used by s32/s36 in this component.
+   ============================================================ */
+.s13-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 760px;
+  max-width: calc(100% - 100px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+
+.s13-headline {
+  font-size: 40px;      /* Heading/H-5 */
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--text-body);
+  text-align: center;
+  margin: 0;
+}
+
+.s13-subline {
+  font-size: 24px;      /* Body/B-3 */
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--text-body);
+  text-align: center;
+  margin: 0;
+}
+
+/* Transition-screen headlines (s32, s36) — bold headline phrase becomes the
+   unit's subject-purple text-emphasis token, per explicit session request.
+   Scoped to each screen's own id (not the shared .s13-headline class) so a
+   future TransitionScreen reusing this class defaults back to plain body
+   color unless explicitly requested.
+   font-weight: reverted to the inherited .s13-headline 700 per explicit
+   feedback (an earlier 600 override read as too light). */
+#s32-headline,
+#s36-headline { color: var(--subject-800); }
+
+.s13-character {
+  width: 320px;      /* enlarged from 260px per explicit feedback — still
+                         below 06-01/06-02's full-bleed .s13-character
+                         (400px/340px) since this one shares the row with
+                         .s13-aside rather than standing alone */
+  height: auto;
+  object-fit: contain;
+}
+
+/* s32-specific: text block raised and character enlarged further per
+   explicit feedback (screen read too empty above the text / character too
+   small against the freed-up space below it). Scoped to s32 only — s36
+   keeps the shared .s13-content/.s13-character defaults above. */
+#s32 .s13-content { margin-top: -220px; }
+
+/* character_computer.mp4's actual frame (3840x2160) is mostly white
+   margin around a tall-narrow seated figure — measured content bbox
+   ~1064-2784 x 70-2104, i.e. ~45% of the frame's width but ~94% of its
+   height. Sizing the whole 16:9 frame to fit (as elsewhere in this unit)
+   wastes most of the box on invisible side padding, so instead of scaling
+   the untouched .s13-character rule, this crops to just that content:
+   .s32-character-crop is a fixed, non-revealed clip box (safe to give it
+   any static layout — it never fights the reveal animation's `transform`,
+   see the transform-conflict note above .s13-character-wrap /
+   motion.css); the video inside is rendered at its full scaled-up size
+   and shifted with `left`/`top` (not `transform`, for the same reveal-
+   conflict reason — #s32-character-img still carries data-reveal-on-ready)
+   so the measured content bbox exactly fills the crop box. */
+.s32-character-crop {
+  position: relative;
+  width: 318px;
+  height: 374px;
+  overflow: hidden;
+}
+#s32-character-img {
+  position: absolute;
+  top: -4px;
+  left: -178px;
+  width: 673px;
+  height: 379px;
+  object-fit: contain;
+}
+
+/* s36-specific: same "text too low / character too small" feedback as
+   s32, same fixes — text block raised, character cropped to its actual
+   content (character_testb-opt.mp4's own frame is ~37% content / 63% white
+   margin horizontally, content bbox ~x 1220-2654 of 3840, y 0-2088 of
+   2160 — note the content touches the frame's own top edge, hence 0 top
+   offset below). See .s32-character-crop's comment above for the general
+   technique (crop box static, video shifted via left/top not transform). */
+#s36 .s13-content { margin-top: -220px; }
+.s36-character-crop {
+  position: relative;
+  width: 289px;
+  height: 420px;
+  overflow: hidden;
+}
+#s36-character-img {
+  position: absolute;
+  top: 0;
+  left: -245px;
+  width: 772px;
+  height: 435px;
+  object-fit: contain;
+}
+
+/* s36 aside: raised to the character's mouth height and nudged left so
+   its tail clears the crop box (which otherwise paints over the tail's
+   tip). margins, not transform — #s36-aside carries a reveal animation. */
+#s36-aside {
+  margin-bottom: 150px;
+  margin-right: 16px;
+  z-index: 1;
+}
+
+/* New in this component: a secondary aside speech-bubble beside the
+   TransitionScreen character (s32/s36 both have one; no 06-01/06-02
+   TransitionScreen ever needed one). Reuses the established
+   .hook1-bubble tail-bubble CSS technique verbatim (white fill, 2px
+   Subject/500 border, downward-pointing tail), just scoped small and
+   positioned beside the character instead of above it.
+   flex-direction: row-reverse (not the plain "row" a DOM-order-only read
+   would suggest) — required so the character (2nd DOM child) renders on
+   the RIGHT per the PPT reference, bubble (1st DOM child) on the LEFT.
+   Verified this also keeps .s13-aside's existing tail (anchored at the
+   bubble's own right edge, unchanged) pointing correctly at the
+   character with no gap/overlap — confirmed via rendered bounding boxes,
+   not assumed from row-reverse alone. */
+.s13-character-wrap {
+  position: absolute;
+  bottom: 74px;
+  left: 50%;
+  transform: translateX(-50%);
+  /* width:auto's shrink-to-fit algorithm caps an absolutely-positioned
+     box at (containing-block width − left), i.e. exactly half the canvas
+     here — a real constraint the layout engine applies BEFORE the
+     translateX(-50%) repositioning, not a visual one, so it silently
+     compresses the flex row's children once bubble+character together
+     exceed that half-canvas width. Force sizing off the children's own
+     natural widths instead. */
+  width: max-content;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 4px;
+}
+
+.s13-aside {
+  position: relative;
+  background: #ffffff;
+  border: 2px solid var(--subject-500);
+  border-radius: 16px;
+  padding: 16px 20px;
+  max-width: 260px;      /* enlarged from 220px per explicit feedback,
+                             proportional to .s13-character's own increase */
+  font-size: 24px;      /* Body/B-3 — same as the transition screen's own
+                            regular body text (.s13-subline), per explicit
+                            feedback that the 20px bubble text read too small */
+  font-weight: 400;
+  color: var(--text-body);
+  text-align: right;
+  direction: rtl;
+  line-height: 1.4;
+}
+.s13-aside::before,
+.s13-aside::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+.s13-aside::before {
+  border-width: 10px 0 10px 12px;
+  border-color: transparent transparent transparent var(--subject-500);
+}
+.s13-aside::after {
+  left: calc(100% - 2px);
+  border-width: 8px 0 8px 10px;
+  border-color: transparent transparent transparent #ffffff;
+}
+
+/* ============================================================
+   PROGRESS QUESTION — the unit's real dot-nav component, ported verbatim
+   from 06-01/06-02 (per the user's explicit direction — this component
+   had shipped with a plain "שאלה N מתוך 2" text label instead; replaced
+   everywhere in this file with the actual visual component). Two
+   independent 2-question instances drive this component's two practice
+   sections (progressA: s33+s3435 / progressB: s37+s3839 — see script.js),
+   each rendered into its own <nav class="progress-question"> placeholder.
+   .progress-question--inline is new here: the base component is
+   absolutely positioned (standalone-screen top bar, s33/s37) but s3435/
+   s3839 embed their question 2 inline in a scroll flow, same reasoning
+   as the old .tq-progress--inline variant it replaces.
+   ============================================================ */
+/* Geometry/colors ported verbatim from the approved methodica-math-percent-06-02
+   implementation (itself verified against the Foundation component, Figma file
+   eSbp4bKHgBky0rakDb8l9N, node 1460:38334) — 24px icons, 64px/1.5px connectors,
+   4px row gap, 15px labels. Correct and incorrect share the SAME subject-purple
+   filled circle (not green/red) — only the ✓/✕ glyph differs. */
+.progress-question {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  direction: rtl;
+}
+.progress-question--inline {
+  position: static;
+  top: auto;
+  left: auto;
+  transform: none;
+  width: fit-content;
+  margin: 0 auto 4px;
+}
+
+/* On the two scroll screens (s3435/s3839), the nav is pinned in place while
+   its OWN .lp-scroll content scrolls underneath it. The nav has no
+   background, so scrolled-up text visually overlapped/bled through it —
+   per explicit user feedback ("scrolling always causes text to rise over
+   the progress bar"). An opaque ::before backdrop matching #app's own white
+   canvas background makes it act as a fixed "frozen row": whatever scrolls
+   underneath disappears behind it instead of overlapping. A pseudo-element
+   (rather than background+padding directly on .progress-question) keeps
+   the nav's own layout box — and every screen's top-clearance math that's
+   sized against it (.tqs-page, .tq-body, etc.) — unchanged; only the
+   painted backdrop extends beyond it. Scoped to these two screens only —
+   s33/s37/etc. have no scrollable content behind their nav, so this would
+   be a no-op there anyway. */
+#s3435 .progress-question::before,
+#s3839 .progress-question::before {
+  content: '';
+  position: absolute;
+  inset: -6px -20px;
+  background: #ffffff;
+  border-radius: 999px;
+  z-index: -1;
+}
+.progress-question__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-question__icon {
+  position: relative;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1.5px solid #ECECEC;
+}
+/* Default (not-visited) center dot */
+.progress-question__icon::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 7.2px;
+  height: 7.2px;
+  border-radius: 50%;
+  background: #D9D9D9;
+  transform: translate(-50%, -50%);
+}
+
+/* Current — pale subject halo + white ring w/ subject stroke + subject dot */
+.progress-question__icon--current {
+  background: var(--subject-100);
+  border: none;
+}
+.progress-question__icon--current::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 19.2px;
+  height: 19.2px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 2px solid var(--subject-500);
+  transform: translate(-50%, -50%);
+}
+.progress-question__icon--current::after { background: var(--subject-500); }
+
+/* Correct / incorrect — identical subject-filled disc, differentiated only
+   by the ✓ / ✕ glyph (never by dot color) per the Foundation component. */
+.progress-question__icon--correct,
+.progress-question__icon--incorrect {
+  background: var(--subject-500);
+  border: none;
+}
+.progress-question__icon--correct::after {
+  content: '';
+  width: 13px;
+  height: 10px;
+  border-radius: 0;
+  background: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMyIgaGVpZ2h0PSIxMCIgdmlld0JveD0iMCAwIDEyLjcyNzMgOS4xODc2MyIgZmlsbD0ibm9uZSI+PHBhdGggZD0iTTQuMTA5NDIgOS4xODc2M0MzLjc0ODE0IDkuMTg3NzggMy40MDE2NyA5LjA0NDE4IDMuMTQ2NDIgOC43ODg1MUwwLjIzNDk1NiA1Ljg3ODEyQy0wLjA3ODMxODggNS41NjQ3NSAtMC4wNzgzMTg4IDUuMDU2NzcgMC4yMzQ5NTYgNC43NDMzOUMwLjU0ODMzMiA0LjQzMDEyIDEuMDU2MzEgNC40MzAxMiAxLjM2OTY5IDQuNzQzMzlMNC4xMDk0MiA3LjQ4MzEyTDExLjM1NzYgMC4yMzQ5NTZDMTEuNjcxIC0wLjA3ODMxODggMTIuMTc4OSAtMC4wNzgzMTg4IDEyLjQ5MjMgMC4yMzQ5NTZDMTIuODA1NiAwLjU0ODMzMiAxMi44MDU2IDEuMDU2MzEgMTIuNDkyMyAxLjM2OTY5TDUuMDcyNDIgOC43ODg1MUM0LjgxNzE3IDkuMDQ0MTggNC40NzA2OSA5LjE4Nzc4IDQuMTA5NDIgOS4xODc2M1oiIGZpbGw9IndoaXRlIi8+PC9zdmc+") no-repeat center / contain;
+}
+.progress-question__icon--incorrect::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 0;
+  background: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgdmlld0JveD0iMCAwIDEwIDEwIiBmaWxsPSJub25lIj48cGF0aCBkPSJNOS43NjczNiAwLjIzMjYzN0M5LjYxODM2IDAuMDgzNjc5NiA5LjQxNjMgMCA5LjIwNTYxIDBDOC45OTQ5MiAwIDguNzkyODYgMC4wODM2Nzk2IDguNjQzODYgMC4yMzI2MzdMNSAzLjg3NjQ5TDEuMzU2MTUgMC4yMzI2MzdDMS4yMDcxNCAwLjA4MzY3OTYgMS4wMDUwOCAwIDAuNzk0MzkxIDBDMC41ODM3MDIgMCAwLjM4MTYzOSAwLjA4MzY3OTYgMC4yMzI2MzcgMC4yMzI2MzdDMC4wODM2Nzk2IDAuMzgxNjM5IDAgMC41ODM3MDIgMCAwLjc5NDM5MUMwIDEuMDA1MDggMC4wODM2Nzk2IDEuMjA3MTQgMC4yMzI2MzcgMS4zNTYxNUwzLjg3NjQ5IDVMMC4yMzI2MzcgOC42NDM4NkMwLjA4MzY3OTYgOC43OTI4NiAwIDguOTk0OTIgMCA5LjIwNTYxQzAgOS40MTYzIDAuMDgzNjc5NiA5LjYxODM2IDAuMjMyNjM3IDkuNzY3MzZDMC4zODE2MzkgOS45MTYzMiAwLjU4MzcwMiAxMCAwLjc5NDM5MSAxMEMxLjAwNTA4IDEwIDEuMjA3MTQgOS45MTYzMiAxLjM1NjE1IDkuNzY3MzZMNSA2LjEyMzUxTDguNjQzODYgOS43NjczNkM4Ljc5Mjg2IDkuOTE2MzIgOS4yMDU2MSAxMEM5LjQxNjMgMTAgOS42MTgzNiA5LjkxNjMyIDkuNzY3MzYgOS43NjczNkM5LjkxNjMyIDkuNjE4MzYgMTAgOS40MTYzIDEwIDkuMjA1NjFDMTAgOC45OTQ5MiA5LjkxNjMyIDguNzkyODYgOS43NjczNiA4LjY0Mzg2TDYuMTIzNTEgNUw5Ljc2NzM2IDEuMzU2MTVDOS45MTYzMiAxLjIwNzE0IDEwIDEuMDA1MDggMTAgMC43OTQzOTFDMTAgMC41ODM3MDIgOS45MTYzMiAwLjM4MTYzOSA5Ljc2NzM2IDAuMjMyNjM3WiIgZmlsbD0id2hpdGUiLz48L3N2Zz4=") no-repeat center / contain;
+}
+
+.progress-question__label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #ECECEC;
+}
+.progress-question__label--visited { color: #222222; }
+
+.progress-question__connector {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 1.5px;
+  margin-top: 11.5px;
+  background: #ECECEC;
+  border-radius: 2px;
+}
+.progress-question__connector--visited { background: rgba(0, 0, 0, 0.6); }
+
+/* ============================================================
+   SingleChoiceQuestion — .scq-* ported verbatim from 06-02. Used by
+   s3839's two sub-parts (laid out via .tqs-page/.tqs-text-col/
+   .tqs-media-col below, not a standalone-screen .scq-wrap — this
+   component has no plain full-screen SCQ screen of its own).
+   ============================================================ */
+
+.scq-opt.correct .scq-radio {
+  border: none;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgdmlld0JveD0iMCAwIDIyIDIyIj48Y2lyY2xlIGN4PSIxMSIgY3k9IjExIiByPSIxMSIgZmlsbD0iIzYwOWUxMiIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDQuNjM2LDYuNDA2KSIgZD0iTTQuMTA5NTUgOS4xODc2M0MzLjc0ODI4IDkuMTg3NzggMy40MDE4IDkuMDQ0MTggMy4xNDY1NSA4Ljc4ODUxTDAuMjM1MDkgNS44NzgxMkMtMC4wNzgxODU3IDUuNTY0NzUgLTAuMDc4MTg1NyA1LjA1Njc3IDAuMjM1MDkgNC43NDMzOUMwLjU0ODQ2NSA0LjQzMDEyIDEuMDU2NDUgNC40MzAxMiAxLjM2OTgyIDQuNzQzMzlMNC4xMDk1NSA3LjQ4MzEyTDExLjM1NzcgMC4yMzQ5NTZDMTEuNjcxMSAtMC4wNzgzMTg4IDEyLjE3OTEgLTAuMDc4MzE4OCAxMi40OTI1IDAuMjM0OTU2QzEyLjgwNTcgMC41NDgzMzIgMTIuODA1NyAxLjA1NjMxIDEyLjQ5MjUgMS4zNjk2OUw1LjA3MjU1IDguNzg4NTFDNC44MTczMSA5LjA0NDE4IDQuNDcwODMgOS4xODc3OCA0LjEwOTU1IDkuMTg3NjNaIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPgo=");
+  background-size: 22px 22px;
+}
+
+.scq-opt.wrong .scq-radio {
+  border: none;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgdmlld0JveD0iMCAwIDIyIDIyIj48Y2lyY2xlIGN4PSIxMSIgY3k9IjExIiByPSIxMSIgZmlsbD0iI2IyMDAxMCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDYsNikiIGQ9Ik05Ljc2NzM2IDAuMjMyNjM3QzkuNjE4MzYgMC4wODM2Nzk2IDkuNDE2MyAwIDkuMjA1NjEgMEM4Ljk5NDkyIDAgOC43OTI4NiAwLjA4MzY3OTYgOC42NDM4NiAwLjIzMjYzN0w1IDMuODc2NDlMMS4zNTYxNSAwLjIzMjYzN0MxLjIwNzE0IDAuMDgzNjc5NiAxLjAwNTA4IDAgMC43OTQzOTEgMEMwLjU4MzcwMiAwIDAuMzgxNjM5IDAuMDgzNjc5NiAwLjIzMjYzNyAwLjIzMjYzN0MwLjA4MzY3OTYgMC4zODE2MzkgMCAwLjU4MzcwMiAwIDAuNzk0MzkxQzAgMS4wMDUwOCAwLjA4MzY3OTYgMS4yMDcxNCAwLjIzMjYzNyAxLjM1NjE1TDMuODc2NDkgNUwwLjIzMjYzNyA4LjY0Mzg2QzAuMDgzNjc5NiA4Ljc5Mjg2IDAgOC45OTQ5MiAwIDkuMjA1NjFDMCA5LjQxNjMgMC4wODM2Nzk2IDkuNjE4MzYgMC4yMzI2MzcgOS43NjczNkMwLjM4MTYzOSA5LjkxNjMyIDAuNTgzNzAyIDEwIDAuNzk0MzkxIDEwQzEuMDA1MDggMTAgMS4yMDcxNCA5LjkxNjMyIDEuMzU2MTUgOS43NjczNkw1IDYuMTIzNTFMOC42NDM4NiA5Ljc2NzM2QzguNzkyODYgOS45MTYzMiA4Ljk5NDkyIDEwIDkuMjA1NjEgMTBDOS40MTYzIDEwIDkuNjE4MzYgOS45MTYzMiA5Ljc2NzM2IDkuNzY3MzZDOS45MTYzMiA5LjYxODM2IDEwIDkuNDE2MyAxMCA5LjIwNTYxQzEwIDguOTk0OTIgOS45MTYzMiA4Ljc5Mjg2IDkuNzY3MzYgOC42NDM4Nkw2LjEyMzUxIDVMOS43NjczNiAxLjM1NjE1QzkuOTE2MzIgMS4yMDcxNCAxMCAxLjAwNTA4IDEwIDAuNzk0MzkxQzEwIDAuNTgzNzAyIDkuOTE2MzIgMC4zODE2MzkgOS43NjczNiAwLjIzMjYzN1oiIGZpbGw9IndoaXRlIi8+PC9zdmc+Cg==");
+  background-size: 22px 22px;
+}
+
+/* ---- Content image (left column) ---- */
+.scq-img {
+  flex: 0 0 380px;
+  width: 380px;
+  height: 380px;
+  align-self: flex-start;
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #F4F4F6;
+  border: 1px solid #E5E5E5;
+}
+.scq-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Real 3:2 landscape content photos (Q5.png 354×236, Q6.png 505×337) —
+   both measured directly from the shipped asset files and matched
+   against the pptx's own picture shape dimensions. Sizing the slot to
+   the photo's own aspect (380 × 380/1.5) instead of the template's
+   generic 380×380 square means object-fit:contain has zero letterboxing
+   left to do — the slot's content box already matches the image. */
+/* flex: 0 0 auto overrides the base .scq-img rule's flex: 0 0 380px — that
+   shorthand sets flex-basis on the FLEX CONTAINER's main axis, which is
+   width in s37's row-flex .tq-wrap (harmless there, coincides with the
+   width this rule already wants) but HEIGHT in s3839's column-flex
+   .tqs-media-col — silently forcing this element back to 380px tall
+   (a square) regardless of this rule's own explicit height:253px, which
+   was the actual cause of s3839's photo showing letterboxed gray card
+   background above/below the real 3:2 image (bug found via computed
+   style, not just a cosmetic card-color tweak). */
+.scq-img--landscape { flex: 0 0 auto; width: 380px; height: 253px; }
+/* s3839: photo spans the widened .tqs-media-col (460px) so it lines up under both speech bubbles; same 3:2 aspect. */
+.tqs-media-col .scq-img--landscape { width: 460px; height: 307px; }
+
+.img-zoom-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 5;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid var(--subject-500);
+  color: var(--subject-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.img-zoom-panel {
+  position: relative;
+  width: 660px;
+  height: 660px;
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.img-zoom-panel img,
+.img-zoom-panel .scq-img { width: 100%; height: 100%; border: none; object-fit: contain; }
+.scq-hint-panel {
+  width: 560px;
+  max-height: 520px;
+  overflow-y: auto;
+  scrollbar-width: none; /* content fits within max-height; overflow-y stays
+    as a safety net only — hide the track so it doesn't show when unneeded */
+  background: var(--subject-500);
+  border-radius: 48px;
+  padding: 40px 44px;
+  color: #ffffff;
+  text-align: center;
+}
+.scq-hint-panel::-webkit-scrollbar { display: none; }
+.scq-hint-body .gvi-fraction,
+.scq-hint-body .gvi-eq-sign { color: #ffffff; }
+.scq-hint-body .gvi-fraction .num { border-bottom-color: #ffffff; }
+.scq-hint-body .gvi-percent { color: #ffffff; }
+.scq-hint-body .gvi-feedback-eq { justify-content: center; }
+
+.gvi-fraction .num.is-input { padding: 0 0 6px; border-bottom-color: var(--subject-700); }
+
+.gvi-answer-box {
+  width: 64px;
+  height: 40px;
+  text-align: center;
+  font-family: Calibri, 'Segoe UI', Tahoma, sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--subject-800);
+  border: 2px solid var(--subject-700);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  outline: none;
+}
+.gvi-answer-box:focus { background: var(--subject-100); border-color: var(--subject-800); }
+.gvi-answer-box:disabled { color: var(--text-body); border-color: #C9CED8; background: #F4F4F6; box-shadow: none; }
+.gvi-answer-box.is-correct { border-color: var(--correct-border); background: var(--correct-bg); color: var(--correct-text); }
+.gvi-answer-box.is-error { border-color: var(--incorrect-border); background: var(--incorrect-bg); color: var(--incorrect-text); }
+
+.gvi-percent { font-size: 22px; font-weight: 400; /* script: equation results regular */ color: var(--subject-800); align-self: center; }
+
+.gvi-feedback-eq {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 14px;
+  direction: ltr;
+  margin: 10px 0;
+}
+
+/* Inline fraction inside a plain sentence (screen 35-36's row-3 "8,999/10,000
+   ביצוע") — same .gvi-fraction building block, laid out inline instead of
+   as its own centered block. */
+.cls-inline-fraction {
+  display: inline-flex;
+  flex-direction: column;
+  vertical-align: middle;
+  font-size: 22px;   /* was 20px — matches .cls-label's own 22px so the
+                         fraction reads at the same size as the rest of
+                         its row's text, per explicit user feedback ("the
+                         question's fields are too small"). */
+  margin: 0 4px;
+}
+.cls-inline-fraction .num,
+.cls-inline-fraction .den { padding: 0 6px; }
+
+/* ============================================================
+   TABLE ValueInputQuestion — new in this component. Figma "Screen
+   Templates/FillInTheBlankTableQuestion" (node 1046:26887, file
+   eSbp4bKHgBky0rakDb8l9N). Chrome colors are re-themed to the current Math
+   Foundations Subject/* tokens (Subject/200 borders + Subject/100 header
+   fill) per PROJECT_CONTEXT.md. Cell/input dimensions enlarged from the
+   template's original 161px/56px columns/rows (per explicit user
+   feedback that the compact size read as too small against the canvas
+   and made the given denominators hard to notice) — content unchanged,
+   only scale. SemiBold 24px header / 26px fraction body. Used by s33/s37.
+   ============================================================ */
+/* Layout regions — replaces the previous independent absolute-positioned
+   .tq-qtitle (top:64, 4px below the progress nav) + .tq-wrap/.tq-table
+   (top:152, a fixed offset regardless of how tall the title text actually
+   rendered). That fixed-offset pairing is what produced screen 38's
+   "everything too high / too crowded" bug: title started almost flush
+   under the progress dots, and the table/image below it sat at a
+   guessed y-position instead of a real gap from the title's own bottom
+   edge. .tq-body is a single flex column spanning the region between the
+   progress nav and the bottom bar, vertically centering its own children
+   (title → content row) with an explicit gap — the title, table, and
+   image are now normal-flow children, never independently positioned. */
+.tq-body {
+  position: absolute;
+  top: 84px;      /* progress nav ends ~60px; 24px breathing room below it */
+  left: 40px;
+  right: 40px;
+  bottom: 98px;   /* 74px bottom bar + 24px breathing room above it */
+  display: flex;
+  flex-direction: column;
+  /* flex-start = visual RIGHT under direction:rtl (inline-start), per
+     figma-lomda-builder/reference/patterns.md's RTL flex-alignment gotcha
+     — NOT the "physical left" flex-end would give. Right-aligns the title
+     text with the table/wrap below it (both were independently centered
+     before, so their right edges didn't line up), per explicit user
+     feedback. */
+  align-items: flex-start;
+  justify-content: center;
+  /* Trimmed from 32px to 12px — same "session correction" 06-02's own
+     .q3-wrap made (32px→12px there too) to fit an added text element
+     without overflow/scrollbar. s37's context+instruction+table stack no
+     longer fits the canvas height at 32px per gap once split into two
+     separately-staged paragraphs (see .tq-qtext-group below); s33 has one
+     less gap to begin with and was never tight, so this is a safe,
+     uniform reduction, not a per-screen hack. */
+  gap: 12px;
+}
+
+.tq-qtitle {
+  font-size: 24px;      /* Body/B-3 */
+  font-weight: 400;
+  color: var(--text-body);
+  line-height: 1.4;
+  text-align: right;    /* RTL intro/instruction text is right-aligned, never
+                            centered, per session-wide alignment rule */
+  margin: 0;
+  /* Widened from 900px: s37's 2nd context sentence needs ~1200px to render
+     on one visual line — at 900px it wrapped to a 3rd line, adding height
+     .tq-body no longer has room for after the context+instruction split
+     (see .tq-qtext-group). 1160px fits inside .tq-body's 1200px content
+     width with a small margin to spare, right up to (not past) the table's
+     own right-aligned edge. */
+  max-width: 1160px;
+}
+.tq-qtitle strong { font-weight: 700; color: var(--subject-800); }
+
+/* Groups the context sentence + purple instruction as one flex child of
+   .tq-body, exact reuse of methodica-math-percent-06-02's .q3-qtext-group
+   pattern (a tight 6px rhythm between them, like the source's own line
+   break) so splitting them into two separately-staged <p> elements doesn't
+   inherit .tq-body's own much larger inter-group gap. align-items is
+   flex-start (not 06-02's centered value) to match this component's own
+   right-aligned convention. */
+.tq-qtext-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.tq-table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--subject-200);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.tq-row { display: flex; flex-direction: row; } /* RTL: 1st DOM child renders rightmost */
+
+.tq-cell {
+  width: 214px;
+  height: 82px;
+  flex: 0 0 214px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--subject-200);
+  border-left: 1px solid var(--subject-200);
+  background: #ffffff;
+}
+.tq-row:last-child .tq-cell { border-bottom: none; }
+.tq-row .tq-cell:last-child { border-left: none; }
+
+/* Given/read-only text column (student name, given count, color name) —
+   restored from the slide's own native table (s33: שם התלמיד + כמות
+   שאלות שנענו נכונה; s37: צבע). Plain centered text, narrower than the
+   214px fraction/percent columns since the content itself is short. */
+.tq-cell--given {
+  width: 160px;
+  flex: 0 0 160px;
+  font-size: 20px;
+  font-weight: 400; /* script: body cells regular; header keeps 600 via .tq-cell--head */
+  color: var(--text-body);
+}
+
+.tq-cell--head {
+  background: var(--subject-100); /* Math mode light surface, replaces the template's own generic Blue/100 */
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text-body);
+  text-align: center;
+}
+/* Header text is now the pptx's own full column labels (e.g. "השבר לאחר
+   הרחבת המכנה ל-100"), too long to fit one line at the data-row's fixed
+   82px height — the header row alone grows to fit 2-3 wrapped lines,
+   data rows stay fixed-height. */
+.tq-row--head .tq-cell { height: auto; min-height: 82px; padding: 10px 12px; }
+
+/* ---- Fraction-in-cell layout — one deliberate block, not layered
+   overrides. Rebuilt clean per explicit request rather than patched: the
+   whole num/bar/den unit (or, for s37, the given num/den pair) must read
+   as ONE centered fraction object and fit inside the cell's own content
+   box (82px cell − 2×6px padding = 70px) with real margin to spare, then
+   let the cell's own flex centering (align-items/justify-content:center
+   above) place it — never positioned relative to the row edge. Applies
+   uniformly to both the input variant (s33, .num.is-input) and the
+   given/read-only variant (s37, plain .num) so both read at the same
+   visual scale. ---- */
+.tq-cell .gvi-fraction {
+  gap: 2px;
+  font-size: 20px;
+}
+.tq-cell .gvi-fraction .num,
+.tq-cell .gvi-fraction .den {
+  padding: 0 8px;
+  line-height: 1;
+}
+.tq-cell .gvi-answer-box {
+  width: 60px;
+  height: 28px;
+  font-size: 18px;
+}
+
+/* Table with an optional content image beside it (s37/Q5-opt.png) — reuses the
+   .scq-img optional-image-column slot ValueInputQuestion.md documents.
+   Normal-flow row inside .tq-body (see above) — no independent absolute
+   position of its own. */
+.tq-wrap {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+}
+/* s37's Q5.png measures 354×236px — a real 3:2 landscape photo, not a
+   square. Forcing it into the template's generic 380×380 square slot
+   produced visible top/bottom letterboxing even with the slot's own
+   card chrome removed (below) — the chrome was never the actual cause.
+   .scq-img--landscape (defined with the base .scq-img rule) sizes the
+   slot to the photo's own aspect instead, so object-fit:contain has
+   nothing left to letterbox. */
+.tq-img { background: transparent; border: none; }
+
+/* s37-only table tightening + text bump, per explicit user feedback:
+   columns read too wide for their short content, and the data text (20px)
+   looked inconsistent against the question stem's own 24px (Body/B-3,
+   720-design-guidelines typography table). Scoped to .tq-table--with-img
+   (only s37 uses this modifier) so s33's table/headers are untouched. Cell
+   width shaved from 214/160 to 190/130 — the ~80px this frees up is handed
+   to the enlarged Q5.png slot below, so the row's total width barely
+   changes and stays centered without overflow. */
+.tq-table--with-img .tq-cell { width: 190px; flex: 0 0 190px; }
+.tq-table--with-img .tq-cell--given { width: 130px; flex: 0 0 130px; font-size: 24px; }
+.tq-table--with-img .gvi-fraction { font-size: 24px; font-weight: 600; }
+.tq-table--with-img .tq-pct-input { font-size: 24px; }
+.tq-table--with-img .tq-pct-suffix { font-size: 18px; }
+/* Header row text bumped to match the "צבע" header's own size (already
+   24px via .tq-cell--given above, since that header cell carries both
+   classes) — "השבר"/"אחוז" read visibly smaller otherwise, per explicit
+   user feedback. */
+.tq-table--with-img .tq-cell--head { font-size: 24px; }
+
+/* Q5.png enlarged further (456×304 → 618×412, same exact 3:2 as the source
+   photo) per explicit user feedback that it read too small/cramped next to
+   the table — 412px height now matches the table's own rendered height
+   (header + 4 rows), and the row's total width (table 510px + 40px gap +
+   618px image ≈ 1168px) still fits the 1200px .tq-body content width with
+   room to spare. Scoped to s37's own instance via #s37, not the shared
+   .scq-img--landscape default (s3839's Q6.png wasn't asked to grow). */
+#s37 .tq-img.scq-img--landscape { width: 618px; height: 412px; }
+
+/* Percent input — the % sign lives INSIDE the input's own bordered box
+   (explicit production note), not a sibling span beside it. direction:ltr
+   on the wrapper keeps digit-then-% reading order regardless of the
+   ambient RTL page direction — "30%", not "%30". Height/font brought down
+   to match the fraction column's own new, tighter proportions (see
+   comment above) so both cell types in the same row read as the same
+   visual scale instead of the percent box looking oversized beside a
+   now-more-compact fraction. */
+.tq-pct-wrap {
+  display: inline-flex;
+  align-items: center;
+  direction: ltr;
+  width: 104px;
+  height: 44px;
+  border: 1px solid var(--subject-200);
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  /* Forces its own GPU compositing layer. Without this, some browsers
+     fail to fully repaint this overflow:hidden + border-radius box when
+     a child's background-color changes via a class toggle (focus →
+     correct, etc.) — the old color stays visually stuck on part of the
+     pill (typically the input side) after the class has already changed,
+     producing a two-tone split until an unrelated repaint (scroll,
+     resize) flushes it. */
+  transform: translateZ(0);
+}
+/* The wrap itself carries NO background in any state (default/focus/
+   correct/error) — every state's color is painted directly on both the
+   input and the suffix span below, instead of relying on the wrap's
+   background showing through the input's transparent one. Some browsers
+   render the disabled/focused input's own background as opaque over part
+   of the pill, so a wrap-level-only background split into a visible
+   two-tone pill (input area one color, suffix area another) instead of
+   one uniform color. Painting both children explicitly in every state
+   removes any dependency on that transparency. */
+.tq-pct-input {
+  flex: 1 1 auto;
+  width: 0;
+  height: 100%;
+  min-width: 0;
+  border: none;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  background: #ffffff;
+  text-align: end;
+  padding-inline-start: 8px;
+  font-family: Calibri, 'Segoe UI', Tahoma, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--subject-800);
+}
+.tq-pct-suffix {
+  flex: 0 0 auto;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  padding-inline-end: 10px;
+  background: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-body);
+}
+.tq-pct-wrap:focus-within { border-color: var(--subject-500); }
+.tq-pct-wrap:focus-within .tq-pct-input,
+.tq-pct-wrap:focus-within .tq-pct-suffix { background: var(--subject-100); }
+.tq-pct-wrap.is-correct { border-color: var(--correct-border); }
+.tq-pct-wrap.is-correct .tq-pct-input,
+.tq-pct-wrap.is-correct .tq-pct-suffix { color: var(--correct-text); background: var(--correct-bg); }
+.tq-pct-wrap.is-error { border-color: var(--incorrect-border); }
+.tq-pct-wrap.is-error .tq-pct-input,
+.tq-pct-wrap.is-error .tq-pct-suffix { color: var(--incorrect-text); background: var(--incorrect-bg); }
+.tq-pct-input:disabled {
+  cursor: not-allowed;
+  /* WebKit/Blink dim a disabled input's own background/text toward the
+     UA disabled palette regardless of author background-color — only the
+     input side of the pill (a real form control) is affected, not the
+     sibling %-suffix span, which is why a fully-correct pill showed a
+     washed-out input half against a solid-green suffix half instead of
+     one uniform color. Neutralizing the dimming here, not more repaint
+     forcing, is what actually fixes it. */
+  opacity: 1;
+  -webkit-text-fill-color: currentColor;
+}
+
+/* ---- Table feedback — floating popup variant (standalone screens s33/
+   s37) ----
+   QA fix: was pinned bottom-left (position:absolute; bottom:96px; left:40px;
+   fixed width:380px/240px per outcome, hanging from the corner with
+   max-height+overflow-y:auto, plus an s37-only bottom:174px override to
+   keep it from spilling past that screen's photo) — read as crowded
+   against the corner instead of belonging to the screen's content.
+   .tq-feedback--floating is now the POSITIONING REGION: it spans the exact
+   same box as .tq-body (s33/s37 have no split image/text column to center
+   against instead — the table/photo row is the only content), and centers
+   its card with flex. Each .tq-fb variant is the actual visible card
+   (only one .active at a time), sized to its own content (width:max-content,
+   capped) rather than a fixed per-outcome width — retry's naturally shorter
+   text no longer needs a hardcoded narrower box or a screen-specific
+   vertical offset to avoid covering the table/photo. pointer-events:none on
+   the region keeps its transparent margin from blocking the table/photo
+   underneath. */
+.tq-feedback.tq-feedback--floating {
+  position: absolute;
+  top: 84px;
+  left: 40px;
+  right: 40px;
+  bottom: 98px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 8;
+  pointer-events: none;
+}
+.tq-feedback.tq-feedback--floating[hidden] { display: none; }
+.tq-feedback.tq-feedback--floating .tq-fb.active {
+  pointer-events: auto;
+  width: max-content;
+  max-width: min(400px, 100%);
+  max-height: 100%;
+  overflow-y: auto; /* last-resort fallback — content should fit at this size */
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+  background: #ffffff;
+  cursor: move; /* draggable via the pointerdown handler below, scoped to
+    this exact selector (.tq-feedback--floating .tq-fb.active) — was
+    missing here, a pre-existing affordance gap unrelated to the popup
+    normalization pass (QA fix). Deliberately NOT applied to the inline
+    (.tq-feedback:not(.tq-feedback--floating)) variant below, which the
+    drag handler's own selector excludes — that card isn't draggable. */
+}
+.tq-feedback.tq-feedback--floating[data-outcome="correct"] .tq-fb.active { background: var(--fb-bg-correct); border: 0.3px solid var(--fb-border); }
+.tq-feedback.tq-feedback--floating[data-outcome="retry"] .tq-fb.active,
+.tq-feedback.tq-feedback--floating[data-outcome="wrong2"] .tq-fb.active { background: var(--fb-bg-incorrect); border: 0.3px solid var(--fb-border); }
+/* The retry outcome is a short 3-line nudge, not a worked explanation like
+   correct/wrong2 — kept its own tighter title size (unrelated to
+   positioning) now that the card is content-sized rather than a fixed
+   width. Padding normalized to the shared 24px (2026-09-02 popup
+   normalization pass) — the previous 14px/16px had no stated content
+   reason and read as unexplained drift. */
+.tq-feedback.tq-feedback--floating[data-outcome="retry"] .tq-fb.active {
+  padding: 24px;
+}
+/* Retry title raised from 17px to the shared 20px feedback size (session
+   correction — read too small next to the other feedback cards). */
+.tq-feedback.tq-feedback--floating[data-outcome="retry"] .tq-fb-title {
+  font-size: 20px;
+}
+/* Retry title lines are already split by <br> — never re-wrap one inside
+   the shrink-wrapped card ("זה לא / מדויק,"). */
+.tq-fb[data-fb="retry"] .tq-fb-title,
+.tq-feedback.tq-feedback--floating[data-outcome="retry"] .tq-fb-title { white-space: nowrap; }
+/* s33's correct/wrong2 body runs 3 paragraphs deep at the shared 400px cap,
+   reading tall and narrow — this screen's own table leaves plenty of room
+   either side, so widen just this card to trade some of that height for
+   width (session correction, per explicit feedback). */
+#s33-feedback .tq-fb.active { max-width: min(560px, 100%); }
+
+/* ---- Table feedback — "inline" variant (embedded-in-scroll screens s3435/
+   s3839): both/all sub-questions on one scroll flow can be simultaneously
+   resolved and each must stay visibly in view (no manual close), which a
+   single floating popup slot can't satisfy for more than one at a time —
+   documented local variant per 720-templates/SKILL.md "Prefer a local
+   template variant." Per the Figma popup-feedback template (720 UI
+   Templates, node 716-24031): position:absolute at the bottom-LEFT of its
+   OWN .lp-section/.tqs-page (each page owns its positioned ancestor, so
+   this stays local per-section rather than becoming a second shared
+   popup slot), RTL/right-aligned text. NOT the same fix as the rejected
+   ".tq-feedback--floating was pinned bottom-left" QA note above this
+   block — that was a single popup pinned to the whole SCREEN's corner
+   regardless of content (read as disconnected); this anchors within each
+   section's own box, in the empty space its own layout already leaves
+   there (.cls-section's rows sit flex-start/right, .tqs-media-col sits on
+   the left at a fixed 380px — max-width here is kept under that so it
+   never crosses into the text/answers column). ---- */
+.tq-feedback:not(.tq-feedback--floating) {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: auto;
+  max-width: 480px; /* was 360px — too narrow, forced awkward mid-phrase line
+    breaks in s3839's sub-part feedback (e.g. "...שבכל כיתה" / "צפה מספר
+    שונה..."); 620px fixed that but text-wrap:balance then wrapped well
+    short of the box's own width, leaving a dead gap — 480px is the
+    tightest width that still keeps both sub-parts' text off cramped
+    3-word lines. .cls-feedback (s3435) overrides max-width separately and
+    is unaffected. */
+  padding: 24px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
+  z-index: 4;
+}
+.tq-feedback:not(.tq-feedback--floating)[hidden] { display: none; }
+.tq-feedback:not(.tq-feedback--floating)[data-outcome="correct"] { background: var(--fb-bg-correct); border: 0.3px solid var(--fb-border); }
+.tq-feedback:not(.tq-feedback--floating)[data-outcome="retry"],
+.tq-feedback:not(.tq-feedback--floating)[data-outcome="wrong2"] { background: var(--fb-bg-incorrect); border: 0.3px solid var(--fb-border); }
+
+.tq-fb { display: none; text-align: right; direction: rtl; }
+.tq-fb.active { display: block; }
+/* Figma's template ("Popup Feedback" component set, 217:4135) keeps the
+   title/body a single neutral color on the tinted card in BOTH correct
+   and incorrect states — the pale green/red background alone carries the
+   correct/wrong signal, no colored text. Applies to both the floating
+   (.tq-feedback--floating, s33/s37) and inline (s3435/s3839) variants
+   alike — previously only the inline variant had this; the floating
+   variant's own colored-title override was removed to match. */
+.tq-fb-title { font-size: 20px; font-weight: 700; margin: 0; color: var(--fb-text); text-wrap: balance; }   /* orphan/line-balance QA pass — see .tq-fb-body p */
+.tq-fb-body { font-size: 20px; line-height: 1.5; color: var(--fb-text); margin-top: 10px; }
+/* Orphan-word / line-balance pass (unit-wide feedback typography QA):
+   redistributes each paragraph's own wrapped lines evenly so a long
+   sentence doesn't strand a single trailing word alone on its last line.
+   Alignment stays right/RTL — balance only changes where the soft
+   line-breaks fall. No-op in browsers without support (falls back to
+   normal wrapping). */
+.tq-fb-body p { margin: 0 0 8px; text-wrap: balance; }
+.tq-fb-body p:last-child { margin-bottom: 0; }
+
+/* ============================================================
+   SCROLL SCREENS — .lp-scroll/.lp-scroll-indicator/.lp-section/
+   .lp-text-col/.lp-img-col/.lp-title/.lp-body ported verbatim from
+   06-01's Learning Phase. Used by s3435/s3839 (one continuous scroll per
+   screen — simpler than 06-01's multi-section narrative: no locked
+   checkpoint tiers here, just plain scrollable content).
+   ============================================================ */
+#s3435, #s3839 { overflow: hidden; }
+
+.lp-scroll {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 12px; /* Figma 2808:22566: the scroll track sits 12px in from the screen edge, not flush with it */
+  bottom: 74px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  direction: ltr; /* scrollbar-only flip — every child below re-declares direction:rtl */
+  /* Default browser scrollbar read as too thin/light to notice against the
+     white canvas (explicit user feedback) — darker, clearly-visible thumb
+     in the current Subject/* purple instead of relying on OS defaults. */
+}
+/* Scrollbar per Figma 720 UI Templates "gesture hint" (2808:22566) — an
+   in-page rounded track (12px, rgba(201,206,216,0.4), radius 16) with a
+   rounded thumb (radius 24), inset from the screen edge rather than the
+   browser's own edge-flush bar. Thumb stays Subject/500 purple (Math).
+   Chrome drops ALL ::-webkit-scrollbar styling once scrollbar-width/
+   scrollbar-color are set, so those standard props are Firefox-only. */
+.lp-scroll::-webkit-scrollbar { width: 12px; }
+.lp-scroll::-webkit-scrollbar-track {
+  background: rgba(201, 206, 216, 0.4);
+  border: 0.5px solid #F3F4F5;
+  border-radius: 16px;
+  margin: 16px 0;
+}
+.lp-scroll::-webkit-scrollbar-thumb { background: var(--subject-500); border-radius: 24px; }
+.lp-scroll::-webkit-scrollbar-thumb:hover { background: var(--subject-700); }
+@supports (-moz-appearance: none) {
+  .lp-scroll { scrollbar-width: auto; scrollbar-color: var(--subject-500) rgba(201, 206, 216, 0.4); }
+}
+
+.lp-scroll-indicator {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  animation: lpScrollHint 1.6s ease-in-out infinite;
+}
+.lp-scroll-indicator[hidden] { display: none; }
+.lp-scroll-indicator:focus-visible { outline: 2px solid var(--subject-500); outline-offset: 2px; border-radius: 4px; }
+.lp-scroll-indicator-path { stroke: var(--subject-500); }
+
+@keyframes lpScrollHint {
+  0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.5; }
+  50%      { transform: translateX(-50%) translateY(5px); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-scroll-indicator { animation: none; }
+}
+
+/* ---- Scroll gesture hint — Figma "gesture hint" (3287:32535): the
+   "Cursor Click" pointing hand + Ripple Ring 1/2 + 8 spark dots on a 2s
+   click loop (keyframes from the Figma motion data), drifting down the
+   scroll track like Cursor Drag (2904:27290 — click bursts along a
+   vertical path). Ported from methodica-math-percent-04's approved
+   scroll-screen hint; created/removed by scrollGestureEnter() in
+   script.js. The frame is 300px wide with its click point at 150px;
+   right:-132px centers that click ON the scroll track (12px wide, 12px in
+   from the screen edge — see .lp-scroll). Ripple/spark SVGs recolored
+   from 4.4's science blue to Math Subject/* purples. */
+.click-hint {
+  position: absolute;
+  width: 300px; height: 300px;
+  pointer-events: none;
+  z-index: 20;
+}
+.click-hint[id$="-hint-scroll"] {
+  right: -132px; top: 60px;
+  animation: hintDrift 4s ease-in-out infinite;
+}
+.click-hint__ripple1 {
+  position: absolute; left: 95px; top: 95px; width: 110px; height: 110px;
+  animation: hintR1Op 2s linear infinite, hintR1Scale 2s linear infinite;
+}
+.click-hint__ripple2 {
+  position: absolute; left: 136px; top: 136px; width: 28px; height: 28px;
+  animation: hintR2Op 2s linear infinite, hintR2Scale 2s linear infinite;
+}
+.click-hint__spark {
+  position: absolute; left: 148px; top: 148px; width: 5px; height: 5px;
+  animation: hintSparkOp 2s linear infinite, hintSparkMove 2s linear infinite;
+  animation-delay: var(--d, 0ms);
+}
+.click-hint__cursor {
+  /* Figma "Cursor Click" pointing hand (3287:22205, 28x33) — fingertip
+     (~12px in, top edge) on the frame's click point (150,150) */
+  position: absolute; left: 138px; top: 150px; width: 28px; height: 33px;
+}
+.click-hint img { width: 100%; height: 100%; display: block; }
+
+@keyframes hintDrift {
+  0%, 15%  { transform: translateY(0); }
+  60%, 70% { transform: translateY(90px); }
+  100%     { transform: translateY(0); }
+}
+@keyframes hintR1Op {
+  0%   { animation-timing-function: cubic-bezier(0.2, 0.4, 0.4, 1); opacity: 0; }
+  5%   { animation-timing-function: ease-out; opacity: 0.85; }
+  35%  { animation-timing-function: ease-out; opacity: 0.65; }
+  45%  { animation-timing-function: cubic-bezier(0.6, 0, 1, 1); opacity: 0.35; }
+  50%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+@keyframes hintR1Scale {
+  0%    { animation-timing-function: cubic-bezier(0.2, 0.4, 0.4, 1); scale: 0.05 0.05; }
+  7.5%  { animation-timing-function: ease-out; scale: 0.22 0.22; }
+  22.5% { animation-timing-function: ease-out; scale: 0.6 0.6; }
+  37.5% { animation-timing-function: ease-out; scale: 0.85 0.85; }
+  50%   { scale: 1 1; }
+  100%  { scale: 1 1; }
+}
+@keyframes hintR2Op {
+  0%   { animation-timing-function: cubic-bezier(0.05, 0.9, 0.1, 1); opacity: 0; }
+  3%   { animation-timing-function: cubic-bezier(0.4, 0, 1, 1); opacity: 0.75; }
+  10%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+@keyframes hintR2Scale {
+  0%   { animation-timing-function: cubic-bezier(0.05, 0.9, 0.1, 1); scale: 0.2 0.2; }
+  3%   { animation-timing-function: cubic-bezier(0.4, 0, 1, 1); scale: 1 1; }
+  10%  { scale: 1.1 1.1; }
+  100% { scale: 1.1 1.1; }
+}
+@keyframes hintSparkOp {
+  0%    { animation-timing-function: cubic-bezier(0.05, 0.9, 0.1, 1); opacity: 0; }
+  8.5%  { animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94); opacity: 0.9; }
+  30%   { animation-timing-function: cubic-bezier(0.4, 0, 1, 1); opacity: 0.7; }
+  47.5% { opacity: 0; }
+  100%  { opacity: 0; }
+}
+@keyframes hintSparkMove {
+  0%    { animation-timing-function: cubic-bezier(0.05, 0.9, 0.1, 1); translate: 0 0; }
+  8.5%  { animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          translate: calc(var(--dx, 0px) * 0.725) calc(var(--dy, 0px) * 0.725); }
+  24%   { translate: var(--dx, 0px) var(--dy, 0px); }
+  100%  { translate: var(--dx, 0px) var(--dy, 0px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .click-hint { display: none !important; }
+}
+
+/* min-height:100% (not a fixed px guess like the previous 560px) — this
+   canvas is a fluid-height design (scaleApp() in script.js stretches
+   #app taller than the nominal 710px baseline on any viewport wider than
+   the 1280:710 ratio), so .lp-scroll's own real clientHeight varies by
+   viewport, not just by content. 100% resolves against .lp-scroll's own
+   definite height (established by its top:0/bottom:74 absolute
+   positioning) — so every .lp-section always measures at least exactly
+   one visible scroll-viewport tall, on any aspect ratio, which is the
+   actual requirement for "scroll to the next page, the previous page is
+   fully gone" to work via scrollIntoView. A fixed px value could only
+   ever match one specific viewport height and silently broke on any
+   other (confirmed: at 560px, and even at the exact 636px canonical
+   height, a page shorter than the viewport can never fully scroll out of
+   view — scrollIntoView clamps to the container's own max scroll). */
+.lp-section {
+  position: relative; /* positioning context for .tq-feedback:not(.tq-feedback--floating)'s bottom-left anchor, see below */
+  min-height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  direction: rtl;
+  align-items: center;
+  justify-content: center;
+  gap: 56px;
+  padding: 48px 80px;
+}
+
+.lp-text-col { width: 560px; flex-shrink: 0; direction: rtl; }
+.lp-title { font-size: 40px; font-weight: 700; line-height: 1.25; color: var(--text-body); text-align: right; margin: 0 0 20px; }
+.lp-body { font-size: 26px; font-weight: 400; line-height: 1.5; color: var(--text-body); text-align: right; margin: 0 0 6px; }   /* was 20px — matches this screen's own question text size (.cls-qtext), per explicit user feedback; .lp-body is only used here in this file (not by s3839), so this doesn't touch any other screen. */
+.lp-body:last-child { margin-bottom: 0; }
+.lp-body.lp-gap { margin-bottom: 30px; }
+.lp-body strong { font-weight: 700; }
+
+.lp-img-col { flex-shrink: 0; width: 300px; display: flex; justify-content: center; }
+.lp-img-col img { width: 300px; height: auto; border-radius: 16px; object-fit: contain; display: block; }
+
+/* s3435's own APP.png is a tall 222×480 portrait phone screenshot — at
+   the shared .lp-img-col's default 300px width it renders 648px tall,
+   taller than the section's own content budget and the main reason
+   page 1 previously overflowed one full scroll page. Scoped narrower
+   here (this is the only .lp-img-col use in this file) rather than
+   shrinking the shared rule for every future user of it. */
+.tqs-top .lp-img-col,
+.tqs-top .lp-img-col img { width: 220px; }
+
+/* ---- s3435 — classification question section (below the intro) ----
+   Rows were originally a stacked column (label above, 3 pills below) —
+   re-checked against the pptx's own resolved shape transforms (slide 35's
+   "קבוצה 32/33/55" groups): the status label and its 3 option pills sit on
+   ONE horizontal band per row (same y-range once each group's chOff/chExt
+   is resolved), and the 3 pill shapes share one uniform width rather than
+   shrinking to their own text — not a stacked form layout. Rebuilt as a
+   single-line row (label + equal-width pills) to match; padding/gaps
+   tightened in the same pass per explicit "less oversized whitespace"
+   feedback. */
+/* s3435's own two pages are much shorter than one full viewport (intro
+   text+image ~574px, classification rows ~452px, vs. the shared
+   min-height:100% above forcing ~795px each) — that left page 1's
+   content floating (centered) inside a mostly-empty full-screen box and
+   pushed page 2's content a full screen further down before it was even
+   reachable, reading as "too much distance between elements" and far
+   more scrolling than the actual content needs. Overridden to auto here
+   (scoped to this screen's two pages only — s3839 keeps the shared 100%)
+   so both pages size to their own content and sit close together, per
+   explicit user feedback ("elements too far apart in the scroll, keep
+   them close, minimize scrolling — aim for it all on one screen"). */
+#s3435-page-top,
+#s3435-page-cls {
+  min-height: auto;
+}
+
+/* Further compression pass (explicit follow-up user feedback: "compress
+   the gap even more") on top of the min-height fix above — the intro
+   page's own top/bottom padding no longer needs to be as generous now
+   that it isn't floating inside an artificially tall box. 24px still
+   clears #s3435-progress horizontally (the nav's own centered pill never
+   overlaps this row — see .cls-section's padding-top comment below for
+   the column that DOES need explicit nav clearance). */
+#s3435-page-top {
+  padding-top: 40px; /* was 64px (before that 24px) — raised again so the
+                         question below peeks into the first view at 16:9
+                         and signals there's more to scroll (user feedback) */
+  padding-bottom: 16px;
+}
+
+.cls-section {
+  flex-direction: column;
+  /* align-items: flex-start (was center) — centering the 860px-wide
+     qtext/row boxes inside the section's wider padded area left equal
+     empty margins on both sides, so the block sat short of the section's
+     own right padding edge instead of hugging it. flex-start is the RTL
+     "start" side (right), so the block now flushes against the right
+     edge like the rest of this unit's right-aligned text (explicit user
+     feedback: still not right-aligned after matching qtext/row widths
+     alone). */
+  align-items: flex-start;
+  /* justify-content: flex-start (overrides the base .lp-section's own
+     center) — with vertical centering, the retry-feedback block growing/
+     shrinking below the pills re-centered the WHOLE block each time,
+     visibly "jumping" the heading/rows up and down (explicit user
+     feedback). Anchoring from the top means only the actions/feedback
+     area grows downward — the heading and rows stay put. Top padding
+     bumped from 28px to clear the progress nav, now a fixed overlay
+     pinned to the top of the whole #s3435 screen (see index.html) rather
+     than flowing inline in this section. */
+  justify-content: flex-start;
+  gap: 16px;   /* was 24px (before that, 16px) — tightened back per a later
+                  explicit "compress the gap even more" follow-up; the
+                  progress nav stays pinned/locked at the top regardless
+                  (see #s3435-progress), so this is purely row-to-row
+                  breathing room, not nav clearance. */
+  padding: 60px 64px 32px;   /* top 60px (was 100px) — pulled up with #s3435-page-top so the question peeks into the first view; nav clearance only matters when scrolled, and max scroll is too short to bring this under the nav. Earlier: top was 116px (before that 90px, which left
+                                  only ~14px clearance below the nav's own
+                                  bottom edge (76px) and read as crowded).
+                                  100px keeps ~24px clearance — tighter than
+                                  116px but still clearly more than the
+                                  rejected 14px — per the same later
+                                  "compress more" feedback. bottom was 44px,
+                                  trimmed to 32px (trailing space after the
+                                  action buttons, not load-bearing for
+                                  readability). */
+}
+
+.cls-qtext {
+  font-size: 26px;
+  font-weight: 400;
+  color: var(--text-body);
+  text-align: right;    /* RTL intro/instruction text is right-aligned, never
+                            centered, per session-wide alignment rule */
+  margin: 0 0 8px;   /* was 16px (on top of .cls-section's own 16px gap, for
+                         a 32px instruction-to-rows gap) — trimmed per the
+                         later "compress more" feedback; still adds a bit
+                         more than the shared row-to-row gap so the
+                         question reads as its own group above the rows. */
+  width: 100%;
+  /* max-width matches .cls-row's own 860px (not a wider value) so the
+     right edge of this text lines up with the right edge of the rows
+     below it — .cls-section centers both by the same amount, so equal
+     max-widths is what makes them share a right edge. Previously this had
+     no explicit width, so the flex column let it shrink to its own text
+     and centered that narrower box instead of right-aligning it against
+     the rows (explicit user feedback). */
+  max-width: 860px;
+}
+.cls-qtext strong { font-weight: 700; color: var(--subject-800); }
+
+.cls-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 860px;
+}
+
+.cls-label {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 22px;   /* was 19px — matches the pill/button text size next
+                         to it, per explicit user feedback. */
+  font-weight: 400;
+  color: var(--text-body);
+  text-align: right;
+  margin: 0;
+}
+/* Only the result value (percent or fraction) carries emphasis — bold,
+   same plain text color as the rest of the label (not the subject-800
+   purple used for .cls-qtext strong — per explicit user feedback, this
+   emphasis stays black) — not the surrounding "סטטוס צעדים:" / "ביצוע"
+   wording. */
+.cls-label strong { font-weight: 700; color: var(--text-body); }
+.cls-label .gvi-fraction { color: var(--text-body); }
+
+.cls-pills {
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+.cls-pills .scq-opt {
+  flex: 0 0 178px;
+  width: 178px;
+  min-height: 46px;
+  padding: 8px 14px;
+  gap: 8px;
+  /* 22px matches the base .scq-opt size used by every other SCQ pill in
+     this component (e.g. #tqs-a-answers/#tqs-b-answers) — this row had
+     shrunk it to 16px, off the component's own established pill-text
+     size, per explicit user feedback ("not standard, looks smaller"). */
+  font-size: 22px;
+  justify-content: center;
+}
+
+/* Was max-width:860px (nearly the full row width) back when this card sat
+   INLINE directly under the 860px-wide .cls-row list, per prior explicit
+   user feedback. Now that the bottom-left repositioning above makes this
+   card float independently (see .tq-feedback:not(.tq-feedback--floating)),
+   an 860px card anchored to the LEFT would overlap the .cls-row pills,
+   which sit flex-start/right and are themselves up to 860px wide — kept
+   compact instead, a bit past the shared 360px default (headroom for the
+   multi-line correct/wrong2 body text; unrelated to font-size — see the
+   reverted-font-size comment below). */
+.cls-feedback { max-width: 400px; }
+/* Reverted (unit-wide feedback typography QA pass): this scoped override
+   previously bumped s3435's feedback to 26px to match .cls-qtext's own
+   question-text size (an earlier explicit request). That made this
+   screen's feedback the one outlier in the unit — every other feedback
+   popup (.scq-fb-title/.scq-fb-body across 02/04/05/06, the base
+   .tq-fb-title/.tq-fb-body above, .gvi-feedback-label) reads at Body/B-6,
+   20px, matching the Figma feedback-popup template. Removed so this
+   screen's feedback falls back to that same shared 20px, restoring one
+   consistent feedback text size across the whole unit. */
+
+
+/* ============================================================
+   s3839 — two-part scroll SCQ + comic speech bubbles. Restructured to
+   match the pptx's own per-slide composition, confirmed via measured
+   shape geometry: slide 38 places the shared context + "א. מי צודק?" +
+   all 4 of its option pills on the RIGHT and the two speech bubbles +
+   Q6.png on the LEFT, as ONE slide/composition — not context+image on
+   one page and סעיף א's own question below it on another. Slide 39
+   repeats the same image+bubbles on the LEFT again, beside סעיף ב's own
+   question+options on the RIGHT. .tqs-page models one pptx slide = one
+   full scroll page (RTL: .tqs-text-col first DOM child renders right,
+   .tqs-media-col second child renders left) — replaces the previous
+   .tqs-comic-wrap/.scq-img-group split, which put the image+bubbles and
+   סעיף א's own question on two separate .lp-scroll children (contradicted
+   the source, and — since .tqs-comic-wrap's real content was shorter than
+   one scroll viewport — could never fully scroll out of view either).
+   ============================================================ */
+.tqs-page {
+  position: relative; /* positioning context for .tq-feedback:not(.tq-feedback--floating)'s bottom-left anchor, see below */
+  display: flex;
+  flex-direction: row; /* RTL: 1st DOM child (.tqs-text-col) renders rightmost */
+  direction: rtl; /* .lp-scroll sets direction:ltr for the scrollbar-flip trick; every direct page re-declares rtl for itself */
+  align-items: flex-start;
+  gap: 40px;
+  min-height: 100%; /* one full scroll-viewport tall on any aspect ratio, see .lp-section above */
+  box-sizing: border-box;
+  /* Top padding increased from 40px: s3839-progress moved from an in-flow
+     --inline nav to a fixed overlay (see index.html comment on #s3839-progress)
+     — this page's own content needs enough top clearance to sit fully below
+     it instead of starting underneath it. */
+  padding: 112px 40px 56px;
+}
+
+.tqs-text-col {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+}
+
+.tqs-media-col {
+  flex: 0 0 460px; /* wider than the 380px photo so each speech bubble gets ~224px and wraps to fewer lines */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.cbub-row {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  width: 100%;
+}
+
+/* Comic speech bubble — two placed side by side above the shared photo.
+   Reuses the .hook1-bubble tail-bubble CSS technique verbatim (white
+   fill, 2px Subject/500 border, downward tail into the photo below),
+   doubled for a two-character exchange — no new visual language. */
+.cbub {
+  position: relative;
+  flex: 1 1 0;
+  background: #ffffff;
+  border: 2px solid var(--subject-500);
+  border-radius: 16px;
+  padding: 14px 16px 10px;
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--text-body);
+  text-align: right;
+  direction: rtl;
+  line-height: 1.35;
+  margin-bottom: 12px;
+}
+.cbub p { margin: 0 0 6px; }
+.cbub-name { font-size: 18px; font-weight: 700; color: var(--subject-800); }
+
+/* This photo sits in a COLUMN flex context (.tqs-media-col) — unlike
+   s37's table-image slot (.tq-img), it never had its card background/
+   border stripped, so once the flex-basis bug above is fixed and the
+   slot renders at its real 380×253, remove the same chrome for
+   consistency (no visible card edge behind a photo that already fills
+   its slot exactly). */
+.tqs-media-col .scq-img { background: transparent; border: none; }
+
+.cbub::before,
+.cbub::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+.cbub::before { top: 100%; border-width: 12px 10px 0 10px; border-color: var(--subject-500) transparent transparent transparent; }
+.cbub::after { top: calc(100% - 2px); border-width: 10px 8px 0 8px; border-color: #ffffff transparent transparent transparent; }
+
+/* Sizing/centering is now .tqs-page's/.tqs-text-col's job (see above) —
+   .tqs-subpart only carries the per-sub-part markup grouping needed by
+   subOptions()/subCheck()'s '#tqs-' + part selectors, plus its own two
+   visual deltas from the shared .scq-* markup it reuses. */
+.tqs-subpart {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.tqs-subpart .scq-answers { max-width: 700px; }
+
+/* Part ב's title-to-answers gap read as too tight at the shared
+   .tqs-subpart 20px alone, per explicit user feedback. Extra 12px brings
+   the total to 32px, matching .tq-body's own text-to-content gap value
+   elsewhere in this file rather than inventing a new number. Scoped to
+   part ב only — part א's own intro-to-question spacing is a separate,
+   already-tuned exception (#tqs-page-a .tqs-subpart above). */
+#tqs-b-qtext { margin-bottom: 12px; }
+
+/* Page A's sub-part follows the shared context paragraphs in the same
+   .tqs-text-col (page B has no such intro above it) — the column's own
+   16px gap read as too tight a break between "here's the scenario" and
+   "here's the actual question," per explicit user feedback. Scoped to
+   page A only, not the shared .tqs-subpart rule. */
+#tqs-page-a .tqs-subpart { margin-top: 16px; }
+
+/* s3839's sub-part feedback uses explicit <br> line breaks (per user
+   feedback — the balanced auto-wrap broke mid-phrase and left a dead gap
+   inside the card). Card shrinks to the longest authored line; lines
+   don't re-wrap. Now the standard draggable floating card (was the
+   non-draggable inline variant pinned flush at left:0/bottom:0 of its
+   page — read as stuck to the edge and clipped under the bottom bar,
+   QA), so only the shared 400px card cap is lifted here. The floating
+   region is positioned inside its own .tqs-page, so each card scrolls
+   away with its own page. */
+#tqs-a-feedback .tq-fb.active,
+#tqs-b-feedback .tq-fb.active { max-width: none; }
+
+/* No scrolling on s3839 until sub-part א reaches its final correct/wrong
+   state — there's nothing for the learner to do on page ב before that
+   (QA). scrollbar-gutter keeps the page width stable when it unlocks. */
+#s3839-scroll { scrollbar-gutter: stable; }
+#s3839-scroll.lp-scroll--locked { overflow-y: hidden; }
+#tqs-a-feedback .tq-fb-title,
+#tqs-a-feedback .tq-fb-body p,
+#tqs-b-feedback .tq-fb-title,
+#tqs-b-feedback .tq-fb-body p { white-space: nowrap; text-wrap: nowrap; }
+
+/* Final-wrong "התשובה הנכונה" / "התשובה שלי" reveal toggle — ported from
+   methodica-math-percent-03 (.scq-popup-reveal-btn, S8 pilot): a single
+   pill button whose label swaps between the two states. Sits last in the
+   wrong2 feedback card, under the explanation. */
+.scq-popup-reveal-btn {
+  display: block;
+  margin: 14px 0 0 auto; /* right edge = RTL reading start, as in 4.3 */
+  background: #fff;
+  color: var(--subject-500);
+  border: 1.5px solid var(--subject-500);
+  border-radius: 1000px;
+  font-family: Calibri, 'Segoe UI', Tahoma, sans-serif;
+  font-size: 20px;   /* matches .scq-fb-body text (was 16px — read too small) */
+  font-weight: 400;
+  padding: 6px 18px;
+  cursor: pointer;
+  direction: rtl;
+}
+.scq-popup-reveal-btn:hover { background: var(--subject-100); }
+
+/* Multi-group hint (s33): fixed line breaks from the script, right-aligned,
+   one blank line between groups; panel widens to fit the longest line. */
+.scq-hint-body .hint-lines { text-align: right; }
+.scq-hint-body .hint-lines p { white-space: nowrap; margin: 0 0 1.5em; }
+.scq-hint-body .hint-lines p:last-child { margin-bottom: 0; }
+.scq-hint-panel:has(.hint-lines) { width: max-content; min-width: 560px; max-width: 1100px; }

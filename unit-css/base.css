@@ -1,0 +1,219 @@
+/* ============================================================
+   unit-css/base.css — rules shared byte-for-byte by ALL six components
+   (subject tokens, reset, 1280x710 canvas, screen shell + bottom bar,
+   continue/back/hint buttons, staged-reveal states).
+   Linked FIRST in every component's index.html, before questions.css /
+   styles.css, so a component rule still wins at equal specificity.
+   Only rules present in every component that links this file belong
+   here — a rule added here applies to all six. Phase 1c, 2026-09-30.
+   ============================================================ */
+
+:root {
+  /* Math mode — Subject/* tokens, current Foundations (720 - UI Templates) */
+  --subject-100: #EAD9FF;
+  --subject-200: #CEC7FF;
+  --subject-300: #E1D9FF;
+  --subject-350: #B3B0FF;
+  --subject-400: #BDB3FC;
+  --subject-500: #3B2FC2;
+  --subject-600: #383896;
+  --subject-700: #5656CC;
+  --subject-800: #4B35A5;
+  --subject-900: #2F2478;
+  --subject-alpha-100: rgba(165, 28, 255, 0);
+  --subject-alpha-200: rgba(165, 28, 255, 0.3);
+  --subject-gradient: linear-gradient(to bottom, #6F6AD5 8.654%, #4B35A5 38.462%, #270075 100%);
+
+  /* Theme-independent — feedback + neutral (never touched by subject switch) */
+  --correct-bg: #F0FBF5;
+  --correct-border: #1B9E5E;
+  --correct-text: #0E5E39;
+  --incorrect-bg: #FFF0ED;
+  --incorrect-border: #D9360B;
+  --incorrect-text: #7A2010;
+  --text-body: #303030;
+  --text-dark: #1A2744;
+
+  /* Feedback-popup-only tokens — Figma component set 217:4135 "Popup
+     Feedback" normalization pass. Deliberately separate from the
+     --correct-* / --incorrect-* tokens above: those remain shared with
+     non-popup UI (.scq-opt.correct/.wrong inline answer highlighting,
+     which keeps its own green/red border+text) and must not change. */
+  --fb-border: #AEAEAE;
+  --fb-bg-correct: #F2FFE8;
+  --fb-bg-incorrect: #FFDBDC;
+  --fb-text: #222222;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  direction: rtl;
+  font-family: Calibri, 'Segoe UI', Tahoma, sans-serif;
+  background: #ffffff;
+}
+
+#app {
+  width: 1280px;
+  height: 710px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.screen {
+  display: none;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.screen.active { display: block; }
+
+/* 74px bottom bar — white strip with top hairline */
+.screen::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 74px;
+  background: #ffffff;
+  border-top: 1px solid #E5E5E5;
+  z-index: 1;
+}
+
+.btn-continue {
+  position: absolute;
+  bottom: 16px;
+  left: 32px;
+  z-index: 10;
+  height: 39px;
+  padding: 0 36px;
+  border: none;
+  border-radius: 50px;
+  background: var(--subject-gradient);
+  color: #ffffff;
+  font-family: Calibri, 'Segoe UI', Tahoma, sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  cursor: pointer;
+  white-space: nowrap;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-continue:hover:not(:disabled) { filter: brightness(0.92); }
+
+.btn-continue:focus-visible {
+  outline: 3px solid var(--subject-500);
+  outline-offset: 3px;
+}
+
+.btn-continue:disabled,
+.btn-continue:disabled:hover {
+  background: #AEAEAE !important;
+  color: #6E6E6E !important;
+  cursor: not-allowed !important;
+}
+
+.btn-back {
+  position: absolute;
+  bottom: 16px;
+  right: 32px;
+  z-index: 10;
+  height: 39px;
+  padding: 0 36px;
+  border: 1px solid var(--subject-700);
+  border-radius: 50px;
+  background: #ffffff;
+  color: var(--subject-700);
+  font-family: Calibri, 'Segoe UI', Tahoma, sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scq-left-actions .btn-continue { position: static; bottom: auto; left: auto; }
+
+.btn-hint {
+  position: static;
+  height: 39px;
+  padding: 0 28px;
+  border: 1px solid var(--subject-700);
+  border-radius: 50px;
+  background: #ffffff;
+  color: var(--subject-700);
+  font-family: Calibri, 'Segoe UI', Tahoma, sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.btn-hint:hover:not(:disabled) { background: var(--subject-100); }
+
+/* Locked hint is hidden entirely (not greyed out) — it appears only after
+   the first wrong attempt. visibility keeps its slot so Check doesn't shift. */
+.btn-hint:disabled { visibility: hidden; }
+
+.s13-text-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.hint-lamp { flex: none; width: 36px; height: 31px; margin-top: 3px; }
+
+[data-reveal-on-ready] {
+  opacity: 0;
+  transform: translateY(var(--m-distance));
+}
+
+[data-reveal-on-ready].is-revealed {
+  animation: m-float-in var(--m-reveal-duration) var(--m-ease) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal-on-ready] { opacity: 1; transform: none; }
+  [data-reveal-on-ready].is-revealed { animation: none; }
+}
+
+[data-reveal-on-ready].is-revealed.m-stage-text {
+  animation-duration: var(--m-stage-duration-text);
+  animation-timing-function: var(--m-ease-calm);
+}
+
+[data-reveal-on-ready].is-revealed.m-stage-card {
+  animation-duration: var(--m-stage-duration-card);
+  animation-timing-function: var(--m-ease-calm);
+}
+
+[data-reveal-on-ready].is-revealed.m-stage-visual {
+  animation-duration: var(--m-stage-duration-visual);
+  animation-timing-function: var(--m-ease-calm);
+}
+
+@keyframes btnAdvanceGrow {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.05); }
+}
+
+/* Script emphasis: only the lead clause of a retry title is bold ("שננסה שוב?" etc. regular) */
+.fb-regular { font-weight: 400; }

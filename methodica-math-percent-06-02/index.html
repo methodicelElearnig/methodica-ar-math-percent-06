@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>methodica-math-percent-06-02</title>
+  <!-- The shared xAPI library is fetched by unit-js/50-loader.js at the END of the body, after the
+       parser has queued every image below; live, its request waited for the last image, which put the
+       resume restore 20-45 s behind a slow line (2026-11-03). Preloading it from the head queues it FIRST.
+       The href must equal what 50-loader.js builds (no ?v=, no crossorigin) or the browser fetches it
+       twice; the library letter here changes together with LIB720 there (the harness asserts it). -->
+  <link rel="preload" as="script" fetchpriority="high" href="https://lomdot.education.gov.il/metodica/720active/common/xapiwrapper.min.js">
+  <link rel="preload" as="script" fetchpriority="high" href="https://lomdot.education.gov.il/metodica/720active/common/xapi-720-l.js">
+  <link rel="preconnect" href="https://kata.cet.ac.il">
+  <link rel="stylesheet" href="../unit-css/base.css?v=1">
+  <link rel="stylesheet" href="../unit-css/questions.css?v=1">
+  <link rel="stylesheet" href="../unit-css/25-report.css?v=1">
+  <link rel="stylesheet" href="styles.css?v=12">
+  <link rel="stylesheet" href="../unit-css/motion.css?v=1">
+</head>
+<body>
+  <!-- Boot cover (ADDING-REPORTING-AND-RESUME.md §8.11): hides screen 0 until the resume
+       decision is known, so a returning learner never sees the first screen flash before their
+       own. Removed by dropBootCover() (../unit-js/40-resume.js) on every loader exit path; the
+       inline net below needs no other file: it lifts the cover after 800ms, or — while
+       50-loader.js has set window.__resumeInFlight — waits for the restore up to a hard 11s
+       ceiling (the metadata poll alone may take 10s). A loader that failed to load gives back
+       exactly the 800ms behaviour. From methodica-math-ratio-01. -->
+  <div id="boot-cover" style="position:fixed;inset:0;z-index:9999;background:#ffffff"></div>
+  <script>
+  (function () {
+    /* A Kata launch (registration in the query) may have a document to restore: raise the
+     flag HERE, before any script is fetched. bootXAPI raises it too, but it runs from the
+     last script tag, and on a cold cache those scripts arrive after the 800 ms below - so
+     the cover used to drop before the flag existed, exposing screen 0 for the whole wait
+     (2026-11-03). Without a registration (local, dev) the 800 ms behaviour is unchanged. */
+  if (/[?&]registration=/.test(location.search)) window.__resumeInFlight = true;
+  var t0 = Date.now();
+    function tick() {
+      var c = document.getElementById('boot-cover');
+      if (!c || !c.parentNode) return;
+      if (window.__resumeInFlight && Date.now() - t0 < 11000) { setTimeout(tick, 100); return; }
+      c.parentNode.removeChild(c);
+    }
+    setTimeout(tick, 800);
+  })();
+  </script>
+  <div id="app">
+
+    <!-- Report / Issue button ("מצאתם בעיה?") — global, outside all .screen divs; top-left,
+         z-index 30 (720-templates _global-components.md). Glyph is inline SVG on currentColor,
+         styles in ../unit-css/25-report.css, behaviour in ../unit-js/25-report.js. -->
+    <button class="flag-btn" id="flag-btn" type="button" onclick="openReportModal()" aria-label="هل وجدتم مشكلة؟">
+      <span class="flag-btn-icon">
+        <span class="flag-btn-glyph" aria-hidden="true">
+          <svg class="flag-btn-glyph-pole" viewBox="0 0 0.794329 17.0005" preserveAspectRatio="none" fill="none"><path d="M0.397164 17C0.177722 17 0 16.8239 0 16.6065V0.393501C0 0.176082 0.177722 0 0.397164 0C0.616607 0 0.794329 0.176082 0.794329 0.393501V16.607C0.794329 16.8245 0.616607 17.0005 0.397164 17.0005V17Z" fill="currentColor"/></svg>
+          <svg class="flag-btn-glyph-banner" viewBox="0 0 12 9.31542" preserveAspectRatio="none" fill="none"><path d="M2.76227 9.31542C1.91972 9.31542 1.06958 9.15545 0.213483 8.71363C0.0823588 8.64599 0 8.51124 0 8.36469V0.950975C0 0.814619 0.0715221 0.687925 0.188558 0.615989C0.305594 0.54459 0.45189 0.537611 0.574886 0.598811C0.577053 0.599884 0.578679 0.600958 0.580846 0.602032C2.31309 1.49586 4.05563 1.046 5.90003 0.569821C7.80946 0.0770055 9.78336 -0.431915 11.7865 0.601495C11.9176 0.669136 12 0.803882 12 0.950438V8.36415C12 8.4946 11.9344 8.617 11.8255 8.69001C11.7166 8.76302 11.5774 8.77805 11.4555 8.72974C11.443 8.7249 11.4311 8.71954 11.4197 8.71363C9.68745 7.8198 7.94491 8.26967 6.10051 8.7453C5.00709 9.02714 3.89199 9.31489 2.76281 9.31489L2.76227 9.31542ZM0.793787 8.11935C2.45559 8.87307 4.13094 8.44038 5.90003 7.98407C7.62469 7.53903 9.40191 7.08057 11.2062 7.75806V1.19631C9.54441 0.442591 7.86906 0.875281 6.09997 1.33159C4.37531 1.77663 2.59755 2.23509 0.793787 1.5576V8.11935Z" fill="currentColor"/></svg>
+        </span>
+      </span>
+      <span class="flag-btn-label">هل وجدتم مشكلة؟</span>
+    </button>
+
+    <!-- ================================================================
+         SCREEN 0 (s27) — pptx slide 27, item methodica-math-percent-06-02-001
+         TransitionScreen — figma-lomda-builder/720-templates: no dedicated
+         canonical template file (same "unconfirmed frame" classification as
+         06-01's s13/s25), so this reuses the .s13-content/.s13-text-group
+         composition those two screens already established verbatim.
+         Asset: assets/videos/character_lifting.mp4 — animated loop of the
+         character lifting weights, replacing the earlier
+         character_lifting.png static fallback (see CONTENT_FLAGS.md #27).
+         ================================================================ -->
+    <section class="screen active" data-screen="0" id="s27">
+      <!-- Reveal timing is fully JS-driven — see script.js
+           s27StagedSteps()/runStagedSequence('s27', ...): lead line (+
+           character) -> "3 أسئلة" emphasis -> requirement subline ->
+           continue button enables + pulses. -->
+      <div class="s13-content">
+        <div class="s13-text-group">
+          <p class="s27-lead m-stage-text" id="s27-lead" data-reveal-on-ready>أنهينا مرحلة التعلّم، سننتقل إلى التدريب الأول ونجيب عن</p>
+          <p class="s27-emphasis m-stage-text" id="s27-emphasis" data-reveal-on-ready>3 أسئلة</p>
+          <p class="s27-sub m-stage-text" id="s27-sub" data-reveal-on-ready>يجب الإجابة بشكل صحيح عن سؤالين على الأقل.</p>
+        </div>
+      </div>
+      <video class="s13-character m-stage-visual" id="s27-character-img" data-reveal-on-ready src="assets/videos/character_lifting-opt.mp4" autoplay loop muted playsinline aria-label="شخصية ترتدي قميصًا عليه رمز النسبة المئوية، ترفع ثقلًا فوق رأسها"></video>
+
+      <button class="btn-back" id="s27-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <button class="btn-continue" id="s27-continue" onclick="goTo(1)" disabled>متابعة</button>
+    </section>
+
+    <!-- ================================================================
+         SCREEN 1 (s28) — pptx slide 28, item methodica-math-percent-06-02-001
+         שאלה 1 מתוך 3. SingleChoiceQuestion (720-templates/
+         SingleChoiceQuestion.md) — figma name "SingleChoiceQuestion" per
+         the slide's own production note. שאלה אוריינית: לא. רמה גבוהה: כן.
+         Asset: assets/images/Q2.png (real pptx media, ppt/media/image29.png
+         — pixel-hash-confirmed identical to the root project's own existing
+         assets/images/Q2.png, not re-exported/duplicated).
+         Correct answer: option b — 4% = 4/100 = 1/25, i.e. one bulb in 25.
+         ================================================================ -->
+    <section class="screen" data-screen="1" id="s28">
+      <nav class="progress-question" aria-label="التنقُّل بين الأسئلة" id="s28-progress"></nav>
+
+      <div class="scq-wrap">
+        <div class="scq-question-col">
+          <div class="scq-qtext">
+            <p class="m-stage-text" data-qrole="context" data-reveal-on-ready>في مراقبة الجودة في مصنع للمصابيح، تبين أن 4% من المصابيح المنتجة معيبة.</p>
+            <p class="m-stage-text" data-qrole="question" data-reveal-on-ready><strong>أيّ الجمل التالية هي الأصحّ؟</strong></p>
+          </div>
+          <div class="scq-answers" role="radiogroup" aria-label="خيارات الإجابة">
+            <button class="scq-opt m-stage-card" type="button" role="radio" aria-checked="false" data-id="a" data-reveal-on-ready onclick="scqSelect('s28','a')">
+              <span class="scq-opt-text">معظم المصابيح التي تُنتَج في المصنع معيبة</span>
+              <span class="scq-radio"></span>
+            </button>
+            <button class="scq-opt m-stage-card" type="button" role="radio" aria-checked="false" data-id="b" data-reveal-on-ready onclick="scqSelect('s28','b')">
+              <span class="scq-opt-text">مصباح واحد من كل 25 مصباحًا معيب</span>
+              <span class="scq-radio"></span>
+            </button>
+            <button class="scq-opt m-stage-card" type="button" role="radio" aria-checked="false" data-id="c" data-reveal-on-ready onclick="scqSelect('s28','c')">
+              <span class="scq-opt-text">وجد في المصنع 4 مصابيح معيبة بالضبط</span>
+              <span class="scq-radio"></span>
+            </button>
+            <button class="scq-opt m-stage-card" type="button" role="radio" aria-checked="false" data-id="d" data-reveal-on-ready onclick="scqSelect('s28','d')">
+              <span class="scq-opt-text">40% من المصابيح المصنّعة معيبة</span>
+              <span class="scq-radio"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="scq-img m-stage-visual" id="s28-img" data-reveal-on-ready>
+          <div class="scq-img-clip">
+            <img src="assets/images/Q2-opt.png" alt="صف من المصابيح الكهربائية على خط إنتاج في مصنع، واحد منها مكسور ومعيب" loading="lazy">
+          </div>
+        </div>
+      </div>
+
+      <div class="scq-feedbox" id="s28-feedbox" hidden>
+        <div class="scq-fb" data-fb="retry">
+          <div class="scq-fb-head">
+            <p class="scq-fb-title">هذا غير دقيق،<br><span class="fb-regular">هل نحاول مرة أخرى؟</span></p>
+          </div>
+        </div>
+        <div class="scq-fb" data-fb="correct">
+          <div class="scq-fb-head" onclick="scqToggleFeedbox('s28')">
+            <p class="scq-fb-title">دقيق!</p>
+            <button class="scq-fb-chevron" type="button" aria-label="طيّ/توسيع"><svg viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+          <div class="scq-fb-body">
+            <div class="gvi-feedback-eq gvi-feedback-eq--label">
+              <span class="gvi-eq-label">4% هي</span>
+              <div class="gvi-fraction"><span class="num">4</span><span class="den">100</span></div>
+              <span class="gvi-eq-label">وبعد الاختزال تساوي</span>
+              <div class="gvi-fraction"><span class="num">1</span><span class="den">25</span></div>
+            </div>
+            <p>لذلك إذا كانت 4% من المصابيح معيبة، فهذا يعني أن مصباحًا واحدًا<br>من كل 25 مصباحًا معيب.</p>
+            <p><strong>يمكن أيضًا القول إنه من كل 100 مصباح تم فحصه، وُجد 4 منها معيبة.</strong></p>
+          </div>
+        </div>
+        <div class="scq-fb" data-fb="wrong2">
+          <div class="scq-fb-head" onclick="scqToggleFeedbox('s28')">
+            <p class="scq-fb-title">تقريبًا... لنشرح:</p>
+            <button class="scq-fb-chevron" type="button" aria-label="طيّ/توسيع"><svg viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+          <div class="scq-fb-body">
+            <div class="gvi-feedback-eq gvi-feedback-eq--label">
+              <span class="gvi-eq-label">4% هي</span>
+              <div class="gvi-fraction"><span class="num">4</span><span class="den">100</span></div>
+              <span class="gvi-eq-label">وبعد الاختزال تساوي</span>
+              <div class="gvi-fraction"><span class="num">1</span><span class="den">25</span></div>
+            </div>
+            <p>لذلك إذا كانت 4% من المصابيح معيبة، فهذا يعني أن مصباحًا واحدًا<br>من كل 25 معيب.</p>
+            <p><strong>يمكن أيضًا القول إنه من بين كل 100 مصباح تم فحصه، وُجد 4 منها معيبة.</strong></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="scq-left-actions">
+        <button class="btn-hint" id="s28-hint" onclick="scqOpenHint('s28')">هل من تلميح؟</button>
+        <button class="btn-continue" id="s28-check" onclick="scqCheck('s28')" disabled>هل إجابتي صحيحة؟</button>
+      </div>
+      <button class="btn-back" id="s28-back-btn" onclick="goBack()" hidden>رجوع</button>
+    </section>
+
+    <!-- ================================================================
+         SCREEN 2 (s29) — pptx slide 29, item methodica-math-percent-06-02-002
+         שאלה 2 מתוך 3. SingleChoiceQuestion. שאלה אוריינית: כן (longer
+         question body) — per SingleChoiceQuestion.md's own layout note,
+         .scq-qtext/.scq-answers stack in normal flow so the answers block
+         always renders below the (longer) question text; .scq-question-col
+         scrolls internally rather than compressing/clipping the text.
+         רמה גבוהה: כן.
+         Asset: assets/images/Yoav.png (real pptx media, ppt/media/image31.png,
+         exported fresh for this screen — not present anywhere else in the
+         project before this session).
+         Correct answer: option c — 30GB / 10GB = 300/100 = 300%.
+         ================================================================ -->
+    <section class="screen" data-screen="2" id="s29">
+      <nav class="progress-question" aria-label="التنقُّل بين الأسئلة" id="s29-progress"></nav>
+
+      <div class="scq-wrap">
+        <div class="scq-question-col">
+          <div class="scq-qtext">
+            <p class="m-stage-text" data-qrole="context" data-reveal-on-ready>طارق مشترك في باقة إنترنت خلوي تشمل <strong class="scq-strong-plain">10 غيغابايت (GB)</strong> بسعر مخفّض.</p>
+            <p class="m-stage-text" data-qrole="context" data-reveal-on-ready>خلال عطلة الحانوكا، شاهد طارق الكثير من مقاطع الفيديو، وفي نهاية الشهر تلقّى رسالة تفيد بأنه استهلك <strong class="scq-strong-plain">30 غيغابايت (GB)</strong> من بيانات الإنترنت.</p>
+            <p class="m-stage-text" data-qrole="question" data-reveal-on-ready><strong>أي من الادعاءات التالية صحيح؟</strong></p>
+          </div>
+          <div class="scq-answers" role="radiogroup" aria-label="خيارات الإجابة">
+            <button class="scq-opt m-stage-card" type="button" role="radio" aria-checked="false" data-id="a" data-reveal-on-ready onclick="scqSelect('s29','a')">
+              <span class="scq-opt-text">استخدم طارق 30% من باقة التصفح الخاصة به</span>
+              <span class="scq-radio"></span>
+            </button>
+            <button class="scq-opt m-stage-card" type="button" role="radio" aria-checked="false" data-id="b" data-reveal-on-ready onclick="scqSelect('s29','b')">
+              <span class="scq-opt-text">تجاوز طارق سعة الباقة بمقدار 20 غيغابايت، ولذلك استخدم 200% من الباقة</span>
+              <span class="scq-radio"></span>
+            </button>
+            <button class="scq-opt m-stage-card" type="button" role="radio" aria-checked="false" data-id="c" data-reveal-on-ready onclick="scqSelect('s29','c')">
+              <span class="scq-opt-text">يستخدم طارق 300% من الباقة الأصلية، لأن 30 غيغابايت هي ثلاثة أضعاف 10 غيغابايت.</span>
+              <span class="scq-radio"></span>
+            </button>
+            <button class="scq-opt m-stage-card" type="button" role="radio" aria-checked="false" data-id="d" data-reveal-on-ready onclick="scqSelect('s29','d')">
+              <span class="scq-opt-text">استخدم طارق 130% من الباقة، لأننا نضيف 30 إلى 100%</span>
+              <span class="scq-radio"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="scq-img m-stage-visual" id="s29-img" data-reveal-on-ready>
+          <div class="scq-img-clip">
+            <img src="assets/images/Yoav-opt.png" alt="يجلس فتى إلى طاولة في غرفته مساءً، وينظر بعين متأملة إلى الهاتف المحمول الذي في يده." loading="lazy">
+          </div>
+        </div>
+      </div>
+
+      <div class="scq-feedbox" id="s29-feedbox" hidden>
+        <div class="scq-fb" data-fb="retry">
+          <div class="scq-fb-head">
+            <p class="scq-fb-title">هذا غير دقيق،<br><span class="fb-regular">هل نحاول مرة أخرى؟</span></p>
+          </div>
+        </div>
+        <div class="scq-fb" data-fb="correct">
+          <div class="scq-fb-head" onclick="scqToggleFeedbox('s29')">
+            <p class="scq-fb-title">صحيح جدًا!</p>
+            <button class="scq-fb-chevron" type="button" aria-label="طيّ/توسيع"><svg viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+          <div class="scq-fb-body">
+            <p>الكل هو باقة التصفح الأصلية – 10GB.</p>
+            <p>استخدم طارق 30GB. كم تساوي 30 من أصل 10 بالنسبة المئوية؟</p>
+            <div class="gvi-feedback-eq">
+              <div class="gvi-fraction"><span class="num">30</span><span class="den">10</span></div>
+              <span class="gvi-eq-sign">=</span>
+              <div class="gvi-fraction"><span class="num">300</span><span class="den">100</span></div>
+              <span class="gvi-eq-sign">=</span>
+              <span class="gvi-percent gvi-percent--strong">300%</span>
+            </div>
+            <p>أي أن طارق استخدم <strong>300%</strong> من باقته (ثلاثة أضعافها).</p>
+          </div>
+        </div>
+        <div class="scq-fb" data-fb="wrong2">
+          <div class="scq-fb-head" onclick="scqToggleFeedbox('s29')">
+            <p class="scq-fb-title">أخطأتم، لا بأس — فنحن نتعلّم أيضاً من الأخطاء.</p>
+            <button class="scq-fb-chevron" type="button" aria-label="طيّ/توسيع"><svg viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+          <div class="scq-fb-body">
+            <p>الكلّ هو باقة التصفح الأصلية – 10GB.</p>
+            <p>استخدم طارق 30GB. كم تساوي 30 من أصل 10 بالنسبة المئوية؟</p>
+            <div class="gvi-feedback-eq">
+              <div class="gvi-fraction"><span class="num">30</span><span class="den">10</span></div>
+              <span class="gvi-eq-sign">=</span>
+              <div class="gvi-fraction"><span class="num">300</span><span class="den">100</span></div>
+              <span class="gvi-eq-sign">=</span>
+              <span class="gvi-percent gvi-percent--strong">300%</span>
+            </div>
+            <p>أي أن طارق استخدم <strong>300%</strong> من باقته (ثلاثة أضعافها).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="scq-left-actions">
+        <button class="btn-hint" id="s29-hint" onclick="scqOpenHint('s29')">هل من تلميح؟</button>
+        <button class="btn-continue" id="s29-check" onclick="scqCheck('s29')" disabled>هل إجابتي صحيحة؟</button>
+      </div>
+      <button class="btn-back" id="s29-back-btn" onclick="goBack()" hidden>رجوع</button>
+    </section>
+
+    <!-- ================================================================
+         SCREEN 3 (s30) — pptx slide 30, item methodica-math-percent-06-02-003
+         שאלה 3 מתוך 3. Local SingleChoiceQuestion variant: THREE independent
+         single-choice sub-parts (A/B/C, one per pie diagram) — session
+         correction (see CONTENT_FLAGS.md #4/#30, moved to Resolved): each
+         sub-part has its OWN 3-value answer set, not a shared 5-value pool.
+         Re-derived directly from the pptx's own OMML math objects (two of
+         the five plain-text-visible values were actually math fractions
+         invisible to a plain-text read, same class of miss as flags #31/#33)
+         plus its own green-fill (#92D050) answer-key convention on the
+         correct pill in each column:
+           A (Q3A.png, 22-wedge circle):  3/11 (correct) · 22% · 6/11
+           B (Q3B.png, ~17-wedge circle): 0.34 · 10/34 (correct) · 50%
+           C (Q3C.png, 5-wedge circle):   20% · 40% (correct) · 2/100
+         Pill vertical order within each part matches the pptx's own
+         top-to-bottom shape order. Markup: one bordered .q3-answer-card per
+         part (matches the user-supplied reference screenshot's
+         graph→card→3-choices structure) holding 3 stacked .scq-opt/.scq-radio
+         rows verbatim — no new selected/correct/wrong CSS states needed.
+         Fraction-valued options render via the project's existing
+         .gvi-fraction stacked num/den markup (never slash notation), per
+         720-templates/_question-template-defaults.md.
+         Assets: Q3A.png/Q3B.png/Q3C.png (supplied directly by the user,
+         confirmed this session to be the same 3 circles referenced above).
+         Grading: holistic across all 3 sub-parts together (2-attempt
+         retry gate, per the slide's own "טעיתם לפחות בתשובה אחת" —
+         "at least one wrong" — retry/final-incorrect copy) — matches
+         Partial-correction flow (_global-components.md): a sub-part
+         already marked correct on attempt 1 stays locked/correct through
+         attempt 2, only the still-wrong sub-parts remain editable.
+         ================================================================ -->
+    <section class="screen" data-screen="3" id="s30">
+      <nav class="progress-question" aria-label="التنقُّل بين الأسئلة" id="s30-progress"></nav>
+
+      <div class="q3-wrap">
+        <div class="q3-qtext-group">
+          <p class="q3-shared-qtext m-stage-text" id="s30-context" data-reveal-on-ready>
+            في حفلة عيد ميلاد قُدِّمت ثلاث كعكات متطابقة، وقُطعت كل كعكة بطريقة مختلفة، وأُكل من كل منها جزء مختلف (مظلَّل).
+          </p>
+          <p class="q3-shared-qtext m-stage-text" id="s30-instruction" data-reveal-on-ready>
+            <strong>طابِقوا كل جزء ملوّن مع التمثيل الصحيح له.</strong>
+          </p>
+        </div>
+
+        <div class="q3-parts">
+          <div class="q3-part" data-part="A">
+            <div class="scq-img q3-img m-stage-visual" data-reveal-on-ready>
+              <div class="scq-img-clip">
+                <img src="assets/images/Q3A-thumb.png" alt="دائرة مقسّمة إلى 22 جزءًا متساويًا، منها 6 أجزاء ملوّنة باللون البنفسجي" loading="lazy">
+              </div>
+              <button class="img-zoom-btn" type="button" aria-label="تكبير الصورة" data-zoom-src="assets/images/Q3A-opt.png" data-zoom-alt="الدائرة مقسّمة إلى 22 جزءًا متساويًا، منها 6 أجزاء ملوّنة باللون البنفسجي">
+                <svg class="img-zoom-btn__icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="8.5" cy="8.5" r="6.5" stroke="currentColor" stroke-width="1.6"/><line x1="13.4" y1="13.4" x2="18" y2="18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+            <div class="q3-answer-card m-stage-card" data-reveal-on-ready role="radiogroup" aria-label="اختاروا تمثيلاً للدائرة الأولى">
+              <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="v311" onclick="q3Select('A','v311')"><span class="scq-opt-text"><span class="gvi-fraction q3-fraction"><span class="num">3</span><span class="den">11</span></span></span><span class="scq-radio"></span></button>
+              <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="v22" onclick="q3Select('A','v22')"><span class="scq-opt-text">22%</span><span class="scq-radio"></span></button>
+              <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="v611" onclick="q3Select('A','v611')"><span class="scq-opt-text"><span class="gvi-fraction q3-fraction"><span class="num">6</span><span class="den">11</span></span></span><span class="scq-radio"></span></button>
+            </div>
+          </div>
+
+          <div class="q3-part" data-part="B">
+            <div class="scq-img q3-img m-stage-visual" data-reveal-on-ready>
+              <div class="scq-img-clip">
+                <img src="assets/images/Q3B-thumb.png" alt="دائرة مقسمة إلى 17 جزءاً متساوياً، 5 منها ملونة باللون البنفسجي" loading="lazy">
+              </div>
+              <button class="img-zoom-btn" type="button" aria-label="تكبير الصورة" data-zoom-src="assets/images/Q3B.png" data-zoom-alt="دائرة مقسّمة إلى 17 جزءاً متساوياً، 5 منها ملوّنة باللون البنفسجي">
+                <svg class="img-zoom-btn__icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="8.5" cy="8.5" r="6.5" stroke="currentColor" stroke-width="1.6"/><line x1="13.4" y1="13.4" x2="18" y2="18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+            <div class="q3-answer-card m-stage-card" data-reveal-on-ready role="radiogroup" aria-label="اختاروا تمثيلاً للدائرة الثانية">
+              <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="v034" onclick="q3Select('B','v034')"><span class="scq-opt-text">0.34</span><span class="scq-radio"></span></button>
+              <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="v1034" onclick="q3Select('B','v1034')"><span class="scq-opt-text"><span class="gvi-fraction q3-fraction"><span class="num">10</span><span class="den">34</span></span></span><span class="scq-radio"></span></button>
+              <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="v50" onclick="q3Select('B','v50')"><span class="scq-opt-text">50%</span><span class="scq-radio"></span></button>
+            </div>
+          </div>
+
+          <div class="q3-part" data-part="C">
+            <div class="scq-img q3-img m-stage-visual" data-reveal-on-ready>
+              <div class="scq-img-clip">
+                <img src="assets/images/Q3C-thumb.png" alt="الدائرة مقسّمة إلى خمسة أجزاء متساوية، جزآن منها ملوّنان باللون البنفسجي" loading="lazy">
+              </div>
+              <button class="img-zoom-btn" type="button" aria-label="تكبير الصورة" data-zoom-src="assets/images/Q3C.png" data-zoom-alt="الدائرة مقسّمة إلى خمسة أجزاء متساوية، جزآن منها ملوّنان باللون البنفسجي">
+                <svg class="img-zoom-btn__icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="8.5" cy="8.5" r="6.5" stroke="currentColor" stroke-width="1.6"/><line x1="13.4" y1="13.4" x2="18" y2="18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+            <div class="q3-answer-card m-stage-card" data-reveal-on-ready role="radiogroup" aria-label="اختاروا تمثيلاً للدائرة الثالثة">
+              <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="v20" onclick="q3Select('C','v20')"><span class="scq-opt-text">20%</span><span class="scq-radio"></span></button>
+              <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="v40" onclick="q3Select('C','v40')"><span class="scq-opt-text">40%</span><span class="scq-radio"></span></button>
+              <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="v2100" onclick="q3Select('C','v2100')"><span class="scq-opt-text"><span class="gvi-fraction q3-fraction"><span class="num">2</span><span class="den">100</span></span></span><span class="scq-radio"></span></button>
+            </div>
+          </div>
+        </div>
+        <p class="q3-zoom-caption">انقروا على الرسوم البيانية للتكبير</p>
+      </div>
+
+      <div class="scq-feedbox q3-feedbox" id="s30-feedbox" hidden>
+        <div class="scq-fb" data-fb="retry">
+          <div class="scq-fb-head">
+            <p class="scq-fb-title">أخطأتم في إجابة واحدة على الأقل،<br><span class="fb-regular">هل نحاول مرة أخرى؟</span></p>
+          </div>
+        </div>
+        <div class="scq-fb" data-fb="correct">
+          <div class="scq-fb-head" onclick="scqToggleFeedbox('s30')">
+            <p class="scq-fb-title">صحيح جدًا!</p>
+            <button class="scq-fb-chevron" type="button" aria-label="طيّ/توسيع"><svg viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+          <div class="scq-fb-body">
+            <p>لتحديد التمثيلات المتكافئة يمكن توسيع الكسر أو تقليصه أو تحويله إلى نسبة مئوية.</p>
+            <div class="gvi-feedback-eq">
+              <div class="gvi-fraction"><span class="num">6</span><span class="den">22</span></div>
+              <span class="gvi-eq-sign">=</span>
+              <div class="gvi-fraction"><span class="num">3</span><span class="den">11</span></div>
+              <span class="gvi-eq-note">(اختزال بالقسمة على 2)</span>
+            </div>
+            <div class="gvi-feedback-eq">
+              <div class="gvi-fraction"><span class="num">5</span><span class="den">17</span></div>
+              <span class="gvi-eq-sign">=</span>
+              <div class="gvi-fraction"><span class="num">10</span><span class="den">34</span></div>
+              <span class="gvi-eq-note">(توسيع بمقدار 2)</span>
+            </div>
+            <div class="gvi-feedback-eq">
+              <div class="gvi-fraction"><span class="num">2</span><span class="den">5</span></div>
+              <span class="gvi-eq-sign">=</span>
+              <div class="gvi-fraction"><span class="num">40</span><span class="den">100</span></div>
+              <span class="gvi-eq-sign">=</span>
+              <span class="gvi-percent">40%</span>
+              <span class="gvi-eq-note">(توسيع بمقدار 20)</span>
+            </div>
+          </div>
+        </div>
+        <div class="scq-fb" data-fb="wrong2">
+          <div class="scq-fb-head" onclick="scqToggleFeedbox('s30')">
+            <p class="scq-fb-title">أخطأتم في إجابة واحدة على الأقل، لنفهم السبب:</p>
+            <button class="scq-fb-chevron" type="button" aria-label="طيّ/توسيع"><svg viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+          <div class="scq-fb-body">
+            <p>لتحديد التمثيلات المتكافئة يمكن توسيع الكسر أو تقليصه أو تحويله إلى نسبة مئوية.</p>
+            <div class="gvi-feedback-eq">
+              <div class="gvi-fraction"><span class="num">6</span><span class="den">22</span></div>
+              <span class="gvi-eq-sign">=</span>
+              <div class="gvi-fraction"><span class="num">3</span><span class="den">11</span></div>
+              <span class="gvi-eq-note">(اختزال بالقسمة على 2)</span>
+            </div>
+            <div class="gvi-feedback-eq">
+              <div class="gvi-fraction"><span class="num">5</span><span class="den">17</span></div>
+              <span class="gvi-eq-sign">=</span>
+              <div class="gvi-fraction"><span class="num">10</span><span class="den">34</span></div>
+              <span class="gvi-eq-note">(توسيع ×2)</span>
+            </div>
+            <div class="gvi-feedback-eq">
+              <div class="gvi-fraction"><span class="num">2</span><span class="den">5</span></div>
+              <span class="gvi-eq-sign">=</span>
+              <div class="gvi-fraction"><span class="num">40</span><span class="den">100</span></div>
+              <span class="gvi-eq-sign">=</span>
+              <span class="gvi-percent">40%</span>
+              <span class="gvi-eq-note">(توسيع بمقدار 20)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scq-left-actions">
+        <button class="btn-hint" id="s30-hint" onclick="scqOpenHint('s30')">هل من تلميح؟</button>
+        <button class="btn-continue" id="s30-check" onclick="q3Check()" disabled>هل إجابتي صحيحة؟</button>
+      </div>
+      <button class="btn-back" id="s30-back-btn" onclick="goBack()" hidden>رجوع</button>
+    </section>
+
+    <!-- Shared hint overlay — outside all .screen divs, directly in #app
+         (so it scales together with the rest of the canvas via scaleApp()'s
+         transform on #app — session correction: this was previously placed
+         AFTER #app's closing tag, i.e. actually outside #app despite the
+         comment's stated intent, which left its text unscaled relative to
+         in-canvas question/answer text at any viewport where scale != 1).
+         One overlay, reused by every SCQ screen in this part; content is
+         swapped per-screen by scqOpenHint(). -->
+    <div id="scq-hint-overlay" class="m-popup hidden" hidden>
+      <div class="scq-hint-panel" role="dialog" aria-modal="true" aria-label="تلميح">
+        <div class="scq-hint-content">
+          <svg class="hint-lamp" width="36" height="31" viewBox="0 0 26 22.2883" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M17.7925 2.76345C16.3676 1.37911 14.5057 0.68776 12.5488 0.815545C9.07995 1.04163 6.27286 3.9168 6.01796 7.50134C5.85646 9.77363 6.7035 11.9443 8.34374 13.4548C9.23036 14.2723 9.74016 15.465 9.74016 16.7265H11.2284H14.7733H16.2615C16.2615 15.4847 16.7919 14.2707 17.7181 13.3959C19.17 12.0263 20.0012 10.0751 20.0012 8.04361C20.0012 6.01215 19.1953 4.12486 17.7909 2.76018L17.7925 2.76345ZM13.0001 5.54524C11.6701 5.54524 10.5856 6.66582 10.5856 8.04525C10.5856 8.46956 10.2515 8.81524 9.84149 8.81524C9.43143 8.81524 9.09736 8.46956 9.09736 8.04525C9.09736 5.8172 10.8484 4.00527 13.0001 4.00527C13.4133 4.00527 13.7473 4.35094 13.7473 4.77525C13.7473 5.19957 13.4133 5.54524 13.0001 5.54524Z" fill="white"/>
+            <path d="M9.73858 19.6245C9.73858 20.3289 9.99823 20.9908 10.478 21.4904L10.4938 21.5068C10.9783 22.0098 11.6242 22.2883 12.3114 22.2883H13.6888C14.3775 22.2883 15.025 22.0114 15.5111 21.5052C15.9956 21.0039 16.2631 20.3355 16.2631 19.6277V17.9895H9.73858V19.6245ZM11.2268 19.5294H14.7717V19.6277C14.7717 19.9243 14.6609 20.2077 14.4566 20.419C14.254 20.6254 13.9753 20.7483 13.6888 20.7483H12.3114C12.028 20.7483 11.7588 20.6336 11.5561 20.4305L11.5451 20.4174C11.3424 20.211 11.2268 19.9226 11.2268 19.6261V19.5311V19.5294Z" fill="white"/>
+            <path d="M25.2558 7.27531H22.607C22.1954 7.27531 21.8629 7.62099 21.8629 8.0453C21.8629 8.46961 22.197 8.81529 22.607 8.81529H25.2558C25.6674 8.81529 25.9999 8.46961 25.9999 8.0453C25.9999 7.62099 25.6658 7.27531 25.2558 7.27531Z" fill="white"/>
+            <path d="M4.1386 8.0453C4.1386 7.61935 3.80453 7.27531 3.39447 7.27531H0.744124C0.332481 7.27531 0 7.62099 0 8.0453C0 8.46961 0.334064 8.81529 0.744124 8.81529H3.39289C3.80453 8.81529 4.13701 8.46961 4.13701 8.0453H4.1386Z" fill="white"/>
+            <path d="M20.8702 3.11398C21.0175 3.11398 21.1663 3.06811 21.2961 2.97472L23.4667 1.40198C23.804 1.15788 23.8847 0.677863 23.6488 0.328911C23.4129 -0.0200418 22.949 -0.105232 22.6118 0.140509L20.4412 1.71325C20.1039 1.95736 20.0232 2.43737 20.2591 2.78632C20.4032 3.00094 20.6343 3.11562 20.8702 3.11562V3.11398Z" fill="white"/>
+            <path d="M4.70372 13.1172L2.53309 14.69C2.19586 14.9341 2.11512 15.4141 2.35102 15.763C2.49509 15.9777 2.72625 16.0923 2.96215 16.0923C3.10939 16.0923 3.25822 16.0465 3.38804 15.9531L5.55867 14.3803C5.8959 14.1362 5.97665 13.6562 5.74074 13.3073C5.50484 12.9583 5.04095 12.8731 4.70372 13.1189V13.1172Z" fill="white"/>
+            <path d="M23.4668 14.6884L21.2961 13.1157C20.9589 12.8716 20.495 12.9567 20.2591 13.3041C20.0232 13.653 20.1055 14.133 20.4412 14.3771L22.6118 15.9499C22.7416 16.0449 22.8904 16.0891 23.0377 16.0891C23.272 16.0891 23.5032 15.9744 23.6488 15.7598C23.8847 15.4109 23.8024 14.9309 23.4668 14.6868V14.6884Z" fill="white"/>
+            <path d="M5.55869 1.71322L3.38806 0.140478C3.05083 -0.103625 2.58694 -0.0184349 2.35104 0.328879C2.11513 0.677832 2.19746 1.15785 2.53311 1.40195L4.70374 2.97469C4.83356 3.06971 4.98239 3.11395 5.12963 3.11395C5.36395 3.11395 5.5951 2.99927 5.74076 2.78465C5.97666 2.4357 5.89434 1.95569 5.55869 1.71158V1.71322Z" fill="white"/>
+          </svg>
+          <div class="scq-hint-body" id="scq-hint-body"></div>
+        </div>
+        <button class="scq-hint-back" type="button" onclick="scqCloseHint()">العودة إلى السؤال</button>
+      </div>
+    </div>
+
+    <!-- Shared image-zoom modal — outside all .screen divs, directly in
+         #app (same scaling-parity fix as the hint overlay above), per
+         _global-components.md "Image zoom". -->
+    <div id="img-zoom-modal" class="hidden" aria-hidden="true">
+      <div class="img-zoom-panel" role="dialog" aria-modal="true">
+        <button class="img-zoom-close" type="button" data-zoom-close="true" aria-label="إغلاق"><svg viewBox="0 0 15 15" fill="none"><path d="M1 1l13 13M14 1L1 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+        <img id="img-zoom-stage-img" src="" alt="">
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Report dialogs — markup contract of ../unit-js/25-report.js (verbatim from
+       methodica-math-ratio-01). Outside #app: full-viewport, not scaled with the canvas. -->
+  <div id="report-modal"
+         class="report-modal-overlay"
+         hidden
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="report-modal-title">
+      <div class="report-modal-box">
+        <button class="report-close-btn" onclick="tryCloseReportModal()" aria-label="إغلاق">&#10005;</button>
+        <h2 class="report-modal-title" id="report-modal-title">الإبلاغ عن مشكلة</h2>
+        <p class="report-modal-body">هل هناك شيء غير واضح أو لا يعمل كما ينبغي؟<br>أخبرونا بما حدث لنتولّى الأمر.</p>
+
+        <div class="report-field">
+          <label class="report-label" for="report-type"><span class="required-star">*</span> ما نوع المشكلة</label>
+                    <div class="report-custom-select" id="report-type-wrapper">
+            <button class="report-select-btn is-placeholder" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <span class="report-select-value">اختاروا نوع المشكلة</span>
+            </button>
+            <ul class="report-select-list" role="listbox" hidden>
+              <li class="report-select-option" data-value="technical" role="option">خلل تقني أو شيء لا يعمل</li>
+              <li class="report-select-option" data-value="unclear" role="option">شيء غير واضح لي</li>
+              <li class="report-select-option" data-value="other" role="option">أخرى</li>
+            </ul>
+            <input type="hidden" id="report-type" value="">
+          </div>
+          <span class="report-field-error" id="report-type-error" hidden>اختاروا نوع المشكلة</span>
+        </div>
+
+        <div class="report-field">
+          <label class="report-label" for="report-text"><span class="required-star">*</span> ماذا حدث؟</label>
+          <textarea class="report-textarea" id="report-text" maxlength="250" rows="4" placeholder="اشرحوا ما حدث لنتمكّن من فهم المشكلة" onblur="reportTextBlur()"></textarea>
+          <span class="report-field-error" id="report-text-error" hidden>اكتبوا ما حدث</span>
+          <span class="report-char-count" id="report-char-count">0 / 250</span>
+        </div>
+
+        <div class="report-actions">
+          <button class="report-cancel-btn" onclick="tryCloseReportModal()">إلغاء</button>
+          <button class="report-submit-btn" onclick="submitReport()" disabled>إرسال البلاغ</button>
+        </div>
+      </div>
+    </div>
+  <div id="report-confirm-modal"
+         class="report-modal-overlay"
+         hidden
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="confirm-modal-title">
+      <div class="report-modal-box report-confirm-box">
+        <h2 class="report-modal-title" id="confirm-modal-title">هل أنتم متأكدون من إغلاق النافذة؟</h2>
+        <p class="report-modal-body">عند الإغلاق لن يُرسَل البلاغ</p>
+        <div class="report-actions">
+          <button class="report-cancel-btn" onclick="forceCloseReportModal()">إغلاق النافذة</button>
+          <button class="report-submit-btn" onclick="backToReportForm()">أريد الإبلاغ</button>
+        </div>
+      </div>
+    </div>
+  <div id="report-thanks-modal"
+         class="report-modal-overlay"
+         hidden
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="thanks-modal-title">
+      <div class="report-modal-box report-confirm-box">
+        <h2 class="report-modal-title" id="thanks-modal-title">تم إرسال البلاغ، شكرًا!</h2>
+        <p class="report-modal-body">استلمنا بلاغكم وسنتولّى معالجته في أقرب وقت.</p>
+        <div class="report-actions">
+          <button class="report-submit-btn" onclick="closeReportThanks()">إغلاق</button>
+        </div>
+      </div>
+    </div>
+
+  <script src="../unit-js/10-identity.js?v=2"></script>
+  <script src="../unit-js/20-xapi.js?v=3"></script>
+  <script src="../unit-js/25-report.js?v=1"></script>
+  <script src="../unit-js/40-resume.js?v=6"></script>
+  <script src="../unit-js/50-loader.js?v=3"></script>
+  <script src="../unit-js/motion.js?v=1"></script>
+  <script src="../unit-js/05-core.js?v=3"></script>
+  <script src="script.js?v=16"></script>
+  <script src="../unit-js/90-boot.js?v=1"></script>
+</body>
+</html>

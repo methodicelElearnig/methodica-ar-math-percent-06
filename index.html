@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Production unit shell (prototype). Replaces the old plain redirect
+       to methodica-math-percent-06-01/index.html: a redirect makes 06-01's
+       document the ONLY thing ever loaded at the repo root, so any tool
+       that counts screens from that root (DOM scan or DEV_READY listener)
+       only ever sees 06-01's own 18 screens, never the unit's other 26
+       across 06-02..06-06.
+
+       This shell instead holds one full-viewport iframe (no chrome, no
+       dev toolbar — that's viewer.html's job, not this file's) that loads
+       06-01 first, then bridges the SAME DEV_READY/DEV_STATE/DEV_GOTO/
+       DEV_RESET postMessage protocol every component already speaks, but
+       in unit-wide global screen numbers via unit-manifest.js. See
+       unit-shell.js for the full protocol. Component folders remain the
+       single source of truth for content and are unmodified; each still
+       works standalone when opened directly. -->
+  <title>methodica-math-percent-06</title>
+  <style>
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
+    /* One iframe per visited component (see unit-shell.js); only the active
+       one is visible. visibility (not display:none) keeps hidden frames
+       laid out at full size so their scaleApp() stays correct. */
+    .unit-frame { position: absolute; inset: 0; display: block; width: 100%; height: 100%; border: 0; visibility: hidden; }
+    .unit-frame.is-active { visibility: visible; }
+  </style>
+</head>
+<body>
+  <iframe id="unit-frame" class="unit-frame is-active" title="methodica-math-percent-06"></iframe>
+  <script src="./unit-manifest.js?v=1"></script>
+  <script src="./unit-shell.js?v=4"></script>
+</body>
+</html>

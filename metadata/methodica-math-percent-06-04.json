@@ -1,0 +1,86 @@
+{
+  "id": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-04/",
+  "title": "בואו נאתגר את עצמנו",
+  "learningUnitId": "methodica-math-percent-06",
+  "componentPurpose": "practice",
+  "isAssessment": false,
+  "recommendedAfterFail": [],
+  "isRequired": false,
+  "relativeDifficulty": 5,
+  "masteryLevel": null,
+  "order": 4,
+  "depthLevel": "core-curriculum-basic",
+  "cognitiveLevels": ["interpretation-and-reasoning"],
+  "languages": ["Hebrew"],
+  "skills": [],
+  "estimatedTimeInMinutes": 8,
+  "createdAt": "2026-09-28T00:00:00.000Z",
+  "updatedAt": "2026-09-28T00:00:00.000Z",
+  "subContent": [
+    {
+      "id": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-04/methodica-math-percent-06-04-001/",
+      "title": "מדוע להשתמש באחוזים – בדיקת מכשירים",
+      "informationToBot": "מטרת הפריט: לתרגל הבנה מושגית-רפלקטיבית של היתרון בייצוג אחוזים על פני שבר גולמי, בהקשר של בקרת איכות בייצור טלפונים (31 תקולים מתוך 1,250, המוצג כ-2.48%). כיווני חשיבה: הלומד בוחר מדוע המנהלת בחרה להציג את הנתון כ-2.48% ולא כשבר 31/1,250 - התשובה הנכונה מדגישה שאחוז מעניק קנה מידה פשוט וברור להשוואה, בניגוד לשבר שדורש חישוב כדי להבין את משמעותו. טעויות נפוצות: פרשנות מניפולטיבית-שגויה (שהאחוז 'מסתיר' או 'מקטין' את המספר); טעות מתמטית (שהשבר אינו נכון). מידע נוסף: 2 ניסיונות, רמז זמין; מסך מעבר לפני השאלה ('זמן ל-3 שאלות מתקדמות'). מבוסס שקפים 42-43 בתסריט המקורי, רמת חשיבה גבוהה.",
+      "contentType": "practice",
+      "mediaFormat": "interactive-content",
+      "questions": [
+        {
+          "questionId": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-04/methodica-math-percent-06-04-001/q1",
+          "questionType": "choice",
+          "questionText": "מפעל להרכבת טלפונים ניידים בדק 1,250 מכשירים, מתוכם 31 נמצאו תקולים. המנהלת הציגה להנהלה את הנתון: 2.48% מהמכשירים היו תקולים. מדוע בחרה להשתמש דווקא ב-2.48% במקום בשבר 31/1,250?",
+          "answers": [
+            "האחוז מעניק קנה מידה פשוט לתיאור המצב בהשוואה לשבר הפשוט",
+            "השימוש באחוזים מקטין את המספר באופן אוטומטי ומציג מצג שווא של איכות",
+            "באחוזים קל יותר להחביא את כמות הפגומים האמיתית כדי שההנהלה לא תכעס",
+            "השבר הפשוט אינו נכון מתמטית, ורק האחוז מייצג את המציאות בפועל"
+          ],
+          "correctAnswers": ["האחוז מעניק קנה מידה פשוט לתיאור המצב בהשוואה לשבר הפשוט"]
+        }
+      ]
+    },
+    {
+      "id": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-04/methodica-math-percent-06-04-002/",
+      "title": "נקודות החיים של שירה במשחק",
+      "informationToBot": "מטרת הפריט: לתרגל חישוב אחוזי עלייה וירידה ביחס לערך בסיס משתנה, בתרחיש משחק מחשב שבו נקודות החיים של הדמות גדלות ואז קטנות. כיווני חשיבה: סעיף א' - נקודות החיים גדלו מ-500 ל-600 (עלייה של 100), הלומד מחשב 100/500=20% עלייה; סעיף ב' - מיד אחר כך הדמות מאבדת 100 נקודות מתוך 600 המעודכנות, הלומד מחשב 100/600≈16.7% ירידה (מקרב לכ-17%, האפשרות הקרובה ביותר). שני הסעיפים חולקים אותו פריט/מספר שאלה בתסריט המקורי (התייחסות מפורשת בהערת הפקה שזו שאלה אחת בשני חלקים). טעויות נפוצות: שימוש בבסיס לא נכון (500 במקום 600) בסעיף ב'; בלבול בין אחוז עלייה לאחוז ירידה. מידע נוסף: 2 ניסיונות לכל סעיף, רמז זמין; שקפי המקור מכילים טעות הקלדה בחישוב המוצג בפידבק (1.67% במקום 16.7%) שתוקנה לצורך התוכן המוצג ללומד. מבוסס שקפים 44-45 בתסריט המקורי.",
+      "contentType": "practice",
+      "mediaFormat": "interactive-content",
+      "questions": [
+        {
+          "questionId": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-04/methodica-math-percent-06-04-002/q1",
+          "questionType": "choice",
+          "questionText": "א. במשחק מחשב לדמות של שירה היו 500 נקודות חיים. לאחר שהדמות מצאה שיקוי מיוחד, נקודות החיים שלה גדלו ב-100. בכמה אחוזים גדלו נקודות החיים של הדמות?",
+          "answers": ["10%", "20%", "30%", "40%"],
+          "correctAnswers": ["20%"]
+        },
+        {
+          "questionId": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-04/methodica-math-percent-06-04-002/q2",
+          "questionType": "choice",
+          "questionText": "ב. מיד לאחר מכן, הדמות של שירה נכנסה לקרב ונפגעה, מה שגרם לה לאבד 100 מנקודות החיים המעודכנות שלה. מהו אחוז נקודות החיים אותם איבדה הדמות?",
+          "answers": ["כ-10%", "כ-15%", "כ-17%", "כ-20%"],
+          "correctAnswers": ["כ-17%"]
+        }
+      ]
+    },
+    {
+      "id": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-04/methodica-math-percent-06-04-003/",
+      "title": "החיסכון של ארד באפליקציה",
+      "informationToBot": "מטרת הפריט: לתרגל חישוב אחוז מתוך שלם בהקשר של ניהול כסף באפליקציה - ארד מעביר 50 ש''ח מתוך 200 ש''ח לחיסכון. כיווני חשיבה: הלומד מזהה שהשלם הוא 200 ש''ח וההעברה היא 50 ש''ח, ומחשב 50/200=25/100=25%. טעויות נפוצות: בחירת 20% (טעות בחלוקה) או 50% (בלבול עם הסכום המוחלט). מידע נוסף: זו השאלה האחרונה ברכיב זה (מסך סיום ללא המשך פעיל בשלב זה של הבנייה); 2 ניסיונות, רמז זמין. מבוסס שקף 46 בתסריט המקורי, רמת חשיבה 2.",
+      "contentType": "practice",
+      "mediaFormat": "interactive-content",
+      "questions": [
+        {
+          "questionId": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-04/methodica-math-percent-06-04-003/q1",
+          "questionType": "choice",
+          "questionText": "ארד משתמש באפליקציה לניהול הכסף שלו. בתחילת החודש היו בארנק הדיגיטלי שלו 200 ₪. הוא החליט להעביר 50 ש''ח כחסכון לאוזניות חדשות. איזה מהטענות הבאות נכונה?",
+          "answers": [
+            "ארד חסך 20% מהכסף שהיה ברשותו",
+            "ארד חסך 25% מהכסף שהיה ברשותו",
+            "ארד חסך 50% מהכסף שהיה ברשותו",
+            "אין מספיק נתונים כדי לחשב"
+          ],
+          "correctAnswers": ["ארד חסך 25% מהכסף שהיה ברשותו"]
+        }
+      ]
+    }
+  ]
+}

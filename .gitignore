@@ -1,0 +1,17 @@
+.DS_Store
+Thumbs.db
+desktop.ini
+.claude/
+docs/
+
+# Node (test harness deps live OUTSIDE the OneDrive tree — _test/README.md)
+node_modules/
+
+# Logs (send-/retrieve-metadata.ps1 write them; archive before a run, never commit)
+*.log
+
+# The Kata API key — the ONLY place a live key may sit on disk. Never commit.
+kata-api-key.txt
+
+# Output of retrieve-metadata.ps1 — derived from the catalog, re-runnable on demand
+metadata-from/

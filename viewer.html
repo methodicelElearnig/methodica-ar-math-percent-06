@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Viewer — Desktop / Tablet</title>
+  <style>
+    :root {
+      --toolbar-h: 56px;
+      --partsbar-h: 44px;
+      --navbar-h: 52px;
+      --bg: #1e1e1e;
+      --panel: #2a2a2a;
+      --text: #f0f0f0;
+      --muted: #9a9a9a;
+      --accent: #3B2FC2;
+      --border: #3a3a3a;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+
+    .toolbar {
+      height: var(--toolbar-h);
+      display: flex; align-items: center; gap: 16px;
+      padding: 0 20px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      direction: ltr;
+    }
+    .toolbar h1 { font-size: 14px; font-weight: 600; letter-spacing: 0.3px; }
+    .toolbar .spacer { flex: 1; }
+    .toolbar .size-readout { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+    .seg {
+      display: inline-flex; background: #1a1a1a; border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+    }
+    .seg button {
+      appearance: none; border: 0; background: transparent; color: var(--text);
+      padding: 8px 16px; font: inherit; font-size: 13px; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 8px;
+      transition: background 0.15s ease;
+    }
+    .seg button:hover { background: #333; }
+    .seg button.active { background: var(--accent); color: #fff; }
+    .seg button .ico { width: 16px; height: 16px; display: inline-block; }
+
+    .partsbar {
+      height: var(--partsbar-h);
+      display: flex; align-items: center; gap: 8px;
+      padding: 0 16px;
+      background: #262233;
+      border-bottom: 1px solid var(--border);
+      direction: rtl;
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+    .partsbar .nav-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); flex-shrink: 0; }
+    .part-btn {
+      appearance: none; border: 1px solid var(--border); background: #1a1a1a; color: var(--text);
+      padding: 6px 14px; font: inherit; font-size: 12px; cursor: pointer; border-radius: 999px;
+      display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .part-btn:hover { background: #333; }
+    .part-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .part-arrow { color: var(--muted); flex-shrink: 0; font-size: 13px; }
+    .part-jump {
+      appearance: none; border: 1px solid var(--border); background: transparent; color: var(--muted);
+      padding: 4px 8px; font: inherit; font-size: 11px; cursor: pointer; border-radius: 6px;
+      flex-shrink: 0;
+    }
+    .part-jump:hover { background: #333; color: var(--text); }
+
+    .navbar {
+      height: var(--navbar-h);
+      display: flex; align-items: center; gap: 6px;
+      padding: 0 16px;
+      background: #232323;
+      border-bottom: 1px solid var(--border);
+      direction: ltr;
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+    .navbar .nav-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-right: 8px; flex-shrink: 0; }
+    .nav-btn {
+      appearance: none; border: 1px solid var(--border); background: #1a1a1a; color: var(--text);
+      padding: 6px 10px; font: inherit; font-size: 12px; cursor: pointer; border-radius: 6px;
+      display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .nav-btn:hover { background: #333; }
+    .nav-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .nav-btn .nb-num { font-weight: 700; opacity: 0.85; font-variant-numeric: tabular-nums; }
+    .nav-btn .nb-name { opacity: 0.85; }
+    .nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .dev-controls {
+      display: flex; align-items: center; gap: 8px;
+      padding: 0 16px 0 0;
+      border-left: 1px solid var(--border);
+      margin-left: 8px;
+      flex-shrink: 0;
+    }
+    .dev-controls button {
+      appearance: none; border: 1px solid var(--border); background: #1a1a1a; color: var(--text);
+      padding: 6px 10px; font: inherit; font-size: 12px; cursor: pointer; border-radius: 6px;
+    }
+    .dev-controls button:hover { background: #333; }
+    .dev-controls button:disabled { opacity: 0.4; cursor: not-allowed; }
+    #btn-viewer-reset { border-color: #ff6b6b; color: #ff6b6b; }
+    #btn-viewer-reset:hover { background: #ff6b6b; color: #000; }
+    #current-screen-readout {
+      font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums;
+      min-width: 90px;
+    }
+
+    .stage {
+      position: absolute; top: calc(var(--toolbar-h) + var(--partsbar-h) + var(--navbar-h)); left: 0; right: 0; bottom: 0;
+      display: flex; align-items: center; justify-content: center;
+      overflow: auto;
+      padding: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .toolbar { gap: 10px; padding: 0 12px; }
+      .toolbar h1 { display: none; }
+      .seg button .ico { display: none; }
+      .seg button span { display: none; }
+    }
+    @media (max-width: 600px) {
+      :root { --toolbar-h: 48px; --navbar-h: 48px; }
+      .toolbar .size-readout { font-size: 11px; }
+      .seg button { padding: 6px 10px; font-size: 12px; }
+      .nav-btn { padding: 5px 8px; font-size: 11px; }
+      .nav-btn .nb-name { display: none; }
+      .navbar .nav-label { display: none; }
+      .stage { padding: 12px; }
+    }
+
+    .device-shell {
+      position: relative;
+      transition: width 0.2s ease, height 0.2s ease;
+      flex: 0 0 auto;
+    }
+    .device-scale {
+      position: absolute; top: 0; left: 0;
+      transform-origin: top left;
+      transition: transform 0.2s ease;
+    }
+    /* Hotspot layer sits directly in .device-shell (a SIBLING of the scaled
+       .device-scale, not a child of it) so it always spans the frame's real
+       on-screen box at 1:1 — pins/editor stay normal size and crisp no
+       matter how small the desktop-canvas scale (×0.20 etc.) is. Pin
+       positions are plain left/top percentages, which is why they stay
+       correct across resize/device-preset changes with no recompute. */
+    .hotspot-layer {
+      position: absolute; inset: 0;
+      pointer-events: none; /* clicks pass through to the iframe unless annotate mode is on */
+    }
+    .hotspot-layer.annotate-active {
+      pointer-events: auto;
+      cursor: crosshair;
+      outline: 2px dashed #ffb84d;
+      outline-offset: -2px;
+    }
+    .hotspot-pin {
+      position: absolute;
+      width: 26px; height: 26px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: #ffb84d;
+      color: #1a1200;
+      border: 2px solid #1e1e1e;
+      font: 700 12px/1 system-ui, sans-serif;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      pointer-events: auto;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      z-index: 5;
+    }
+    .hotspot-pin:hover { background: #ffcf80; }
+    .hotspot-editor {
+      position: absolute;
+      transform: translate(-50%, 12px);
+      width: 240px;
+      background: #262626;
+      border: 1px solid #ffb84d;
+      border-radius: 8px;
+      padding: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      z-index: 6;
+      pointer-events: auto;
+      direction: rtl;
+    }
+    .hotspot-editor textarea {
+      width: 100%; min-height: 64px; resize: vertical;
+      background: #1a1a1a; color: var(--text); border: 1px solid var(--border);
+      border-radius: 6px; padding: 6px 8px; font: inherit; font-size: 13px;
+    }
+    .hotspot-editor .he-row { display: flex; gap: 6px; margin-top: 8px; }
+    .hotspot-editor button {
+      appearance: none; border: 1px solid var(--border); border-radius: 6px;
+      padding: 5px 10px; font: inherit; font-size: 12px; cursor: pointer;
+    }
+    .hotspot-editor .he-save { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .hotspot-editor .he-delete { background: transparent; border-color: #b23b3b; color: #ff8a8a; margin-left: auto; }
+    .hotspot-editor .he-cancel { background: transparent; color: var(--muted); }
+
+    .annotate-toggle {
+      appearance: none; border: 1px solid var(--border); background: #1a1a1a; color: var(--text);
+      padding: 8px 14px; font: inherit; font-size: 13px; cursor: pointer; border-radius: 8px;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .annotate-toggle:hover { background: #333; }
+    .annotate-toggle.active { background: #ffb84d; border-color: #ffb84d; color: #1a1200; }
+    .export-btn {
+      appearance: none; border: 1px solid var(--border); background: #1a1a1a; color: var(--text);
+      padding: 8px 14px; font: inherit; font-size: 13px; cursor: pointer; border-radius: 8px;
+    }
+    .export-btn:hover { background: #333; }
+    .hotspot-count {
+      font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums;
+    }
+
+    .device-frame {
+      background: #000;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+      overflow: hidden;
+      transition: width 0.2s ease, height 0.2s ease;
+    }
+    .device-frame iframe {
+      width: 100%; height: 100%;
+      border: 0; display: block; background: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="toolbar">
+    <h1>Lomda Viewer — methodica-math-percent-06</h1>
+
+    <div class="seg" role="group" aria-label="Device">
+      <button type="button" data-device="desktop" class="active" aria-pressed="true">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        Desktop
+        <span style="color:rgba(255,255,255,0.6); font-size:11px;">1920×1080</span>
+      </button>
+      <button type="button" data-device="tablet" aria-pressed="false">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 17h.01"/></svg>
+        Tablet
+        <span style="color:rgba(255,255,255,0.6); font-size:11px;">1024×768</span>
+      </button>
+      <button type="button" data-device="tablet-portrait" aria-pressed="false">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M12 17h.01"/></svg>
+        Tablet · Portrait
+        <span style="color:rgba(255,255,255,0.6); font-size:11px;">768×1024</span>
+      </button>
+    </div>
+
+    <div class="spacer"></div>
+    <span class="hotspot-count" id="hotspot-count"></span>
+    <button type="button" class="export-btn" id="btn-export-hotspots" title="ייצוא כל ההערות לקובץ Markdown+JSON">⬇ ייצוא הערות</button>
+    <button type="button" class="annotate-toggle" id="btn-annotate-toggle" title="סמן/י נקודות עם הערות על המסך">📍 מצב הערות</button>
+    <div class="size-readout" id="size-readout">— × —  ·  ×—</div>
+  </div>
+
+  <nav class="partsbar" id="partsbar" aria-label="Jump to unit part (scene)">
+    <span class="nav-label">חלקי היחידה</span>
+    <!-- Buttons injected by JS from the PARTS array below — this is the
+         "Scenes" row: each button is a whole component folder (06-01/02/03…).
+         The ◀ end-of-part arrow jumps that part's iframe to its own last
+         screen without switching parts, so you can line it up against the
+         next part's opening screen to see the transition. -->
+  </nav>
+
+  <nav class="navbar" id="navbar" aria-label="Jump to screen">
+    <span class="nav-label">Screens</span>
+    <!-- Buttons are injected by JS, derived live from the app's DEV_READY/
+         DEV_STATE messages — never hardcoded, so this list grows on its own
+         as later phases add screens. -->
+    <div class="dev-controls">
+      <button type="button" id="btn-viewer-prev" title="Previous screen">◀ Prev</button>
+      <button type="button" id="btn-viewer-next" title="Next screen">Next ▶</button>
+      <button type="button" id="btn-viewer-reset" title="Reset current screen's state only — does not navigate">↺ Reset</button>
+      <span id="current-screen-readout">—</span>
+    </div>
+  </nav>
+
+  <div class="stage" id="stage">
+    <div class="device-shell" id="device-shell">
+      <div class="device-scale" id="device-scale">
+        <div class="device-frame" id="device-frame">
+          <iframe id="device-iframe" src="methodica-math-percent-06-01/index.html" title="App preview"></iframe>
+        </div>
+      </div>
+      <!-- Sibling of .device-scale, NOT a child of it — sits at the frame's
+           real on-screen box regardless of the internal scale transform. -->
+      <div class="hotspot-layer" id="hotspot-layer"></div>
+    </div>
+  </div>
+
+  <script>
+    const DEVICES = {
+      desktop:         { w: 1920, h: 1080, label: 'Desktop' },
+      tablet:          { w: 1024, h:  768, label: 'Tablet · Landscape' },
+      'tablet-portrait': { w:  768, h: 1024, label: 'Tablet · Portrait'  },
+    };
+
+    // Unit parts ("scenes") — each is a self-contained component folder with
+    // its own index.html/script.js. Unlike SCREENS (derived live from the
+    // running app), this list can't be discovered automatically over
+    // file:// — add one line here when a new component folder is built.
+    const PARTS = [
+      { id: '06-01', label: 'חלק 1', path: 'methodica-math-percent-06-01/index.html' },
+      { id: '06-02', label: 'חלק 2', path: 'methodica-math-percent-06-02/index.html' },
+      { id: '06-03', label: 'חלק 3', path: 'methodica-math-percent-06-03/index.html' },
+      { id: '06-04', label: 'חלק 4', path: 'methodica-math-percent-06-04/index.html' },
+      { id: '06-05', label: 'חלק 5', path: 'methodica-math-percent-06-05/index.html' },
+      { id: '06-06', label: 'חלק 6', path: 'methodica-math-percent-06-06/index.html' },
+    ];
+    let currentPart = 0;
+    let jumpToEndOnReady = false;
+
+    // Screen list is NOT hardcoded here — it's derived live from the app's
+    // own DEV_READY/DEV_STATE postMessage payload (script.js reads the real
+    // .screen ids from the DOM and reports them). Nothing in this file needs
+    // manual editing as later phases add screens.
+    let SCREENS = []; // [{n, name}, ...] — populated on first DEV_READY
+
+    const stage           = document.getElementById('stage');
+    const shellEl         = document.getElementById('device-shell');
+    const scaleEl         = document.getElementById('device-scale');
+    const frameEl         = document.getElementById('device-frame');
+    const iframeEl        = document.getElementById('device-iframe');
+    const readoutEl       = document.getElementById('size-readout');
+    const navbar          = document.getElementById('navbar');
+    const partsbar        = document.getElementById('partsbar');
+    const devBtns         = document.querySelectorAll('.seg button');
+    const btnPrev         = document.getElementById('btn-viewer-prev');
+    const btnNext         = document.getElementById('btn-viewer-next');
+    const btnReset        = document.getElementById('btn-viewer-reset');
+    const currentReadout  = document.getElementById('current-screen-readout');
+    const hotspotLayer    = document.getElementById('hotspot-layer');
+    const btnAnnotate     = document.getElementById('btn-annotate-toggle');
+    const btnExport       = document.getElementById('btn-export-hotspots');
+    const hotspotCountEl  = document.getElementById('hotspot-count');
+
+    let current      = 'desktop'; // default/main QA preset — 1920×1080 desktop
+    let activeScreen = 0;
+    let totalScreens = 0;
+    let navBtns      = [];
+
+    function applyDevice() {
+      const d = DEVICES[current];
+      frameEl.style.width  = d.w + 'px';
+      frameEl.style.height = d.h + 'px';
+      fitScale();
+    }
+
+    function fitScale() {
+      const d = DEVICES[current];
+      const padding = 48;
+      const availW = stage.clientWidth  - padding;
+      const availH = stage.clientHeight - padding;
+      const scale  = Math.min(1, availW / d.w, availH / d.h);
+      shellEl.style.width  = (d.w * scale) + 'px';
+      shellEl.style.height = (d.h * scale) + 'px';
+      scaleEl.style.width  = d.w + 'px';
+      scaleEl.style.height = d.h + 'px';
+      scaleEl.style.transform = `scale(${scale})`;
+      readoutEl.textContent =
+        `${d.w} × ${d.h}  ·  ×${scale.toFixed(2)}`;
+    }
+
+    devBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        current = btn.dataset.device;
+        devBtns.forEach(b => {
+          const on = b === btn;
+          b.classList.toggle('active', on);
+          b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        applyDevice();
+      });
+    });
+
+    window.addEventListener('resize', fitScale);
+    applyDevice();
+
+    // ─── Screen jumper — message-driven, auto-extends ─────────────────────
+    // No direct cross-frame property access (iframeEl.contentWindow.goTo/
+    // .currentScreen) — that requires same-origin and is fragile over
+    // file://. Everything here goes through postMessage, which works
+    // identically over file:// or http://.
+
+    function buildNav() {
+      navBtns.forEach(b => b.remove());
+      navBtns = [];
+      SCREENS.forEach(s => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'nav-btn';
+        b.dataset.screen = s.n;
+        b.innerHTML = `<span class="nb-num">S${s.n}</span><span class="nb-name">${s.name}</span>`;
+        b.addEventListener('click', () => jumpTo(s.n));
+        // Insert before .dev-controls so prev/next/reset always stay last.
+        navbar.insertBefore(b, navbar.querySelector('.dev-controls'));
+        navBtns.push(b);
+      });
+      setActive(activeScreen);
+    }
+
+    function setActive(n) {
+      activeScreen = n;
+      navBtns.forEach(b => {
+        b.classList.toggle('active', Number(b.dataset.screen) === n);
+      });
+      const match = SCREENS.find(s => s.n === n);
+      currentReadout.textContent = match ? `Screen ${n} — ${match.name}` : `Screen ${n}`;
+      btnPrev.disabled = n <= 0;
+      btnNext.disabled = n >= totalScreens - 1;
+      renderHotspots();
+    }
+
+    // DEV navigation is never blocked by learner progression/lock state —
+    // goTo() in script.js has no completion gating, so this always works
+    // regardless of whether the current screen's Continue button is locked.
+    function jumpTo(n) {
+      iframeEl.contentWindow.postMessage({ type: 'DEV_GOTO', screen: n }, '*');
+    }
+    function jumpNext()  { jumpTo(Math.min(totalScreens - 1, activeScreen + 1)); }
+    function jumpPrev()  { jumpTo(Math.max(0, activeScreen - 1)); }
+    function resetCurrent() { iframeEl.contentWindow.postMessage({ type: 'DEV_RESET' }, '*'); }
+
+    btnNext.addEventListener('click', jumpNext);
+    btnPrev.addEventListener('click', jumpPrev);
+    btnReset.addEventListener('click', resetCurrent);
+
+    // ─── Parts ("Scenes") — switch which component folder is loaded ───────
+    // Each part is a fully separate app (own script.js/index.html), so
+    // switching parts reloads the iframe from scratch — there's no shared
+    // state to carry across. `toEnd` requests landing on that part's own
+    // last screen once it reports ready, so its ending can be lined up
+    // against the next part's opening screen to inspect the transition.
+    function switchPart(index, toEnd) {
+      if (index === currentPart && !toEnd) return;
+      currentPart = index;
+      jumpToEndOnReady = !!toEnd;
+      totalScreens = 0;
+      SCREENS = [];
+      buildNav();
+      renderPartsActive();
+      iframeEl.src = PARTS[index].path;
+    }
+
+    function renderPartsActive() {
+      partsbar.querySelectorAll('.part-btn').forEach(b => {
+        b.classList.toggle('active', Number(b.dataset.part) === currentPart);
+      });
+    }
+
+    function buildParts() {
+      PARTS.forEach((p, i) => {
+        if (i > 0) {
+          const arrow = document.createElement('span');
+          arrow.className = 'part-arrow';
+          arrow.textContent = '→';
+          partsbar.appendChild(arrow);
+        }
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'part-btn';
+        b.dataset.part = i;
+        b.textContent = p.label;
+        b.addEventListener('click', () => switchPart(i, false));
+        partsbar.appendChild(b);
+
+        const jumpBtn = document.createElement('button');
+        jumpBtn.type = 'button';
+        jumpBtn.className = 'part-jump';
+        jumpBtn.title = `קפוץ למסך האחרון של ${p.label}`;
+        jumpBtn.textContent = 'סוף ⇥';
+        jumpBtn.addEventListener('click', () => {
+          if (i === currentPart) jumpTo(totalScreens - 1);
+          else switchPart(i, true);
+        });
+        partsbar.appendChild(jumpBtn);
+      });
+      renderPartsActive();
+    }
+
+    buildParts();
+
+    window.addEventListener('message', (e) => {
+      if (!e.data) return;
+      if (e.data.type === 'DEV_READY' || e.data.type === 'DEV_STATE') {
+        totalScreens = e.data.total || 0;
+        SCREENS = (e.data.screens || []).map(s => ({ n: s.index, name: s.id }));
+        buildNav();
+        if (jumpToEndOnReady) {
+          jumpToEndOnReady = false;
+          setActive(totalScreens - 1);
+          jumpTo(totalScreens - 1);
+        } else {
+          setActive(typeof e.data.current === 'number' ? e.data.current : 0);
+        }
+      }
+    });
+
+    // ─── Hotspot annotations — pin + note on any screen, exportable ───────
+    // Stored in localStorage (not per-part — one flat list across the whole
+    // unit) so they survive reloads/part-switches. Each hotspot is tagged
+    // with the part id + screen index/name it was placed on; only the
+    // hotspots matching the CURRENTLY displayed part+screen are rendered.
+    const HOTSPOT_STORAGE_KEY = 'methodica06_viewer_hotspots';
+    let hotspots = loadHotspots();
+    let annotateMode = false;
+    let nextHotspotId = hotspots.reduce((max, h) => Math.max(max, h.id), 0) + 1;
+    let openEditorEl = null;
+
+    function loadHotspots() {
+      try {
+        return JSON.parse(localStorage.getItem(HOTSPOT_STORAGE_KEY) || '[]');
+      } catch (err) {
+        return [];
+      }
+    }
+    function saveHotspots() {
+      localStorage.setItem(HOTSPOT_STORAGE_KEY, JSON.stringify(hotspots));
+      updateHotspotCount();
+    }
+    function updateHotspotCount() {
+      hotspotCountEl.textContent = hotspots.length ? `${hotspots.length} הערות` : '';
+    }
+
+    function closeEditor() {
+      if (openEditorEl) { openEditorEl.remove(); openEditorEl = null; }
+    }
+
+    function renderHotspots() {
+      closeEditor();
+      hotspotLayer.querySelectorAll('.hotspot-pin').forEach(p => p.remove());
+      const partId = PARTS[currentPart].id;
+      const visible = hotspots
+        .filter(h => h.partId === partId && h.screenIndex === activeScreen)
+        .sort((a, b) => a.id - b.id);
+      visible.forEach((h, i) => {
+        const pin = document.createElement('div');
+        pin.className = 'hotspot-pin';
+        pin.style.left = (h.xFrac * 100) + '%';
+        pin.style.top  = (h.yFrac * 100) + '%';
+        pin.textContent = i + 1;
+        pin.title = h.text;
+        pin.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openEditor(h.xFrac, h.yFrac, h);
+        });
+        hotspotLayer.appendChild(pin);
+      });
+      updateHotspotCount();
+    }
+
+    function openEditor(xFrac, yFrac, existing) {
+      closeEditor();
+      const editor = document.createElement('div');
+      editor.className = 'hotspot-editor';
+      editor.style.left = (xFrac * 100) + '%';
+      editor.style.top  = (yFrac * 100) + '%';
+      editor.addEventListener('click', (e) => e.stopPropagation());
+
+      const textarea = document.createElement('textarea');
+      textarea.dir = 'auto';
+      textarea.placeholder = 'מה צריך לתקן כאן?';
+      textarea.value = existing ? existing.text : '';
+      editor.appendChild(textarea);
+
+      const row = document.createElement('div');
+      row.className = 'he-row';
+
+      const saveBtn = document.createElement('button');
+      saveBtn.className = 'he-save';
+      saveBtn.textContent = 'שמירה';
+      saveBtn.addEventListener('click', () => {
+        const text = textarea.value.trim();
+        if (!text) { closeEditor(); return; }
+        if (existing) {
+          existing.text = text;
+        } else {
+          hotspots.push({
+            id: nextHotspotId++,
+            partId: PARTS[currentPart].id,
+            partLabel: PARTS[currentPart].label,
+            screenIndex: activeScreen,
+            screenName: (SCREENS.find(s => s.n === activeScreen) || {}).name || null,
+            device: current,
+            xFrac, yFrac,
+            text,
+          });
+        }
+        saveHotspots();
+        renderHotspots();
+      });
+      row.appendChild(saveBtn);
+
+      if (existing) {
+        const delBtn = document.createElement('button');
+        delBtn.className = 'he-delete';
+        delBtn.textContent = 'מחיקה';
+        delBtn.addEventListener('click', () => {
+          hotspots = hotspots.filter(h => h.id !== existing.id);
+          saveHotspots();
+          renderHotspots();
+        });
+        row.appendChild(delBtn);
+      }
+
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className = 'he-cancel';
+      cancelBtn.textContent = 'ביטול';
+      cancelBtn.addEventListener('click', () => closeEditor());
+      row.appendChild(cancelBtn);
+
+      editor.appendChild(row);
+      hotspotLayer.appendChild(editor);
+      openEditorEl = editor;
+      textarea.focus();
+    }
+
+    hotspotLayer.addEventListener('click', (e) => {
+      if (!annotateMode) return;
+      if (e.target.closest('.hotspot-pin') || e.target.closest('.hotspot-editor')) return;
+      const rect = hotspotLayer.getBoundingClientRect();
+      const xFrac = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+      const yFrac = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
+      openEditor(xFrac, yFrac, null);
+    });
+
+    btnAnnotate.addEventListener('click', () => {
+      annotateMode = !annotateMode;
+      btnAnnotate.classList.toggle('active', annotateMode);
+      hotspotLayer.classList.toggle('annotate-active', annotateMode);
+      if (!annotateMode) closeEditor();
+    });
+
+    function exportHotspots() {
+      if (!hotspots.length) { alert('אין הערות לייצוא עדיין.'); return; }
+      const byPartScreen = {};
+      hotspots.forEach(h => {
+        const key = h.partId + '|' + h.screenIndex;
+        (byPartScreen[key] = byPartScreen[key] || []).push(h);
+      });
+      const ordered = [...hotspots].sort((a, b) =>
+        a.partId.localeCompare(b.partId) || a.screenIndex - b.screenIndex || a.id - b.id);
+
+      let md = `# הערות QA — methodica-math-percent-06\n\nיוצא: ${new Date().toLocaleString('he-IL')}\n\n`;
+      let lastKey = null;
+      ordered.forEach(h => {
+        const key = h.partId + '|' + h.screenIndex;
+        if (key !== lastKey) {
+          md += `\n## ${h.partLabel} — מסך ${h.screenIndex}${h.screenName ? ' (' + h.screenName + ')' : ''}\n\n`;
+          lastKey = key;
+        }
+        md += `- **[${Math.round(h.xFrac * 100)}%, ${Math.round(h.yFrac * 100)}%]** (${h.device}): ${h.text}\n`;
+      });
+      md += '\n---\n\n```json\n' + JSON.stringify(ordered, null, 2) + '\n```\n';
+
+      const blob = new Blob([md], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'methodica-06-annotations.md';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+    btnExport.addEventListener('click', exportHotspots);
+
+    updateHotspotCount();
+  </script>
+
+</body>
+</html>

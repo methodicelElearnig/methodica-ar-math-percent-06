@@ -1,0 +1,32 @@
+# _test/mutations.js — full run, 2026-10-20 on commit b585f51 + this commit's changes (MOE tester notes: item ids, likes data, 06-01-003)
+# node v22.13.1, jsdom 29.1.1
+✓ drop a SCREEN_TO_SUBCONTENT key  →  verify-report fails in [map] (2)
+     e.g. [map] 06-02 map block found with 4 keys  —  keys 3, TOTAL_SCREENS 4
+✓ a stale XAPI_ITEM_SLUG (the pre-2026-10-20 numbering)  →  verify-report fails in [map] (1)
+     e.g. [map] 06-03 map items = metadata items (both directions)  —  got ["https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-
+✓ ?v= of a shared file differs in one component  →  verify-report fails in [tags] (1)
+     e.g. [tags] one ?v= for ../unit-js/20-xapi.js across the six components  —  v=3 vs v=9
+✓ a component re-declares a layer function  →  verify-report fails in [names] (1)
+     e.g. [names] 06-05 "scqOptions" not also declared in the layer  —  unit-js/05-core.js
+✓ cqCheck loses its flush  →  verify-report fails in [flush] (1)
+     e.g. [flush] 06-05 cqCheck flushes after its last commitment
+✓ a verdict written under another component's key  →  verify-report fails in [verdict] (1)
+     e.g. [verdict] 06-02 verdict key is its own  —  got "percent06_c03_result", expected "percent06_c02_result"
+✓ goToComponent un-gated  →  verify-report fails in [routing] (1)
+     e.g. [routing] goToComponent returns unless DEV_NAV
+✓ hideCrossPartBack by attribute only  →  verify-report fails in [boots] (5)
+     e.g. [boots] 06-02 production: first-screen back  —  got "hidden", expected "hidden+display"
+✓ an asset referenced in the wrong case  →  verify-report fails in [assets] (1)
+     e.g. [assets] 06-02 resolves assets/videos/Character_lifting.mp4
+✓ RESULT_KEYS misses a component  →  verify-report fails in [keys] (1)
+     e.g. [keys] RESULT_KEYS = one per component  —  got ["percent06_c01_result","percent06_c02_result","percent06_c03_result","percent06_c04_result","percent06_c05_resul
+✓ the restored "שנמשיך?" is not re-wired (dead button after a reload)  →  statement-flow fails in [seed] (4)
+     e.g. [seed] it advances  —  got 1, expected 2
+✓ applyResumeVars skips the SCQ answers  →  statement-flow fails in [resume 04] (6)
+     e.g. [resume 04] screen 1 looks as it did in-session  —  DIV|progress-question__icon.progress-question__icon--correct||||  ≠  DIV|progress-question__icon.progress-qu
+✓ 02's resume drops the 2026-10-20 item-suffix migration  →  statement-flow fails in [migrate] (2)
+     e.g. [migrate] the old 005/q1 result is restored as 001/q1  —  got {"005/q1":true}, expected {"001/q1":true}
+✓ 01 reports 'answered' for item 003, which KATA no longer declares  →  statement-flow fails in [flow 01] (1)
+     e.g. [flow 01] answered questionId in metadata: q5  —  https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-01/methodica-math
+
+mutations: 14 / 14 caught

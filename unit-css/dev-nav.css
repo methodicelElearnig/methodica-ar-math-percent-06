@@ -1,0 +1,74 @@
+/* ============================================================
+   unit-css/dev-nav.css — styles of the per-component dev navigator
+   (<component>/index_dev.html + ../unit-js/dev-nav.js). Dev-only: never
+   linked from a learner page, never shipped. Phase 1e, 2026-09-30.
+   ============================================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #111; overflow: hidden; }
+
+#dev-layout { display: flex; flex-direction: row-reverse; width: 100vw; height: 100vh; }
+#lomdah-frame { flex: 1 1 auto; min-width: 0; height: 100vh; border: none; display: block; }
+#dev-bar {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,0.88); color: #fff; border: 2px solid #ffe600;
+  border-radius: 32px; padding: 10px 22px;
+  display: flex; align-items: center; gap: 14px;
+  z-index: 9999; font-family: monospace; font-size: 15px; user-select: none;
+  white-space: nowrap;
+}
+#dev-label {
+  color: #ffe600; font-weight: 700; font-size: 13px; letter-spacing: 1px;
+  padding-left: 10px; border-left: 1px solid #444; margin-left: 2px;
+}
+#dev-bar button {
+  background: transparent; border: 1px solid #ffe600; color: #ffe600;
+  border-radius: 8px; padding: 5px 14px; cursor: pointer; font-size: 17px;
+}
+#dev-bar button:hover { background: #ffe600; color: #000; }
+#dev-bar button:disabled { opacity: 0.3; cursor: default; background: transparent; color: #ffe600; }
+#btn-reset { border-color: #ff6b6b; color: #ff6b6b; font-size: 13px; }
+#btn-reset:hover { background: #ff6b6b; color: #000; }
+#dev-screen-input {
+  width: 46px; text-align: center; background: #1a1a1a;
+  color: #ffe600; border: 1px solid #ffe600; border-radius: 6px;
+  font-size: 16px; font-family: monospace; padding: 4px;
+}
+#dev-total { color: #aaa; font-size: 14px; }
+#dev-screen-name { color: #ffe600; font-size: 13px; min-width: 60px; text-align: center; }
+#dev-hint { color: #555; font-size: 11px; border-right: 1px solid #333; padding-right: 12px; }
+#dev-datalist-wrap { display: flex; align-items: center; gap: 4px; }
+
+#dev-sidebar {
+  flex: 0 0 220px;
+  height: 100vh;
+  background: #161616;
+  border-left: 2px solid #ffe600;
+  overflow-y: auto;
+  font-family: monospace;
+  direction: rtl;
+}
+#dev-sidebar-header {
+  position: sticky; top: 0;
+  background: #161616;
+  color: #ffe600; font-size: 12px; font-weight: 700; letter-spacing: 1px;
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid #333;
+}
+#dev-note {
+  padding: 10px 14px; color: #777; font-size: 11px; line-height: 1.5;
+  border-top: 1px solid #333;
+}
+#dev-sidebar-list { list-style: none; margin: 0; padding: 8px; }
+#dev-sidebar-list li { margin-bottom: 4px; }
+#dev-sidebar-list button {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  background: transparent; border: 1px solid transparent; border-radius: 8px;
+  color: #ccc; font-family: monospace; font-size: 13px; text-align: right;
+  padding: 9px 10px; cursor: pointer;
+}
+#dev-sidebar-list button:hover { background: #262626; border-color: #444; }
+#dev-sidebar-list button.active {
+  background: rgba(255,230,0,0.12); border-color: #ffe600; color: #ffe600; font-weight: 700;
+}
+.dev-sidebar-idx { color: #666; font-size: 11px; }
+#dev-sidebar-list button.active .dev-sidebar-idx { color: #ffe600; }

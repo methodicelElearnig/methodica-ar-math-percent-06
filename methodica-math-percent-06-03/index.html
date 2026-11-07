@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>methodica-math-percent-06-03</title>
+  <!-- The shared xAPI library is fetched by unit-js/50-loader.js at the END of the body, after the
+       parser has queued every image below; live, its request waited for the last image, which put the
+       resume restore 20-45 s behind a slow line (2026-11-03). Preloading it from the head queues it FIRST.
+       The href must equal what 50-loader.js builds (no ?v=, no crossorigin) or the browser fetches it
+       twice; the library letter here changes together with LIB720 there (the harness asserts it). -->
+  <link rel="preload" as="script" fetchpriority="high" href="https://lomdot.education.gov.il/metodica/720active/common/xapiwrapper.min.js">
+  <link rel="preload" as="script" fetchpriority="high" href="https://lomdot.education.gov.il/metodica/720active/common/xapi-720-l.js">
+  <link rel="preconnect" href="https://kata.cet.ac.il">
+  <link rel="stylesheet" href="../unit-css/base.css?v=1">
+  <link rel="stylesheet" href="../unit-css/questions.css?v=1">
+  <link rel="stylesheet" href="../unit-css/25-report.css?v=1">
+  <link rel="stylesheet" href="styles.css?v=14">
+  <link rel="stylesheet" href="../unit-css/motion.css?v=1">
+</head>
+<body>
+  <!-- Boot cover (ADDING-REPORTING-AND-RESUME.md §8.11): hides screen 0 until the resume
+       decision is known, so a returning learner never sees the first screen flash before their
+       own. Removed by dropBootCover() (../unit-js/40-resume.js) on every loader exit path; the
+       inline net below needs no other file: it lifts the cover after 800ms, or — while
+       50-loader.js has set window.__resumeInFlight — waits for the restore up to a hard 11s
+       ceiling (the metadata poll alone may take 10s). A loader that failed to load gives back
+       exactly the 800ms behaviour. From methodica-math-ratio-01. -->
+  <div id="boot-cover" style="position:fixed;inset:0;z-index:9999;background:#ffffff"></div>
+  <script>
+  (function () {
+    /* A Kata launch (registration in the query) may have a document to restore: raise the
+     flag HERE, before any script is fetched. bootXAPI raises it too, but it runs from the
+     last script tag, and on a cold cache those scripts arrive after the 800 ms below - so
+     the cover used to drop before the flag existed, exposing screen 0 for the whole wait
+     (2026-11-03). Without a registration (local, dev) the 800 ms behaviour is unchanged. */
+  if (/[?&]registration=/.test(location.search)) window.__resumeInFlight = true;
+  var t0 = Date.now();
+    function tick() {
+      var c = document.getElementById('boot-cover');
+      if (!c || !c.parentNode) return;
+      if (window.__resumeInFlight && Date.now() - t0 < 11000) { setTimeout(tick, 100); return; }
+      c.parentNode.removeChild(c);
+    }
+    setTimeout(tick, 800);
+  })();
+  </script>
+  <div id="app">
+
+    <!-- Report / Issue button ("מצאתם בעיה?") — global, outside all .screen divs; top-left,
+         z-index 30 (720-templates _global-components.md). Glyph is inline SVG on currentColor,
+         styles in ../unit-css/25-report.css, behaviour in ../unit-js/25-report.js. -->
+    <button class="flag-btn" id="flag-btn" type="button" onclick="openReportModal()" aria-label="هل وجدتم مشكلة؟">
+      <span class="flag-btn-icon">
+        <span class="flag-btn-glyph" aria-hidden="true">
+          <svg class="flag-btn-glyph-pole" viewBox="0 0 0.794329 17.0005" preserveAspectRatio="none" fill="none"><path d="M0.397164 17C0.177722 17 0 16.8239 0 16.6065V0.393501C0 0.176082 0.177722 0 0.397164 0C0.616607 0 0.794329 0.176082 0.794329 0.393501V16.607C0.794329 16.8245 0.616607 17.0005 0.397164 17.0005V17Z" fill="currentColor"/></svg>
+          <svg class="flag-btn-glyph-banner" viewBox="0 0 12 9.31542" preserveAspectRatio="none" fill="none"><path d="M2.76227 9.31542C1.91972 9.31542 1.06958 9.15545 0.213483 8.71363C0.0823588 8.64599 0 8.51124 0 8.36469V0.950975C0 0.814619 0.0715221 0.687925 0.188558 0.615989C0.305594 0.54459 0.45189 0.537611 0.574886 0.598811C0.577053 0.599884 0.578679 0.600958 0.580846 0.602032C2.31309 1.49586 4.05563 1.046 5.90003 0.569821C7.80946 0.0770055 9.78336 -0.431915 11.7865 0.601495C11.9176 0.669136 12 0.803882 12 0.950438V8.36415C12 8.4946 11.9344 8.617 11.8255 8.69001C11.7166 8.76302 11.5774 8.77805 11.4555 8.72974C11.443 8.7249 11.4311 8.71954 11.4197 8.71363C9.68745 7.8198 7.94491 8.26967 6.10051 8.7453C5.00709 9.02714 3.89199 9.31489 2.76281 9.31489L2.76227 9.31542ZM0.793787 8.11935C2.45559 8.87307 4.13094 8.44038 5.90003 7.98407C7.62469 7.53903 9.40191 7.08057 11.2062 7.75806V1.19631C9.54441 0.442591 7.86906 0.875281 6.09997 1.33159C4.37531 1.77663 2.59755 2.23509 0.793787 1.5576V8.11935Z" fill="currentColor"/></svg>
+        </span>
+      </span>
+      <span class="flag-btn-label">هل وجدتم مشكلة؟</span>
+    </button>
+
+    <!-- ================================================================
+         SCREEN 0 (s32) — pptx slide 32, item methodica-math-percent-06-03-001
+         TransitionScreen — reuses .s13-content/.s13-text-group verbatim
+         (same template as 06-01's s13/s25 and 06-02's s27). Plain 2-line
+         headline+subline (no bold-emphasis run), so this reuses
+         .s13-headline/.s13-subline directly rather than the .s27-* 3-run
+         variant. Adds one small secondary aside bubble next to the
+         character — new to this screen (06-01/06-02's TransitionScreens
+         never had one) — reuses the established .hook1-bubble tail-bubble
+         CSS technique verbatim, just scoped under a small .s13-aside class,
+         no new visual language.
+         Asset: assets/videos/character_computer.mp4 — animated loop
+         replacing the earlier static character_computer.png (real pptx
+         media, slide 32's own embedded picture — matches the established
+         mascot/vignette style of character_one.png/character_hot.png).
+         Character (+ its aside bubble) now stands pinned to the 74px
+         bottom bar like every other TransitionScreen character in this
+         unit — see .s13-character-wrap below, moved out of .s13-content
+         so it isn't part of that block's own vertical centering.
+         ================================================================ -->
+    <section class="screen active" data-screen="0" id="s32">
+      <div class="s13-content">
+        <div class="s13-text-group">
+          <p class="s13-headline m-stage-text" id="s32-headline" data-reveal-on-ready>لا شيء يضاهي التدريب لترسيخ التعلم<br>سؤالان أبسط</p>
+          <p class="s13-subline m-stage-text" id="s32-subline" data-reveal-on-ready>وهناك تلميح منذ البداية! أجيبوا بشكل صحيح عن سؤال واحد على الأقل للتقدم.</p>
+        </div>
+      </div>
+      <div class="s13-character-wrap">
+        <div class="s32-character-crop">
+          <video class="s13-character m-stage-visual" id="s32-character-img" data-reveal-on-ready src="assets/videos/character_computer-opt.mp4" autoplay muted loop playsinline aria-label="شخصية ترتدي قميصًا عليه رمز النسبة المئوية، تجلس أمام حاسوب محمول"></video>
+        </div>
+      </div>
+
+      <button class="btn-back" id="s32-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <button class="btn-continue" id="s32-continue" onclick="goTo(1)" disabled>متابعة</button>
+    </section>
+
+    <!-- ================================================================
+         SCREEN 1 (s33) — pptx slide 33, item methodica-math-percent-06-03-001
+         שאלה 1 מתוך 2 במקטע. Table ValueInputQuestion — Figma "Screen
+         Templates/FillInTheBlankTableQuestion" (node 1046:26887, file
+         eSbp4bKHgBky0rakDb8l9N).
+         5 real columns, restored from the slide's own native table (which
+         lives inside an <mc:AlternateContent> wrapper — invisible to a
+         flat/non-recursive shape read, which is why every earlier pass
+         missed it): שם התלמיד (given) | כמות שאלות שנענו נכונה (given) |
+         ייצוג בשבר פשוט (input, /20) | השבר לאחר הרחבת המכנה ל-100 (input,
+         /100) | אחוז (input). Only the 2 rightmost columns are given/
+         read-only text; the 3 fraction/percent columns remain learner
+         input exactly as before (ids/answer-key unchanged — the given
+         count column intentionally repeats the same value as the /20
+         input's own correct answer, per the source table itself).
+         Reuses the numerator-input-over-fixed-denominator markup already
+         established in 06-01 (.gvi-fraction / .gvi-answer-box /
+         .num.is-input, used 3× in s17/s19/s21). Percent column:
+         .tq-pct-wrap/.tq-pct-input — the % sign lives INSIDE the input's
+         own box (explicit production note).
+         No content image on this screen — only small hint/back icon
+         graphics exist on the slide, no Q*-named content photo.
+         Hint: always available (רמז זמין תמיד — explicit note).
+         Not a literacy question. Cognitive level 2. 2-attempt retry gate.
+         Answer key (from the pptx's own printed cell values — accepted as
+         the answer key as-is, per explicit instruction, even though row
+         1-2 don't satisfy the simple ×5 "/20→/100" relationship the hint
+         text describes — preserved, not corrected, per CONTENT_FLAGS #31):
+           row1 אנה: 15 given, 15/20, 75/100, 75% (corrected from the pptx 30, per user QA)
+           row2 דניאל: 18 given, 18/20, 90/100, 90% (corrected from the pptx 36 — same ×5 rule)
+           row3 אפרת: 20 given, 20/20, 100/100, 100%
+         ================================================================ -->
+    <section class="screen" data-screen="1" id="s33">
+      <nav class="progress-question" aria-label="التنقُّل بين الأسئلة" id="s33-progress"></nav>
+      <div class="tq-body">
+      <div class="tq-qtext-group">
+        <p class="tq-qtitle m-stage-text" id="s33-context" data-reveal-on-ready>
+          في اختبار الرياضيات كان هناك 20 سؤالاً. أجاب الطلاب والطالبات إجابات صحيحة عن عدد مختلف من الأسئلة.
+        </p>
+        <p class="tq-qtitle m-stage-text" id="s33-instruction" data-reveal-on-ready>
+          <strong>أكملوا الجدول:</strong>
+        </p>
+      </div>
+
+      <div class="tq-table m-stage-card" id="s33-table" role="table" aria-label="جدول: اسم الطالب، عدد الإجابات الصحيحة، الكسر البسيط، الكسر الموسّع والنسبة المئوية" data-reveal-on-ready>
+        <div class="tq-row tq-row--head" role="row">
+          <div class="tq-cell tq-cell--head tq-cell--given" role="columnheader">اسم الطالب</div>
+          <div class="tq-cell tq-cell--head tq-cell--given" role="columnheader">عدد الأسئلة التي أُجيب عنها بشكل صحيح</div>
+          <div class="tq-cell tq-cell--head" role="columnheader">التمثيل بكسر بسيط</div>
+          <div class="tq-cell tq-cell--head" role="columnheader">الكسر بعد توسيع المقام إلى 100</div>
+          <div class="tq-cell tq-cell--head" role="columnheader">النسبة المئوية</div>
+        </div>
+        <div class="tq-row" role="row">
+          <div class="tq-cell tq-cell--given" role="cell">هدى</div>
+          <div class="tq-cell tq-cell--given" role="cell">15</div>
+          <div class="tq-cell" role="cell">
+            <div class="gvi-fraction"><span class="num is-input"><input class="gvi-answer-box tq-input" id="s33-r1-cnt" type="text" inputmode="numeric" maxlength="2" dir="ltr" aria-label="تمثيل بكسر بسيط، السطر 1 من أصل 20" oninput="tqInput('s33', this)"></span><span class="den">20</span></div>
+          </div>
+          <div class="tq-cell" role="cell">
+            <div class="gvi-fraction"><span class="num is-input"><input class="gvi-answer-box tq-input" id="s33-r1-exp" type="text" inputmode="numeric" maxlength="3" dir="ltr" aria-label="الكسر الموسّع، السطر 1 من أصل 100" oninput="tqInput('s33', this)"></span><span class="den">100</span></div>
+          </div>
+          <div class="tq-cell" role="cell">
+            <div class="tq-pct-wrap"><input class="tq-pct-input" id="s33-r1-pct" type="text" inputmode="numeric" maxlength="3" dir="ltr" aria-label="نسبة مئوية، السطر 1" oninput="tqInput('s33', this)"><span class="tq-pct-suffix">%</span></div>
+          </div>
+        </div>
+        <div class="tq-row" role="row">
+          <div class="tq-cell tq-cell--given" role="cell">كريم</div>
+          <div class="tq-cell tq-cell--given" role="cell">18</div>
+          <div class="tq-cell" role="cell">
+            <div class="gvi-fraction"><span class="num is-input"><input class="gvi-answer-box tq-input" id="s33-r2-cnt" type="text" inputmode="numeric" maxlength="2" dir="ltr" aria-label="تمثيل بكسر بسيط، السطر 2، من أصل 20" oninput="tqInput('s33', this)"></span><span class="den">20</span></div>
+          </div>
+          <div class="tq-cell" role="cell">
+            <div class="gvi-fraction"><span class="num is-input"><input class="gvi-answer-box tq-input" id="s33-r2-exp" type="text" inputmode="numeric" maxlength="3" dir="ltr" aria-label="الكسر الموسّع، السطر 2، من أصل 100" oninput="tqInput('s33', this)"></span><span class="den">100</span></div>
+          </div>
+          <div class="tq-cell" role="cell">
+            <div class="tq-pct-wrap"><input class="tq-pct-input" id="s33-r2-pct" type="text" inputmode="numeric" maxlength="3" dir="ltr" aria-label="نسبة مئوية، السطر 2" oninput="tqInput('s33', this)"><span class="tq-pct-suffix">%</span></div>
+          </div>
+        </div>
+        <div class="tq-row" role="row">
+          <div class="tq-cell tq-cell--given" role="cell">رنا</div>
+          <div class="tq-cell tq-cell--given" role="cell">20</div>
+          <div class="tq-cell" role="cell">
+            <div class="gvi-fraction"><span class="num is-input"><input class="gvi-answer-box tq-input" id="s33-r3-cnt" type="text" inputmode="numeric" maxlength="2" dir="ltr" aria-label="تمثيل بكسر بسيط، السطر 3، من أصل 20" oninput="tqInput('s33', this)"></span><span class="den">20</span></div>
+          </div>
+          <div class="tq-cell" role="cell">
+            <div class="gvi-fraction"><span class="num is-input"><input class="gvi-answer-box tq-input" id="s33-r3-exp" type="text" inputmode="numeric" maxlength="3" dir="ltr" aria-label="الكسر الموسّع، الصف 3، من أصل 100" oninput="tqInput('s33', this)"></span><span class="den">100</span></div>
+          </div>
+          <div class="tq-cell" role="cell">
+            <div class="tq-pct-wrap"><input class="tq-pct-input" id="s33-r3-pct" type="text" inputmode="numeric" maxlength="3" dir="ltr" aria-label="نسبة مئوية، سطر 3" oninput="tqInput('s33', this)"><span class="tq-pct-suffix">%</span></div>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <div class="tq-feedback tq-feedback--floating" id="s33-feedback" hidden>
+        <div class="tq-fb" data-fb="retry">
+          <p class="tq-fb-title">هذا غير دقيق،<br>يبدو أنكم أخطأتم في قيمة واحدة أو أكثر...<br><span class="fb-regular">هل نحاول مرة أخرى؟</span></p>
+        </div>
+        <div class="tq-fb" data-fb="correct">
+          <p class="tq-fb-title">إجابات صحيحة!</p>
+          <div class="tq-fb-body">
+            <p>لإيجاد النسبة المئوية، نوسّع الكسر ليصبح مقامه&nbsp;100.</p>
+            <p>بما أن <strong>المقام هو 20،</strong> نبحث عن العدد الذي يجب<br>ضربه فيه للوصول إلى 100.</p>
+            <p>20x <strong>5</strong> =100<br>لذلك نضرب البسط أيضًا في 5 للحفاظ على قيمة الكسر.<br>ثم نقرأ البسط على أنه نسبة مئوية.</p>
+          </div>
+        </div>
+        <div class="tq-fb" data-fb="wrong2">
+          <p class="tq-fb-title">أخطأتم في إجابة واحدة على الأقل، دعونا نشرح...</p>
+          <div class="tq-fb-body">
+            <p>لإيجاد النسبة المئوية، نوسّع الكسر ليصبح مقامه&nbsp;100.</p>
+            <p>بما أن <strong>المقام هو 20،</strong> نبحث عن العدد الذي يجب<br>ضربه فيه للوصول إلى 100.</p>
+            <p>20x <strong>5</strong> =100<br>لذلك نضرب البسط أيضًا في 5 للحفاظ على قيمة الكسر.<br>ثم نقرأ البسط على أنه نسبة مئوية.</p>
+          </div>
+          <button class="scq-popup-reveal-btn" type="button" id="s33-reveal-btn" onclick="tqToggleReveal('s33')">الإجابة الصحيحة</button>
+        </div>
+      </div>
+
+      <div class="scq-left-actions">
+        <button class="btn-hint" id="s33-hint" onclick="scqOpenHint('s33')">هل من تلميح؟</button>
+        <button class="btn-continue" id="s33-check" onclick="tqCheck('s33')" disabled>هل إجابتي صحيحة؟</button>
+      </div>
+      <button class="btn-back" id="s33-back-btn" onclick="goBack()" hidden>رجوع</button>
+    </section>
+
+    <!-- ================================================================
+         SCREEN 2 (s3435) — pptx slides 34-35, item methodica-math-percent-06-03-002
+         ONE scrollable screen — שאלה 2 מתוך 2 במקטע. Top (always in view
+         without scrolling): context paragraph + APP.png, reusing
+         .lp-text-col/.lp-img-col/.lp-title/.lp-body verbatim (same
+         text-right/image-left composition already established for
+         06-01's Learning Phase sections). Scrolling down reveals the
+         actual interaction: 3 data rows, each an always-visible 3-pill
+         row reusing .scq-opt/.scq-radio verbatim (per explicit decision —
+         not a collapsed DropdownQuestion). Literacy: yes. Level 3.
+         Hint: default policy (visible from start) — hint body is the
+         slide's own text (found off-canvas on slide 35).
+         Row 3's value is an OMML math fraction on the source slide
+         (8,999/10,000 — Unicode math digits, invisible to a plain-text
+         read) — rendered here as a live stacked fraction (.gvi-fraction),
+         not converted to a decimal/percent.
+         Grading: holistic across all 3 rows, 2-attempt retry gate.
+         Feedback is rendered inline (not the floating .scq-feedbox) since
+         this question is embedded in a scroll flow, not a standalone
+         screen — same "inline panel, not a floating popup" precedent
+         06-01's Learning-Phase checkpoint sections already use.
+         ================================================================ -->
+    <section class="screen" data-screen="2" id="s3435">
+      <!-- Moved out of .lp-scroll (was inline inside .cls-section, only
+           visible once scrolled to the 2nd page) — fixed at the top of the
+           whole screen like s33/s37's own .progress-question, so it stays
+           visible across both scroll pages instead of appearing/disappearing
+           with scroll position (explicit user feedback). -->
+      <nav class="progress-question" aria-label="التنقُّل بين الأسئلة" id="s3435-progress" data-reveal="1"></nav>
+      <div class="lp-scroll" id="s3435-scroll" data-hint-on-entry>
+
+        <div class="lp-section tqs-top" id="s3435-page-top">
+          <div class="lp-text-col m-stage-text" data-reveal-on-ready>
+            <p class="lp-body">طلاب الصف الثامن شاركوا في تحدي الخطوات على التطبيق.</p>
+            <p class="lp-body lp-gap">لكل 10,000 خطوة يتم إكمالها، تتلقى جمعية "من أجل الحيوانات" تبرعًا بالطعام للحيوانات.</p>
+            <p class="lp-body">كان هدف كل مشارك الوصول إلى 10,000 خطوة.</p>
+            <p class="lp-body">عرض التطبيق التقدّم بطرق مختلفة.</p>
+          </div>
+          <div class="lp-img-col m-stage-visual" data-reveal-on-ready>
+            <img src="assets/images/APP-opt.png" alt="شاشة تطبيق تحدي الخطوات، التي تعرض هدفاً قدره 10,000 خطوة" loading="lazy">
+          </div>
+        </div>
+
+        <div class="lp-section cls-section" id="s3435-page-cls">
+          <p class="cls-qtext m-stage-text" data-reveal-on-ready><strong>لكل معطى، حددوا ما إذا كان: لم يبلغ الهدف، أو بلغ الهدف، أو تجاوز الهدف.</strong></p>
+
+          <div class="cls-row m-stage-card" data-reveal-on-ready data-row="1">
+            <p class="cls-label">حالة الخطوات: إنجاز <strong>25%</strong></p>
+            <div class="scq-answers cls-pills" role="radiogroup" aria-label="اختاروا الحالة عند إنجاز 25%">
+              <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="under" onclick="clsSelect(1,'under')"><span class="scq-opt-text">لم يصل إلى الهدف</span><span class="scq-radio"></span></button>
+              <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="at" onclick="clsSelect(1,'at')"><span class="scq-opt-text">وصل إلى الهدف</span><span class="scq-radio"></span></button>
+              <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="over" onclick="clsSelect(1,'over')"><span class="scq-opt-text">تجاوز الهدف</span><span class="scq-radio"></span></button>
+            </div>
+          </div>
+
+          <div class="cls-row m-stage-card" data-reveal-on-ready data-row="2">
+            <p class="cls-label">حالة الخطوات: إنجاز <strong>200%</strong></p>
+            <div class="scq-answers cls-pills" role="radiogroup" aria-label="اختاروا حالة لنسبة الإنجاز 200%">
+              <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="under" onclick="clsSelect(2,'under')"><span class="scq-opt-text">لم يصل إلى الهدف</span><span class="scq-radio"></span></button>
+              <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="at" onclick="clsSelect(2,'at')"><span class="scq-opt-text">وصل إلى الهدف</span><span class="scq-radio"></span></button>
+              <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="over" onclick="clsSelect(2,'over')"><span class="scq-opt-text">تجاوز الهدف</span><span class="scq-radio"></span></button>
+            </div>
+          </div>
+
+          <div class="cls-row m-stage-card" data-reveal-on-ready data-row="3">
+            <p class="cls-label">حالة الخطوات: إنجاز <span class="gvi-fraction cls-inline-fraction"><span class="num">8,999</span><span class="den">10,000</span></span></p>
+            <div class="scq-answers cls-pills" role="radiogroup" aria-label="اختاروا الحالة عند إنجاز 8,999 خطوة من أصل 10,000">
+              <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="under" onclick="clsSelect(3,'under')"><span class="scq-opt-text">لم يصل إلى الهدف</span><span class="scq-radio"></span></button>
+              <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="at" onclick="clsSelect(3,'at')"><span class="scq-opt-text">وصل إلى الهدف</span><span class="scq-radio"></span></button>
+              <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="over" onclick="clsSelect(3,'over')"><span class="scq-opt-text">تجاوز الهدف</span><span class="scq-radio"></span></button>
+            </div>
+          </div>
+
+          <div class="tq-feedback cls-feedback" id="s3435-feedback" hidden>
+            <div class="tq-fb" data-fb="retry">
+              <p class="tq-fb-title">هذا غير دقيق،<br><span class="fb-regular">ربما أخطأتم في قيمة واحدة أو أكثر.<br>هل نحاول مرة أخرى؟</span></p>
+            </div>
+            <div class="tq-fb" data-fb="correct">
+              <p class="tq-fb-title">أحسنت!</p>
+              <div class="tq-fb-body">
+                <p>يمكن مقارنة كل عدد بالواحد الصحيح.</p>
+                <p><strong>إذا كان أصغر من 1</strong> (أو من 100%) فهو يمثل جزءًا من الكل،</p>
+                <p><strong>إذا كان يساوي 1</strong> (أو 100%) فهو يمثل الكل،</p>
+                <p><strong>إذا كان أكبر من 1</strong> (أو 100%)، فهو يمثّل أكثر من واحد صحيح.</p>
+              </div>
+            </div>
+            <div class="tq-fb" data-fb="wrong2">
+              <p class="tq-fb-title">أخطأتم في إجابة واحدة على الأقل،<br>الإجابة الكاملة معروضة:</p>
+              <div class="tq-fb-body">
+                <p>يمكن مقارنة كل عدد بالواحد الصحيح.</p>
+                <p><strong>إذا كان أصغر من 1</strong> (أو من 100%) فهو يمثل جزءاً من الكل،</p>
+                <p><strong>إذا كان يساوي 1</strong> (أو 100%) فهو يمثل الكل،</p>
+                <p><strong>إذا كان أكبر من 1</strong> (أو 100%)، فهو يمثّل أكثر من واحد صحيح.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <button class="btn-back" id="s3435-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <!-- Hint/check row lives in the bottom bar (bottom-left, per the
+           SCQ template), not inline under the answers. The screen's own
+           "متابعة" stays hidden until the question is resolved. -->
+      <div class="scq-left-actions m-stage-card" id="s3435-actions" data-reveal-on-ready>
+        <button class="btn-hint" id="s3435-hint" onclick="scqOpenHint('s3435')">هل من تلميح؟</button>
+        <button class="btn-continue" id="s3435-check" onclick="clsCheck()" disabled>هل إجابتي صحيحة؟</button>
+      </div>
+      <button class="btn-continue" id="s3435-continue" onclick="segmentAContinue()" disabled hidden>متابعة</button>
+    </section>
+
+    <!-- ================================================================
+         SCREEN 3 (s36) — pptx slide 36, item methodica-math-percent-06-03-003
+         TransitionScreen — same .s13-content shell + .s13-aside bubble
+         pattern as s32.
+         Asset: assets/videos/character_testb.mp4 — animated loop
+         replacing the earlier static character_testb.png (real pptx
+         media — mascot wiping sweat with a towel).
+         ================================================================ -->
+    <section class="screen" data-screen="3" id="s36">
+      <div class="s13-content">
+        <div class="s13-text-group">
+          <p class="s13-headline m-stage-text" id="s36-headline" data-reveal-on-ready><span class="fb-regular">أحسنت!</span><br>سنعود إلى تمرينين بمستوى صعوبة أعلى.</p>
+        </div>
+      </div>
+      <div class="s13-character-wrap">
+        <p class="s13-aside m-stage-popup" id="s36-aside" data-reveal-on-ready>أنا متأكد أنكم ستنجحون!</p>
+        <div class="s36-character-crop">
+          <video class="s13-character m-stage-visual" id="s36-character-img" data-reveal-on-ready data-src="assets/videos/character_testb-opt.mp4" autoplay muted loop playsinline aria-label="شخصية ترتدي قميصًا عليه رمز النسبة المئوية، وتمسح العرق بمنشفة"></video>
+        </div>
+      </div>
+
+      <button class="btn-back" id="s36-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <button class="btn-continue" id="s36-continue" onclick="goTo(4)" disabled>متابعة</button>
+    </section>
+
+    <!-- ================================================================
+         SCREEN 4 (s37) — pptx slide 37, item methodica-math-percent-06-03-003
+         שאלה 1 מתוך 2 במקטע. Table ValueInputQuestion — reuses screen 1's
+         (.tq-*) markup/CSS verbatim, per the explicit instruction not to
+         build a second implementation for this family. Intentionally
+         DIFFERENT structure from s33: here the fraction column is
+         GIVEN/read-only (real per-row values recovered from OMML math
+         objects on the slide — 6/40, 10/40, 20/40, 4/40 — not repeated
+         placeholders like s33's generic "10/20"/"10/100"), and ONLY the
+         percent column is a learner input, matching this slide's own
+         unambiguous note ("השלימו את עמודת האחוזים"). A 3rd column, צבע
+         (given: שחור/בורדו/כחול/ירוק, in that exact row order), was
+         restored from the slide's own native table — same
+         <mc:AlternateContent>-wrapped table discovered on s33, missed by
+         every earlier extraction pass.
+         Content image: assets/images/Q5.png (matches the slide's explicit
+         note "שם התמונה Q5" — sneaker-color survey photo). Q5.png's real
+         pixel size is 354×236 (3:2 landscape, matches the pptx picture's
+         own 265.5×177pt shape) — .scq-img--landscape sizes the slot to
+         that exact aspect instead of the template's generic 380×380
+         square, eliminating the letterboxing a square slot around a 3:2
+         photo would otherwise show.
+         Hint: unlocks only after the first wrong attempt (TQ_CONFIG.s37's
+         hintAfterAttempt flag), not from the start — per explicit user
+         feedback. Not literacy. Level 2. 2-attempt retry.
+         Answer key: 6/40→15%, 10/40→25%, 20/40→50%, 4/40→10%.
+         ================================================================ -->
+    <section class="screen" data-screen="4" id="s37">
+      <nav class="progress-question" aria-label="التنقُّل بين الأسئلة" id="s37-progress"></nav>
+      <div class="tq-body">
+      <div class="tq-qtext-group">
+        <p class="tq-qtitle m-stage-text" id="s37-context" data-reveal-on-ready>
+          شارك 40 من المراهقين والمراهقات في استطلاع لاختيار لون لتصميم جديد لأحذية رياضية.<br>
+          يوضح الجدول عدد المصوّتات والمصوّتين الذين اختاروا كل لون، ويُمثَّل هذا العدد بكسر من مجموع المشاركات&nbsp;والمشاركين.
+        </p>
+        <p class="tq-qtitle m-stage-text" id="s37-instruction" data-reveal-on-ready>
+          <strong>أكملوا عمود النسب المئوية.</strong>
+        </p>
+      </div>
+
+      <div class="tq-wrap m-stage-card" id="s37-table" data-reveal-on-ready>
+        <div class="tq-table tq-table--with-img" role="table" aria-label="جدول: اللون، الكسر من 40، والنسبة المئوية">
+          <div class="tq-row tq-row--head" role="row">
+            <div class="tq-cell tq-cell--head tq-cell--given" role="columnheader">لون</div>
+            <div class="tq-cell tq-cell--head" role="columnheader">الكسر</div>
+            <div class="tq-cell tq-cell--head" role="columnheader">النسبة المئوية</div>
+          </div>
+          <div class="tq-row" role="row">
+            <div class="tq-cell tq-cell--given" role="cell">أسود</div>
+            <div class="tq-cell" role="cell"><div class="gvi-fraction"><span class="num">6</span><span class="den">40</span></div></div>
+            <div class="tq-cell" role="cell"><div class="tq-pct-wrap"><input class="tq-pct-input" id="s37-r1-pct" type="text" inputmode="numeric" maxlength="3" dir="ltr" aria-label="النسبة المئوية، أسود" oninput="tqInput('s37', this)"><span class="tq-pct-suffix">%</span></div></div>
+          </div>
+          <div class="tq-row" role="row">
+            <div class="tq-cell tq-cell--given" role="cell">عنابي</div>
+            <div class="tq-cell" role="cell"><div class="gvi-fraction"><span class="num">10</span><span class="den">40</span></div></div>
+            <div class="tq-cell" role="cell"><div class="tq-pct-wrap"><input class="tq-pct-input" id="s37-r2-pct" type="text" inputmode="numeric" maxlength="3" dir="ltr" aria-label="النسبة المئوية، عنابي" oninput="tqInput('s37', this)"><span class="tq-pct-suffix">%</span></div></div>
+          </div>
+          <div class="tq-row" role="row">
+            <div class="tq-cell tq-cell--given" role="cell">أزرق</div>
+            <div class="tq-cell" role="cell"><div class="gvi-fraction"><span class="num">20</span><span class="den">40</span></div></div>
+            <div class="tq-cell" role="cell"><div class="tq-pct-wrap"><input class="tq-pct-input" id="s37-r3-pct" type="text" inputmode="numeric" maxlength="3" dir="ltr" aria-label="نسبة مئوية، أزرق" oninput="tqInput('s37', this)"><span class="tq-pct-suffix">%</span></div></div>
+          </div>
+          <div class="tq-row" role="row">
+            <div class="tq-cell tq-cell--given" role="cell">أخضر</div>
+            <div class="tq-cell" role="cell"><div class="gvi-fraction"><span class="num">4</span><span class="den">40</span></div></div>
+            <div class="tq-cell" role="cell"><div class="tq-pct-wrap"><input class="tq-pct-input" id="s37-r4-pct" type="text" inputmode="numeric" maxlength="3" dir="ltr" aria-label="نسبة مئوية، أخضر" oninput="tqInput('s37', this)"><span class="tq-pct-suffix">%</span></div></div>
+          </div>
+        </div>
+
+        <div class="scq-img tq-img scq-img--landscape">
+          <img src="assets/images/Q5-opt.png" alt="أربعة طلاب يختبرون أحذية رياضية بألوان مختلفة على طاولة عرض" loading="lazy">
+        </div>
+      </div>
+      </div>
+
+      <div class="tq-feedback tq-feedback--floating" id="s37-feedback" hidden>
+        <div class="tq-fb" data-fb="retry">
+          <p class="tq-fb-title">هذا غير دقيق،<br><span class="fb-regular">قد تكونون أخطأتم في قيمة واحدة أو أكثر.<br>هل نحاول مرة أخرى؟</span></p>
+        </div>
+        <div class="tq-fb" data-fb="correct">
+          <p class="tq-fb-title">أحسنت!</p>
+          <div class="tq-fb-body">
+            <p>لتسهيل المقارنة بين اختيارات المراهقين، من المناسب تمثيل البيانات بالنسبة المئوية. ولتحقيق ذلك، يُستحسن تبسيط الكسور ثم توسيعها إلى مقام 100.</p>
+          </div>
+        </div>
+        <div class="tq-fb" data-fb="wrong2">
+          <p class="tq-fb-title">أخطأتم في إجابة واحدة على الأقل،<br>الإجابة الكاملة معروضة.</p>
+          <div class="tq-fb-body">
+            <p>لتسهيل المقارنة بين اختيارات المراهقين، من المناسب تمثيل البيانات بالنسبة المئوية. ولتحقيق ذلك، يُستحسن تبسيط الكسور ثم توسيعها إلى مقام 100.</p>
+          </div>
+          <button class="scq-popup-reveal-btn" type="button" id="s37-reveal-btn" onclick="tqToggleReveal('s37')">الإجابة الصحيحة</button>
+        </div>
+      </div>
+
+      <div class="scq-left-actions">
+        <button class="btn-hint" id="s37-hint" onclick="scqOpenHint('s37')">هل من تلميح؟</button>
+        <button class="btn-continue" id="s37-check" onclick="tqCheck('s37')" disabled>هل إجابتي صحيحة؟</button>
+      </div>
+      <button class="btn-back" id="s37-back-btn" onclick="goBack()" hidden>رجوع</button>
+    </section>
+
+    <!-- ================================================================
+         SCREEN 5 (s3839) — pptx slides 38-39, item methodica-math-percent-06-03-004
+         TWO full-screen pages — שאלה 2 מתוך 2 במקטע, two sequential
+         SingleChoiceQuestion sub-parts (א, ב). Confirmed directly from the
+         pptx geometry (not inferred): slide 38 places the shared context +
+         "א. מי צודק?" + all 4 of its option pills on the RIGHT (x≈399-925pt)
+         and the two speech bubbles + Q6.png on the LEFT (x≈21-400pt) —
+         ONE slide, ONE composition; slide 39 repeats the SAME image+bubbles
+         on the LEFT again, alongside סעיף ב's own question+options on the
+         RIGHT. Each pptx slide = one .tqs-page here (RTL: text-col first
+         DOM child renders right, media-col second child renders left) —
+         replaces the previous 3-way split (comic-context / א / ב as three
+         separate .lp-scroll children), which both contradicted the source
+         (סעיף א read as a page below the image, not beside it) and
+         structurally couldn't render without previous-page bleed (page-0
+         was shorter than the scroll viewport). #tqs-a/#tqs-b keep their
+         original ids/markup shape (just relocated inside .tqs-text-col) so
+         subSelect()/subCheck()/subOptions() need no JS changes.
+         Reuses .scq-opt/.scq-radio verbatim. .cbub-* comic bubbles reuse
+         the established .hook1-bubble tail-bubble CSS technique, doubled.
+         Sub-part א hint available; sub-part ב explicitly has none. Both
+         literacy, level 4. Feedback rendered inline (same "embedded in
+         scroll → inline, not floating popup" precedent as s3435). Last
+         screen in this component — its Continue is a disabled dead end
+         (no 06-04 built yet), same precedent as 06-01's s24/s26 and
+         06-02's s30.
+         Q6.png is 505×337 (3:2 landscape, matches the pptx picture's own
+         378.8×252.5pt shape) — .scq-img--landscape sizes the slot to that
+         exact aspect instead of the generic 380×380 square, same fix as
+         s37's Q5.png.
+         Answer key: sub-part א → אסיף. sub-part ב → "הוא השווה את מספר
+         הלייקים במקום להשוות את שיעורי ההצלחה" (both option sets found by
+         drilling into the pptx's own nested group shapes).
+         ================================================================ -->
+    <section class="screen" data-screen="5" id="s3839">
+      <!-- Moved out of .lp-scroll (was the old progress-question--inline
+           variant, in-flow at the top of page A's own scroll content) —
+           fixed at the top of the whole screen like s3435-progress, so it
+           stays visible and never scrolls away/underneath its own content,
+           per explicit user feedback. -->
+      <nav class="progress-question" aria-label="التنقُّل بين الأسئلة" id="s3839-progress" data-reveal="1"></nav>
+      <div class="lp-scroll" id="s3839-scroll">
+
+        <div class="tqs-page" id="tqs-page-a">
+          <div class="tqs-text-col">
+            <div class="scq-qtext m-stage-text" id="tqs-a-intro" data-reveal-on-ready>
+              <p>شارك صفّان في المسابقة المدرسية بنشر فيديو.</p>
+              <p>حصل فيديو الصف الثامن/1 على 28 إعجابًا من أصل 32 طالبًا شاهدوه.</p>
+              <p>حصل فيديو الصف الثامن/2 على 30 إعجابًا من أصل 40 طالبًا شاهدوه.</p>
+              <p>ناقش ماجد وعادل أيّ الفيديوهين حقّق نجاحًا أكبر (تأمّلوا القصة المصوّرة).</p>
+            </div>
+
+            <div class="tqs-subpart" id="tqs-a">
+              <p class="scq-qtext m-stage-text" id="tqs-a-qtext" data-reveal-on-ready><strong>أ. مَن المحقّ؟</strong></p>
+              <div class="scq-answers m-stage-card" id="tqs-a-answers" data-reveal-on-ready role="radiogroup" aria-label="خيارات الإجابة، البند أ">
+                <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="asif" onclick="subSelect('a','asif')"><span class="scq-opt-text">ماجد</span><span class="scq-radio"></span></button>
+                <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="michael" onclick="subSelect('a','michael')"><span class="scq-opt-text">عادل</span><span class="scq-radio"></span></button>
+                <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="both" onclick="subSelect('a','both')"><span class="scq-opt-text">كلاهما محق</span><span class="scq-radio"></span></button>
+                <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="unknown" onclick="subSelect('a','unknown')"><span class="scq-opt-text">لا يمكن معرفة ذلك</span><span class="scq-radio"></span></button>
+              </div>
+
+              <div class="tq-feedback tq-feedback--floating" id="tqs-a-feedback" hidden>
+                <div class="tq-fb" data-fb="retry"><p class="tq-fb-title">هذا غير دقيق،<br><span class="fb-regular">هل نحاول مرة أخرى؟</span></p></div>
+                <div class="tq-fb" data-fb="correct">
+                  <p class="tq-fb-title">صحيح! ماجد محق.</p>
+                  <div class="tq-fb-body">
+                    <p>لا يمكن تحديد أيّ صفّ حقّق نجاحًا أكبر من عدد الإعجابات وحده،<br>لأن عدد الطلاب الذين شاهدوا الفيديو يختلف من صفّ إلى آخر.</p>
+                    <p>تذكير: عند مقارنة مجموعات مختلفة الأحجام، نقارن الجزء<br>من الكل، وليس الأعداد نفسها فقط.</p>
+                  </div>
+                </div>
+                <div class="tq-fb" data-fb="wrong2">
+                  <p class="tq-fb-title">هذا خطأ، فلنكن دقيقين</p>
+                  <div class="tq-fb-body">
+                    <p>لا يمكن تحديد أيّ صفّ حقّق نجاحًا أكبر من عدد الإعجابات وحده،<br>لأن عدد الطلاب الذين شاهدوا الفيديو يختلف من صفّ إلى آخر.</p>
+                    <p>تذكير: عند مقارنة مجموعات مختلفة الأحجام، نقارن الجزء<br>من الكل، وليس الأعداد نفسها فقط.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tqs-media-col m-stage-visual" id="tqs-page-a-media" data-reveal-on-ready>
+            <div class="cbub-row">
+              <div class="cbub cbub-asif"><p>"نسبة مَن ضغطوا على إعجاب من بين مشاهدي فيديو الصف الثامن/1 أعلى، ولذلك حقّق نجاحًا أكبر"</p><span class="cbub-name">ماجد</span></div>
+              <div class="cbub cbub-michael"><p>"حصل الصف الثامن/2 على إعجابات أكثر، ولذلك حقّق الفيديو الخاص به نجاحًا أكبر"</p><span class="cbub-name">عادل</span></div>
+            </div>
+            <div class="scq-img scq-img--landscape">
+              <button class="img-zoom-btn" type="button" aria-label="تكبير الصورة" data-zoom-src="assets/images/Q6-opt.png" data-zoom-alt="يجلس طالبان ويتحدثان بجوار طاولة، وأمامهما جهاز لوحي موضوع على الطاولة.">
+                <svg class="img-zoom-btn__icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="8.5" cy="8.5" r="6.5" stroke="currentColor" stroke-width="1.6"/><line x1="13.4" y1="13.4" x2="18" y2="18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              </button>
+              <img src="assets/images/Q6-opt.png" alt="يجلس طالبان ويتحدثان بجوار طاولة، وأمامهما جهاز لوحي موضوع على الطاولة." loading="lazy">
+            </div>
+          </div>
+        </div>
+
+        <div class="tqs-page" id="tqs-page-b">
+          <div class="tqs-text-col">
+            <div class="tqs-subpart" id="tqs-b">
+              <p class="scq-qtext m-stage-text" id="tqs-b-qtext" data-reveal-on-ready><strong>ب. ما الخطأ في ادّعاء عادل؟</strong></p>
+              <div class="scq-answers m-stage-card" id="tqs-b-answers" data-reveal-on-ready role="radiogroup" aria-label="خيارات الإجابة، البند ب">
+                <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="rate" onclick="subSelect('b','rate')"><span class="scq-opt-text">هو قارن عدد الإعجابات بدلاً من أن يقارن نسب النجاح</span><span class="scq-radio"></span></button>
+                <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="calc" onclick="subSelect('b','calc')"><span class="scq-opt-text">هو حسب عدد الإعجابات بطريقة غير صحيحة</span><span class="scq-radio"></span></button>
+                <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="nolikes" onclick="subSelect('b','nolikes')"><span class="scq-opt-text">هو كان يحتاج أن يحسب كم طالبًا لم يضغطوا على "إعجاب"</span><span class="scq-radio"></span></button>
+                <button class="scq-opt" type="button" role="radio" aria-checked="false" data-id="viewers" onclick="subSelect('b','viewers')"><span class="scq-opt-text">هو كان يحتاج إلى مقارنة عدد المشاهدين فقط</span><span class="scq-radio"></span></button>
+              </div>
+
+              <div class="tq-feedback tq-feedback--floating" id="tqs-b-feedback" hidden>
+                <div class="tq-fb" data-fb="retry"><p class="tq-fb-title">هذا غير دقيق،<br><span class="fb-regular">هل نحاول مرة أخرى؟</span></p></div>
+                <div class="tq-fb" data-fb="correct">
+                  <p class="tq-fb-title">إجابة صحيحة!</p>
+                  <div class="tq-fb-body">
+                    <p>قارن عادل عدد الإعجابات فقط، لكنه تجاهل أن<br>عدد الطلاب الذين شاهدوا الفيديو يختلف من صفّ إلى آخر.</p>
+                    <p>للمقارنة بشكل عادل، يجب مقارنة نسبة النجاح،<br>أي النسبة المئوية للإعجابات من إجمالي مشاهدات كل فيديو،<br>وليس عدد الإعجابات فقط.</p>
+                  </div>
+                </div>
+                <div class="tq-fb" data-fb="wrong2">
+                  <p class="tq-fb-title">هذا خطأ، لنكن دقيقين</p>
+                  <div class="tq-fb-body">
+                    <p>قارن عادل عدد الإعجابات فقط، لكنه تجاهل أن<br>عدد الطلاب الذين شاهدوا الفيديو يختلف من صفّ إلى آخر.</p>
+                    <p>للمقارنة بشكل عادل، يجب مقارنة نسبة النجاح،<br>أي النسبة المئوية للإعجابات من إجمالي مشاهدات كل فيديو،<br>وليس عدد الإعجابات فقط.</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="tqs-media-col m-stage-visual" id="tqs-page-b-media" data-reveal-on-ready>
+            <div class="cbub-row">
+              <div class="cbub cbub-asif"><p>"نسبة مَن ضغطوا على إعجاب من بين مشاهدي فيديو الصف الثامن/1 أعلى، ولذلك حقّق نجاحًا أكبر"</p><span class="cbub-name">ماجد</span></div>
+              <div class="cbub cbub-michael"><p>"حصل الصف الثامن/2 على إعجابات أكثر، ولذلك حقّق بالتأكيد نجاحًا أكبر"</p><span class="cbub-name">عادل</span></div>
+            </div>
+            <div class="scq-img scq-img--landscape">
+              <button class="img-zoom-btn" type="button" aria-label="تكبير الصورة" data-zoom-src="assets/images/Q6-opt.png" data-zoom-alt="يجلس طالبان ويتحدثان بجوار طاولة، وأمامهما جهاز لوحي موضوع على الطاولة.">
+                <svg class="img-zoom-btn__icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="8.5" cy="8.5" r="6.5" stroke="currentColor" stroke-width="1.6"/><line x1="13.4" y1="13.4" x2="18" y2="18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              </button>
+              <img src="assets/images/Q6-opt.png" alt="يجلس طالبان ويتحدثان بجوار طاولة، وأمامهما جهاز لوحي موضوع على الطاولة." loading="lazy">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-back" id="s3839-back-btn" onclick="goBack()" hidden>رجوع</button>
+      <!-- Hint/check row lives in the bottom bar (bottom-left, per the
+           SCQ template), not inline under the answers. The screen's own
+           "متابعة" stays hidden until the question is resolved. -->
+      <div class="scq-left-actions m-stage-card" id="tqs-a-actions" data-reveal-on-ready>
+        <button class="btn-hint" id="tqs-a-hint" onclick="scqOpenHint('tqs-a')">هل من تلميح؟</button>
+        <button class="btn-continue" id="tqs-a-check" onclick="subCheck('a')" disabled>هل إجابتي صحيحة؟</button>
+      </div>
+      <div class="scq-left-actions m-stage-card" id="tqs-b-actions" data-reveal-on-ready>
+        <button class="btn-continue" id="tqs-b-check" onclick="subCheck('b')" disabled>هل إجابتي صحيحة؟</button>
+      </div>
+      <button class="btn-continue" id="s3839-continue" disabled hidden>متابعة</button>
+    </section>
+
+    <!-- Shared hint overlay — outside all .screen divs, directly in #app
+         (so it scales together with the rest of the canvas via scaleApp()'s
+         transform on #app — session correction: this was placed AFTER
+         #app's closing tag, i.e. actually outside #app despite the comment's
+         stated intent, which left its text unscaled relative to in-canvas
+         question/answer text at any viewport where scale != 1; matches the
+         fix already shipped in methodica-math-percent-06-02). -->
+    <div id="scq-hint-overlay" class="m-popup hidden" hidden>
+      <div class="scq-hint-panel" role="dialog" aria-modal="true" aria-label="تلميح">
+        <div class="scq-hint-content">
+          <svg class="hint-lamp" width="36" height="31" viewBox="0 0 26 22.2883" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M17.7925 2.76345C16.3676 1.37911 14.5057 0.68776 12.5488 0.815545C9.07995 1.04163 6.27286 3.9168 6.01796 7.50134C5.85646 9.77363 6.7035 11.9443 8.34374 13.4548C9.23036 14.2723 9.74016 15.465 9.74016 16.7265H11.2284H14.7733H16.2615C16.2615 15.4847 16.7919 14.2707 17.7181 13.3959C19.17 12.0263 20.0012 10.0751 20.0012 8.04361C20.0012 6.01215 19.1953 4.12486 17.7909 2.76018L17.7925 2.76345ZM13.0001 5.54524C11.6701 5.54524 10.5856 6.66582 10.5856 8.04525C10.5856 8.46956 10.2515 8.81524 9.84149 8.81524C9.43143 8.81524 9.09736 8.46956 9.09736 8.04525C9.09736 5.8172 10.8484 4.00527 13.0001 4.00527C13.4133 4.00527 13.7473 4.35094 13.7473 4.77525C13.7473 5.19957 13.4133 5.54524 13.0001 5.54524Z" fill="white"/>
+            <path d="M9.73858 19.6245C9.73858 20.3289 9.99823 20.9908 10.478 21.4904L10.4938 21.5068C10.9783 22.0098 11.6242 22.2883 12.3114 22.2883H13.6888C14.3775 22.2883 15.025 22.0114 15.5111 21.5052C15.9956 21.0039 16.2631 20.3355 16.2631 19.6277V17.9895H9.73858V19.6245ZM11.2268 19.5294H14.7717V19.6277C14.7717 19.9243 14.6609 20.2077 14.4566 20.419C14.254 20.6254 13.9753 20.7483 13.6888 20.7483H12.3114C12.028 20.7483 11.7588 20.6336 11.5561 20.4305L11.5451 20.4174C11.3424 20.211 11.2268 19.9226 11.2268 19.6261V19.5311V19.5294Z" fill="white"/>
+            <path d="M25.2558 7.27531H22.607C22.1954 7.27531 21.8629 7.62099 21.8629 8.0453C21.8629 8.46961 22.197 8.81529 22.607 8.81529H25.2558C25.6674 8.81529 25.9999 8.46961 25.9999 8.0453C25.9999 7.62099 25.6658 7.27531 25.2558 7.27531Z" fill="white"/>
+            <path d="M4.1386 8.0453C4.1386 7.61935 3.80453 7.27531 3.39447 7.27531H0.744124C0.332481 7.27531 0 7.62099 0 8.0453C0 8.46961 0.334064 8.81529 0.744124 8.81529H3.39289C3.80453 8.81529 4.13701 8.46961 4.13701 8.0453H4.1386Z" fill="white"/>
+            <path d="M20.8702 3.11398C21.0175 3.11398 21.1663 3.06811 21.2961 2.97472L23.4667 1.40198C23.804 1.15788 23.8847 0.677863 23.6488 0.328911C23.4129 -0.0200418 22.949 -0.105232 22.6118 0.140509L20.4412 1.71325C20.1039 1.95736 20.0232 2.43737 20.2591 2.78632C20.4032 3.00094 20.6343 3.11562 20.8702 3.11562V3.11398Z" fill="white"/>
+            <path d="M4.70372 13.1172L2.53309 14.69C2.19586 14.9341 2.11512 15.4141 2.35102 15.763C2.49509 15.9777 2.72625 16.0923 2.96215 16.0923C3.10939 16.0923 3.25822 16.0465 3.38804 15.9531L5.55867 14.3803C5.8959 14.1362 5.97665 13.6562 5.74074 13.3073C5.50484 12.9583 5.04095 12.8731 4.70372 13.1189V13.1172Z" fill="white"/>
+            <path d="M23.4668 14.6884L21.2961 13.1157C20.9589 12.8716 20.495 12.9567 20.2591 13.3041C20.0232 13.653 20.1055 14.133 20.4412 14.3771L22.6118 15.9499C22.7416 16.0449 22.8904 16.0891 23.0377 16.0891C23.272 16.0891 23.5032 15.9744 23.6488 15.7598C23.8847 15.4109 23.8024 14.9309 23.4668 14.6868V14.6884Z" fill="white"/>
+            <path d="M5.55869 1.71322L3.38806 0.140478C3.05083 -0.103625 2.58694 -0.0184349 2.35104 0.328879C2.11513 0.677832 2.19746 1.15785 2.53311 1.40195L4.70374 2.97469C4.83356 3.06971 4.98239 3.11395 5.12963 3.11395C5.36395 3.11395 5.5951 2.99927 5.74076 2.78465C5.97666 2.4357 5.89434 1.95569 5.55869 1.71158V1.71322Z" fill="white"/>
+          </svg>
+          <div class="scq-hint-body" id="scq-hint-body"></div>
+        </div>
+        <button class="scq-hint-back" type="button" onclick="scqCloseHint()">العودة إلى السؤال</button>
+      </div>
+    </div>
+
+    <!-- Shared image-zoom modal — outside all .screen divs, directly in
+         #app (same scaling-parity fix as the hint overlay above), per
+         _global-components.md "Image zoom". -->
+    <div id="img-zoom-modal" class="hidden" aria-hidden="true">
+      <div class="img-zoom-panel" role="dialog" aria-modal="true">
+        <button class="img-zoom-close" type="button" data-zoom-close="true" aria-label="إغلاق"><svg viewBox="0 0 15 15" fill="none"><path d="M1 1l13 13M14 1L1 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+        <img id="img-zoom-stage-img" src="" alt="">
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Report dialogs — markup contract of ../unit-js/25-report.js (verbatim from
+       methodica-math-ratio-01). Outside #app: full-viewport, not scaled with the canvas. -->
+  <div id="report-modal"
+         class="report-modal-overlay"
+         hidden
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="report-modal-title">
+      <div class="report-modal-box">
+        <button class="report-close-btn" onclick="tryCloseReportModal()" aria-label="إغلاق">&#10005;</button>
+        <h2 class="report-modal-title" id="report-modal-title">الإبلاغ عن مشكلة</h2>
+        <p class="report-modal-body">هل هناك شيء غير واضح أو لا يعمل كما ينبغي؟<br>أخبرونا بما حدث لنتولّى الأمر.</p>
+
+        <div class="report-field">
+          <label class="report-label" for="report-type"><span class="required-star">*</span> ما نوع المشكلة</label>
+                    <div class="report-custom-select" id="report-type-wrapper">
+            <button class="report-select-btn is-placeholder" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <span class="report-select-value">اختاروا نوع المشكلة</span>
+            </button>
+            <ul class="report-select-list" role="listbox" hidden>
+              <li class="report-select-option" data-value="technical" role="option">خلل تقني أو شيء لا يعمل</li>
+              <li class="report-select-option" data-value="unclear" role="option">شيء غير واضح لي</li>
+              <li class="report-select-option" data-value="other" role="option">أخرى</li>
+            </ul>
+            <input type="hidden" id="report-type" value="">
+          </div>
+          <span class="report-field-error" id="report-type-error" hidden>اختاروا نوع المشكلة</span>
+        </div>
+
+        <div class="report-field">
+          <label class="report-label" for="report-text"><span class="required-star">*</span> ماذا حدث؟</label>
+          <textarea class="report-textarea" id="report-text" maxlength="250" rows="4" placeholder="اشرحوا ما حدث لنتمكّن من فهم المشكلة" onblur="reportTextBlur()"></textarea>
+          <span class="report-field-error" id="report-text-error" hidden>اكتبوا ما حدث</span>
+          <span class="report-char-count" id="report-char-count">0 / 250</span>
+        </div>
+
+        <div class="report-actions">
+          <button class="report-cancel-btn" onclick="tryCloseReportModal()">إلغاء</button>
+          <button class="report-submit-btn" onclick="submitReport()" disabled>إرسال البلاغ</button>
+        </div>
+      </div>
+    </div>
+  <div id="report-confirm-modal"
+         class="report-modal-overlay"
+         hidden
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="confirm-modal-title">
+      <div class="report-modal-box report-confirm-box">
+        <h2 class="report-modal-title" id="confirm-modal-title">هل أنتم متأكدون من إغلاق النافذة؟</h2>
+        <p class="report-modal-body">عند الإغلاق لن يُرسَل البلاغ</p>
+        <div class="report-actions">
+          <button class="report-cancel-btn" onclick="forceCloseReportModal()">إغلاق النافذة</button>
+          <button class="report-submit-btn" onclick="backToReportForm()">أريد الإبلاغ</button>
+        </div>
+      </div>
+    </div>
+  <div id="report-thanks-modal"
+         class="report-modal-overlay"
+         hidden
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="thanks-modal-title">
+      <div class="report-modal-box report-confirm-box">
+        <h2 class="report-modal-title" id="thanks-modal-title">تم إرسال البلاغ، شكرًا!</h2>
+        <p class="report-modal-body">استلمنا بلاغكم وسنتولّى معالجته في أقرب وقت.</p>
+        <div class="report-actions">
+          <button class="report-submit-btn" onclick="closeReportThanks()">إغلاق</button>
+        </div>
+      </div>
+    </div>
+
+  <script src="../unit-js/10-identity.js?v=2"></script>
+  <script src="../unit-js/20-xapi.js?v=3"></script>
+  <script src="../unit-js/25-report.js?v=1"></script>
+  <script src="../unit-js/40-resume.js?v=6"></script>
+  <script src="../unit-js/50-loader.js?v=3"></script>
+  <script src="../unit-js/motion.js?v=1"></script>
+  <script src="../unit-js/05-core.js?v=3"></script>
+  <script src="script.js?v=18"></script>
+  <script src="../unit-js/90-boot.js?v=1"></script>
+</body>
+</html>

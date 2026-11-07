@@ -1,0 +1,88 @@
+{
+  "id": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-02/",
+  "title": "זמן תרגול",
+  "learningUnitId": "methodica-math-percent-06",
+  "componentPurpose": "practice",
+  "isAssessment": false,
+  "recommendedAfterFail": [],
+  "isRequired": true,
+  "relativeDifficulty": 3,
+  "masteryLevel": null,
+  "order": 2,
+  "depthLevel": "core-curriculum-basic",
+  "cognitiveLevels": ["algorithmic-thinking"],
+  "languages": ["Hebrew"],
+  "skills": [],
+  "estimatedTimeInMinutes": 10,
+  "createdAt": "2026-09-28T00:00:00.000Z",
+  "updatedAt": "2026-09-28T00:00:00.000Z",
+  "subContent": [
+    {
+      "id": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-02/methodica-math-percent-06-02-001/",
+      "title": "נורות פגומות במפעל",
+      "informationToBot": "מטרת הפריט: לתרגל בחירת הצגה נכונה של אחוז מתוך תרחיש בקרת איכות במפעל נורות (4% מהנורות פגומות), ולבחון הבנה מושגית מעבר לחישוב טכני בלבד. כיווני חשיבה: הלומד ממיר 4% לשבר מצומצם (4/100=1/25) ובוחר מבין 4 ניסוחים איזה מתאר את המצב בצורה הנכונה ביותר (התשובה הנכונה: 'נורה אחת מכל 25 - פגומה'). טעויות נפוצות: פרשנות 4% כ'רוב הנורות פגומות'; בלבול בין 4 נורות בפועל לבין 4 אחוזים; אי-הבנה שמדובר בשיעור יחסי ולא במספר מוחלט. מידע נוסף: 2 ניסיונות עם רמז זמין; לפני השאלה מוצג מסך מעבר קצר ('סיימנו את שלב הלימוד, נעבור לתרגול'). מבוסס שקפים 27-28 בתסריט המקורי. צילום מסך: לא צורף.",
+      "contentType": "practice",
+      "mediaFormat": "interactive-content",
+      "questions": [
+        {
+          "questionId": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-02/methodica-math-percent-06-02-001/q1",
+          "questionType": "choice",
+          "questionText": "בבקרת איכות במפעל נורות נמצא כי 4% מהנורות המיוצרות הן פגומות. איזה מהמשפטים הוא הנכון ביותר?",
+          "answers": ["רוב הנורות שמיוצרות במפעל פגומות", "נורה אחת מכל 25 - פגומה", "במפעל נמצאו 4 נורות פגומות בדיוק", "40% מהנורות המיוצרות פגומות"],
+          "correctAnswers": ["נורה אחת מכל 25 - פגומה"]
+        }
+      ]
+    },
+    {
+      "id": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-02/methodica-math-percent-06-02-002/",
+      "title": "חבילת הגלישה של יואב",
+      "informationToBot": "מטרת הפריט: לתרגל חישוב אחוז הגדול מ-100% (שימוש מעבר לכמות המקורית) בהקשר מוכר של חבילת גלישה סלולרית. כיווני חשיבה: הלומד מזהה שה'שלם' הוא חבילת ה-10GB המקורית, ושיואב השתמש ב-30GB, ומחשב 30/10=300/100=300%. טעויות נפוצות: חיבור 30 ל-100% במקום חישוב יחסי לשלם (טעות ל-130%); חישוב האחוז החורג בלבד ולא האחוז הכולל (טעות ל-200%). מידע נוסף: 2 ניסיונות עם רמז זמין; שקף 29 בתסריט המקורי, שאלה אוריינית (טקסט ארוך יחסית). צילום מסך: לא צורף.",
+      "contentType": "practice",
+      "mediaFormat": "interactive-content",
+      "questions": [
+        {
+          "questionId": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-02/methodica-math-percent-06-02-002/q1",
+          "questionType": "choice",
+          "questionText": "יואב מנוי לחבילת גלישה סלולרית הכוללת 10 גיגה-בייט (GB) במחיר מוזל. במהלך חופשת החנוכה, יואב צפה בהרבה סרטוני וידיאו ובסוף החודש קיבל הודעה כי השתמש ב-30 גיגה-בייט (GB) של גלישה. איזה מהטענות הבאות נכונה?",
+          "answers": [
+            "יואב השתמש ב-30% מחבילת הגלישה שלו",
+            "יואב חרג ב-20 גיגה בייט, ולכן השתמש ב-200% מהחבילה",
+            "יואב השתמש ב-300% מהחבילה המקורית, משום ש-30GB הם פי 3 מ-10GB",
+            "יואב השתמש ב-130% מהחבילה, משום שמוסיפים 30 ל-100%"
+          ],
+          "correctAnswers": ["יואב השתמש ב-300% מהחבילה המקורית, משום ש-30GB הם פי 3 מ-10GB"]
+        }
+      ]
+    },
+    {
+      "id": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-02/methodica-math-percent-06-02-003/",
+      "title": "עוגות יום הולדת – ייצוגים שקולים",
+      "informationToBot": "מטרת הפריט: לתרגל זיהוי ייצוגים שקולים (שבר מצומצם/לא מצומצם, אחוז) עבור חלקים צבועים בשלוש עוגות זהות שנפרסו בדרכים שונות. כיווני חשיבה: לכל אחת משלוש העוגות (מחולקות ל-22, 17 ו-5 חלקים בהתאמה) הלומד בוחר מתוך 3 אפשרויות את הביטוי השקול לחלק הצבוע: עוגה א' - 6/22 שקול ל-3/11 (המצומצם); עוגה ב' - 5/17 שקול ל-10/34 (המורחב); עוגה ג' - 2/5 שקול ל-40% (המומר). טעויות נפוצות: בחירת ערך לא שקול (למשל 22% במקום 3/11 בעוגה א'); בלבול בין הרחבה לצמצום. מידע נוסף: ניקוד הוליסטי על 3 הסעיפים יחד ('טעיתם לפחות בתשובה אחת'), 2 ניסיונות עם נעילת סעיפים שכבר נענו נכון (Partial-correction); ניתן להגדיל כל תרשים עיגול בלחיצה. מבוסס שקף 30 בתסריט המקורי. צילום מסך: לא צורף.",
+      "contentType": "practice",
+      "mediaFormat": "interactive-content",
+      "questions": [
+        {
+          "questionId": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-02/methodica-math-percent-06-02-003/q1",
+          "questionType": "choice",
+          "questionText": "במסיבת יום הולדת הוגשו שלוש עוגות זהות, כל עוגה נפרסה אחרת ונאכל בה חלק אחר (צבוע). התאימו לכל חלק צבוע את הייצוג הנכון לו. עוגה א' - עיגול המחולק ל-22 חלקים שווים, 6 מהם צבועים.",
+          "answers": ["3/11", "22%", "6/11"],
+          "correctAnswers": ["3/11"]
+        },
+        {
+          "questionId": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-02/methodica-math-percent-06-02-003/q2",
+          "questionType": "choice",
+          "questionText": "עוגה ב' - עיגול המחולק ל-17 חלקים שווים, 5 מהם צבועים.",
+          "answers": ["0.34", "10/34", "50%"],
+          "correctAnswers": ["10/34"]
+        },
+        {
+          "questionId": "https://lomdot.education.gov.il/metodica/720active/math/percent/06/methodica-math-percent-06-02/methodica-math-percent-06-02-003/q3",
+          "questionType": "choice",
+          "questionText": "עוגה ג' - עיגול המחולק לחמישה חלקים שווים, שניים מהם צבועים.",
+          "answers": ["20%", "40%", "2/100"],
+          "correctAnswers": ["40%"]
+        }
+      ]
+    }
+  ]
+}

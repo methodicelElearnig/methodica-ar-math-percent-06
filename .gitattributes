@@ -1,0 +1,29 @@
+# Line endings, pinned so every clone agrees (from methodica-math-percent-08 / ratio-01).
+#
+# Every text blob in the index is already LF except the two translation CSVs (below), so
+# this renormalises nothing in history. `eol=lf` additionally pins the WORKING TREE to LF
+# on Windows, where core.autocrlf=true would otherwise check out CRLF. Packages are
+# assembled from the working tree, so this is what makes them byte-identical to their
+# commit whoever builds them (Documentation/reporting-and-resume §11.1).
+
+* text=auto eol=lf
+
+# The translation CSVs are exports stored with CRLF (translation/*.csv) — kept byte-for-byte
+# as delivered; never normalised.
+*.csv   -text
+
+# Explicit binary, so auto-detection is never the only thing guarding media.
+*.ttf   binary
+*.woff2 binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.mp4   binary
+*.pptx  binary
+*.docx  binary
+*.pdf   binary
+
+# SVG is XML — text, never binary.
+*.svg   text eol=lf
