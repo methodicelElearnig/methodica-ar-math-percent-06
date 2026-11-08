@@ -3520,7 +3520,7 @@
     <body>
       <trans-unit id="06-03-00-001">
         <source>אין כמו תרגול לחיזוק הלמידה&lt;br&gt;2 שאלות פשוטות יותר</source>
-        <target>لا شيء يضاهي التدريب لترسيخ التعلم&lt;br&gt;سؤالان أبسط</target>
+        <target>لا شيء يضاهي التدريب لترسيخ التعلم&lt;br&gt;سؤالان بسيطان</target>
         <note from="screen-id">06-03-00</note>
         <note from="screen-title">Transition into further practice</note>
         <note from="screen-type">TransitionScreen</note>
@@ -5962,7 +5962,7 @@
       </trans-unit>
       <trans-unit id="06-05-00-004">
         <source>חשוב להבין מה עדיין לא ברור ולפנות לצ'אט או למורה להסבר נוסף.</source>
-        <target>من المهم أن تفهم ما الذي لا يزال غير واضح، وأن تلجأ إلى الدردشة أو إلى المعلّم للحصول على شرح إضافي.</target>
+        <target>من المهم أن تعرف ما الذي ما زال غير واضح لديك، وأن تتوجّه إلى الدردشة أو إلى المعلّم للحصول على شرح إضافي.</target>
         <note from="screen-id">06-05-00</note>
         <note from="screen-title">Transition into Peak Question A</note>
         <note from="screen-type">TransitionScreen</note>
@@ -7162,7 +7162,7 @@
       </trans-unit>
       <trans-unit id="06-06-00-003">
         <source>חשוב להבין מה עדיין לא ברור ולפנות לצ'אט או למורה להסבר נוסף.</source>
-        <target>من المهم أن تفهم ما الذي لا يزال غير واضح، وأن تلجأ إلى الدردشة أو إلى المعلّم للحصول على شرح إضافي.</target>
+        <target>من المهم أن تعرف ما الذي ما زال غير واضح لديك، وأن تتوجّه إلى الدردشة أو إلى المعلّم للحصول على شرح إضافي.</target>
         <note from="screen-id">06-06-00</note>
         <note from="screen-title">Transition into Peak Question B</note>
         <note from="screen-type">TransitionScreen</note>
